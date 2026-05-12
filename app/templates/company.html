@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel">
+  <div class="company-header">
+    <div>
+      <h2>{{ company_name }}</h2>
+      <span class="muted">{{ jobs | length }} vacanc{{ "y" if jobs | length == 1 else "ies" }}</span>
+    </div>
+    <a href="/?company={{ company_name | urlquote }}" class="btn-open">All vacancies ↗</a>
+  </div>
+
+  {% if tech_counts %}
+  <div class="job-section">
+    <div class="section-label">Tech stack across all vacancies</div>
+    <div class="tech-stat-grid">
+      {% for name, cnt in tech_counts %}
+      <a href="/?tech={{ name | urlquote }}" class="tech-stat-card">
+        <span class="tech-stat-name">{{ name }}</span>
+        <span class="tech-stat-cnt">{{ cnt }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="job-section">
+    <div class="section-label">Vacancies</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Grade</th>
+          <th>Technologies</th>
+          <th>Salary</th>
+          <th>Source</th>
+          <th>Link</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        {% set job_techs = tech_map.get(job.id, []) %}
+        <tr>
+          <td><a href="/jobs/{{ job.id }}" class="job-title-link">{{ job.title }}</a></td>
+          <td>
+            {% if job.grade %}
+            <span class="grade grade-{{ job.grade | lower }}">{{ job.grade }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="tags">
+              {% for t in job_techs[:5] %}
+              <a href="/?tech={{ t | urlquote }}" class="tag">{{ t }}</a>
+              {% endfor %}
+              {% if job_techs | length > 5 %}
+              <a href="/jobs/{{ job.id }}" class="tag-more">+{{ job_techs | length - 5 }} more</a>
+              {% endif %}
+            </div>
+          </td>
+          <td class="salary">{{ job.salary }}</td>
+          <td class="muted">{{ job.source }}</td>
+          <td><a href="{{ job.link }}" target="_blank" rel="noreferrer">open ↗</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

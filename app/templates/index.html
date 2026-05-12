@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel">
+  <form
+    class="ingest-form"
+    hx-post="/ingest"
+    hx-target="#ingest-result"
+    hx-swap="innerHTML">
+    <label for="keywords">Ingest keywords (comma-separated)</label>
+    <input id="keywords" name="keywords" type="text" value="DevOps">
+    <button type="submit">Run ingest</button>
+  </form>
+  <div id="ingest-result"></div>
+</section>
+
+<section class="panel">
+  <form
+    class="filters"
+    hx-get="/partials/jobs"
+    hx-target="#jobs-table"
+    hx-swap="innerHTML"
+    hx-trigger="submit, change from:.auto-filter">
+    <input type="search" name="q" placeholder="Search title / company" value="{{ q }}">
+    <select name="source" class="auto-filter">
+      <option value="">All sources</option>
+      {% for src in sources %}
+      <option value="{{ src }}" {% if src == source %}selected{% endif %}>{{ src }}</option>
+      {% endfor %}
+    </select>
+    <select name="grade" class="auto-filter">
+      <option value="">All grades</option>
+      {% for g in grades %}
+      <option value="{{ g }}" {% if g == grade %}selected{% endif %}>{{ g }}</option>
+      {% endfor %}
+    </select>
+    <select name="tech" class="auto-filter">
+      <option value="">All technologies</option>
+      {% for t in techs %}
+      <option value="{{ t }}" {% if t == tech %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+    {% if company %}
+    <span class="filter-chip">{{ company }} <a href="/">×</a></span>
+    <input type="hidden" name="company" value="{{ company }}">
+    {% endif %}
+    <button type="submit">Filter</button>
+  </form>
+  <div id="jobs-table">
+    {% include "partials/jobs_table.html" %}
+  </div>
+</section>
+{% endblock %}

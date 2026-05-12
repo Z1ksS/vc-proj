@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel job-detail">
+  <div class="job-detail-header">
+    <div>
+      <h2 class="job-title">{{ job.title }}</h2>
+      <div class="job-meta">
+        <a href="/?company={{ job.company | urlquote }}" class="meta-company">{{ job.company }}</a>
+        <span class="meta-sep">·</span>
+        <span class="meta-source">{{ job.source }}</span>
+        {% if job.grade %}
+        <span class="meta-sep">·</span>
+        <span class="grade grade-{{ job.grade | lower }}">{{ job.grade }}</span>
+        {% endif %}
+        {% if job.salary %}
+        <span class="meta-sep">·</span>
+        <span class="meta-salary">{{ job.salary }}</span>
+        {% endif %}
+        {% if job.job_format %}
+        <span class="meta-sep">·</span>
+        <span class="muted">{{ job.job_format }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <a href="{{ job.link }}" target="_blank" rel="noreferrer" class="btn-open">Open original ↗</a>
+  </div>
+
+  {% if techs %}
+  <div class="job-section">
+    <div class="section-label">Technologies</div>
+    <div class="tags tags-wrap">
+      {% for t in techs %}
+      <a href="/?tech={{ t | urlquote }}" class="tag">{{ t }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if job.description %}
+  <div class="job-section">
+    <div class="section-label">Description</div>
+    <div class="job-description">{{ job.description | replace('\n', '<br>') | safe }}</div>
+  </div>
+  {% else %}
+  <p class="muted">No description available.</p>
+  {% endif %}
+</div>
+{% endblock %}

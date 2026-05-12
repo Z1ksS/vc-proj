@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel">
+  <h2>Companies <span class="count-label">{{ companies | length }}</span></h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Company</th>
+          <th>Vacancies</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for company, cnt in companies %}
+        <tr>
+          <td class="muted">{{ loop.index }}</td>
+          <td><a href="/companies/{{ company | urlquote }}" class="company-link"><strong>{{ company }}</strong></a></td>
+          <td>{{ cnt }}</td>
+          <td><a href="/companies/{{ company | urlquote }}">Details →</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

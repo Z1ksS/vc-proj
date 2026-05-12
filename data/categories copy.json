@@ -1,0 +1,427 @@
+{
+  "categories": [
+    {
+      "name": "Python",
+      "sources": {
+        "dou": ["Python"],
+        "djinni": ["Python"],
+        "workua": ["python"],
+        "nofluffjobs": ["Python"]
+      }
+    },
+    {
+      "name": "JavaScript",
+      "sources": {
+        "dou": ["Front End"],
+        "djinni": ["JavaScript / Front-End"],
+        "workua": ["javascript"],
+        "nofluffjobs": ["JavaScript"]
+      }
+    },
+    {
+      "name": "Java",
+      "sources": {
+        "dou": ["Java"],
+        "djinni": ["Java"],
+        "workua": ["java"],
+        "nofluffjobs": ["Java"]
+      }
+    },
+    {
+      "name": ".NET",
+      "sources": {
+        "dou": [".NET"],
+        "djinni": ["C# / .NET"],
+        "workua": ["net"],
+        "nofluffjobs": [".NET"]
+      }
+    },
+    {
+      "name": "Node.js",
+      "sources": {
+        "dou": ["Node.js"],
+        "djinni": ["Node.js"],
+        "workua": ["nodejs"],
+        "nofluffjobs": ["Node.js"]
+      }
+    },
+    {
+      "name": "PHP",
+      "sources": {
+        "dou": ["PHP"],
+        "djinni": ["PHP"],
+        "workua": ["php"],
+        "nofluffjobs": ["PHP"]
+      }
+    },
+    {
+      "name": "iOS",
+      "sources": {
+        "dou": ["iOS/macOS"],
+        "djinni": ["iOS"],
+        "workua": ["ios"],
+        "nofluffjobs": ["iOS"]
+      }
+    },
+    {
+      "name": "Android",
+      "sources": {
+        "dou": ["Android"],
+        "djinni": ["Android"],
+        "workua": ["android"],
+        "nofluffjobs": ["Android"]
+      }
+    },
+    {
+      "name": "React Native",
+      "sources": {
+        "dou": ["React Native"],
+        "djinni": ["React Native"],
+        "workua": ["react-native"],
+        "nofluffjobs": ["React Native"]
+      }
+    },
+    {
+      "name": "Flutter",
+      "sources": {
+        "dou": ["Flutter"],
+        "djinni": ["Flutter"],
+        "workua": ["flutter"],
+        "nofluffjobs": ["Flutter"]
+      }
+    },
+    {
+      "name": "Golang",
+      "sources": {
+        "dou": ["Golang"],
+        "djinni": ["Golang"],
+        "workua": ["golang"],
+        "nofluffjobs": ["Golang"]
+      }
+    },
+    {
+      "name": "C++",
+      "sources": {
+        "dou": ["C++"],
+        "djinni": ["C++"],
+        "workua": ["c++"],
+        "nofluffjobs": ["C++"]
+      }
+    },
+    {
+      "name": "Embedded",
+      "sources": {
+        "dou": ["Embedded"],
+        "djinni": ["Embedded"],
+        "workua": ["embedded"],
+        "nofluffjobs": ["Embedded"]
+      }
+    },
+    {
+      "name": "Ruby",
+      "sources": {
+        "dou": ["Ruby"],
+        "djinni": ["Ruby"],
+        "workua": ["ruby"],
+        "nofluffjobs": ["Ruby"]
+      }
+    },
+    {
+      "name": "Scala",
+      "sources": {
+        "dou": ["Scala"],
+        "djinni": ["Scala"],
+        "workua": ["scala"],
+        "nofluffjobs": ["Scala"]
+      }
+    },
+    {
+      "name": "Rust",
+      "sources": {
+        "dou": ["Rust"],
+        "djinni": ["Rust"],
+        "workua": ["rust"],
+        "nofluffjobs": ["Rust"]
+      }
+    },
+    {
+      "name": "Kotlin",
+      "sources": {
+        "dou": null,
+        "djinni": ["Kotlin"],
+        "workua": ["kotlin"],
+        "nofluffjobs": ["Kotlin"]
+      }
+    },
+    {
+      "name": "Elixir/Erlang",
+      "sources": {
+        "dou": ["Erlang"],
+        "djinni": ["Elixir"],
+        "workua": ["elixir"],
+        "nofluffjobs": ["Elixir"]
+      }
+    },
+    {
+      "name": "QA",
+      "sources": {
+        "dou": ["QA"],
+        "djinni": ["QA Manual", "QA Automation"],
+        "workua": ["qa"],
+        "nofluffjobs": ["QA"]
+      }
+    },
+    {
+      "name": "DevOps",
+      "sources": {
+        "dou": ["DevOps"],
+        "djinni": ["DevOps"],
+        "workua": ["devops"],
+        "nofluffjobs": ["DevOps"]
+      }
+    },
+    {
+      "name": "Security",
+      "sources": {
+        "dou": ["Security"],
+        "djinni": ["Security"],
+        "workua": ["security"],
+        "nofluffjobs": ["Security"]
+      }
+    },
+    {
+      "name": "SysAdmin",
+      "sources": {
+        "dou": ["SysAdmin"],
+        "djinni": ["Sysadmin"],
+        "workua": ["sysadmin"],
+        "nofluffjobs": ["Sysadmin"]
+      }
+    },
+    {
+      "name": "Data Science",
+      "sources": {
+        "dou": ["Data Science"],
+        "djinni": ["Data Science"],
+        "workua": ["data-science"],
+        "nofluffjobs": ["Data Science"]
+      }
+    },
+    {
+      "name": "AI/ML",
+      "sources": {
+        "dou": ["AI/ML"],
+        "djinni": ["ML / AI"],
+        "workua": ["machine-learning"],
+        "nofluffjobs": ["Machine Learning"]
+      }
+    },
+    {
+      "name": "Data Engineering",
+      "sources": {
+        "dou": ["Data Engineer"],
+        "djinni": ["Data Engineer"],
+        "workua": ["data-engineer"],
+        "nofluffjobs": ["Data Engineering"]
+      }
+    },
+    {
+      "name": "DBA",
+      "sources": {
+        "dou": ["DBA"],
+        "djinni": ["SQL / DBA"],
+        "workua": ["dba"],
+        "nofluffjobs": ["DBA"]
+      }
+    },
+    {
+      "name": "Big Data",
+      "sources": {
+        "dou": ["Big Data"],
+        "djinni": null,
+        "workua": ["big-data"],
+        "nofluffjobs": ["Big Data"]
+      }
+    },
+    {
+      "name": "Blockchain",
+      "sources": {
+        "dou": ["Blockchain"],
+        "djinni": null,
+        "workua": ["blockchain"],
+        "nofluffjobs": ["Blockchain"]
+      }
+    },
+    {
+      "name": "Design",
+      "sources": {
+        "dou": ["Design"],
+        "djinni": ["Design"],
+        "workua": ["design"],
+        "nofluffjobs": ["Design"]
+      }
+    },
+    {
+      "name": "Gamedev",
+      "sources": {
+        "dou": ["Unity", "Unreal Engine"],
+        "djinni": ["Gamedev"],
+        "workua": ["gamedev"],
+        "nofluffjobs": ["Gamedev"]
+      }
+    },
+    {
+      "name": "Hardware",
+      "sources": {
+        "dou": ["Hardware"],
+        "djinni": ["Hardware"],
+        "workua": ["hardware"],
+        "nofluffjobs": ["Hardware"]
+      }
+    },
+    {
+      "name": "No Code",
+      "sources": {
+        "dou": ["No-code"],
+        "djinni": ["No Code"],
+        "workua": ["no-code"],
+        "nofluffjobs": ["No Code"]
+      }
+    },
+    {
+      "name": "Project Management",
+      "sources": {
+        "dou": ["Project Manager"],
+        "djinni": ["Project Manager"],
+        "workua": ["project-manager"],
+        "nofluffjobs": ["Project Manager"]
+      }
+    },
+    {
+      "name": "Product Management",
+      "sources": {
+        "dou": ["Product Manager"],
+        "djinni": ["Product Manager"],
+        "workua": ["product-manager"],
+        "nofluffjobs": ["Product Manager"]
+      }
+    },
+    {
+      "name": "Business Analysis",
+      "sources": {
+        "dou": ["Analyst"],
+        "djinni": ["Business Analyst"],
+        "workua": ["business-analyst"],
+        "nofluffjobs": ["Business Analyst"]
+      }
+    },
+    {
+      "name": "Engineering Manager",
+      "sources": {
+        "dou": ["Engineering Manager"],
+        "djinni": ["Engineering Manager"],
+        "workua": ["engineering-manager"],
+        "nofluffjobs": ["Engineering Manager"]
+      }
+    },
+    {
+      "name": "Architect",
+      "sources": {
+        "dou": ["Architect"],
+        "djinni": ["Software Architect"],
+        "workua": ["architect"],
+        "nofluffjobs": ["Architect"]
+      }
+    },
+    {
+      "name": "Scrum Master",
+      "sources": {
+        "dou": ["Scrum Master"],
+        "djinni": ["Scrum Master / Agile Coach"],
+        "workua": ["scrum"],
+        "nofluffjobs": ["Scrum Master"]
+      }
+    },
+    {
+      "name": "Technical Writing",
+      "sources": {
+        "dou": ["Technical Writer"],
+        "djinni": ["Technical Writing"],
+        "workua": ["technical-writer"],
+        "nofluffjobs": ["Technical Writing"]
+      }
+    },
+    {
+      "name": "Salesforce",
+      "sources": {
+        "dou": ["Salesforce"],
+        "djinni": ["Salesforce"],
+        "workua": ["salesforce"],
+        "nofluffjobs": ["Salesforce"]
+      }
+    },
+    {
+      "name": "SAP",
+      "sources": {
+        "dou": ["SAP"],
+        "djinni": ["SAP"],
+        "workua": ["sap"],
+        "nofluffjobs": ["SAP"]
+      }
+    },
+    {
+      "name": "ERP/CRM",
+      "sources": {
+        "dou": ["ERP/CRM"],
+        "djinni": ["ERP Systems"],
+        "workua": ["erp"],
+        "nofluffjobs": ["ERP"]
+      }
+    },
+    {
+      "name": "HR",
+      "sources": {
+        "dou": ["HR"],
+        "djinni": ["HR"],
+        "workua": ["hr"],
+        "nofluffjobs": ["HR"]
+      }
+    },
+    {
+      "name": "Marketing",
+      "sources": {
+        "dou": ["Marketing"],
+        "djinni": ["Marketing"],
+        "workua": ["marketing"],
+        "nofluffjobs": ["Marketing"]
+      }
+    },
+    {
+      "name": "Sales",
+      "sources": {
+        "dou": ["Sales"],
+        "djinni": ["Sales"],
+        "workua": ["sales"],
+        "nofluffjobs": ["Sales"]
+      }
+    },
+    {
+      "name": "SEO",
+      "sources": {
+        "dou": ["SEO"],
+        "djinni": ["SEO"],
+        "workua": ["seo"],
+        "nofluffjobs": ["SEO"]
+      }
+    },
+    {
+      "name": "Support",
+      "sources": {
+        "dou": ["Support"],
+        "djinni": ["Customer/Technical Support"],
+        "workua": ["support"],
+        "nofluffjobs": ["Support"]
+      }
+    }
+  ]
+}

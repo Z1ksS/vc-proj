@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job VC</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <link rel="stylesheet" href="/static/style.css?v=5c">
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Job VC</h1>
+      <nav class="nav">
+        <a href="/">Vacancies</a>
+        <a href="/technologies">Technologies</a>
+        <a href="/companies">Companies</a>
+        <a href="/roles">Roles</a>
+        <a href="/analytics">Analytics</a>
+      </nav>
+    </header>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

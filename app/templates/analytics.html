@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel">
+  <h2>Analytics</h2>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.total }}</div>
+      <div class="stat-label">Total vacancies</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.with_tech }}</div>
+      <div class="stat-label">With tech stack</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.graded }}</div>
+      <div class="stat-label">Graded</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.with_salary }}</div>
+      <div class="stat-label">With salary</div>
+    </div>
+  </div>
+
+  <div class="analytics-columns">
+
+    <div class="analytics-col">
+      <div class="job-section">
+        <div class="section-label">Grade distribution</div>
+        {% set max_cnt = grade_dist[0][1] if grade_dist else 1 %}
+        {% for grade, cnt in grade_dist %}
+        <div class="dist-row">
+          <div class="dist-label">
+            {% if grade != "—" %}
+            <span class="grade grade-{{ grade | lower }}">{{ grade }}</span>
+            {% else %}
+            <span class="muted">{{ grade }}</span>
+            {% endif %}
+          </div>
+          <div class="dist-bar-wrap">
+            <div class="dist-bar" style="width: {{ (cnt / max_cnt * 100) | int }}%"></div>
+          </div>
+          <div class="dist-cnt muted">{{ cnt }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="job-section">
+        <div class="section-label">Sources</div>
+        {% set max_src = source_dist[0][1] if source_dist else 1 %}
+        {% for source, cnt in source_dist %}
+        <div class="dist-row">
+          <div class="dist-label muted">{{ source }}</div>
+          <div class="dist-bar-wrap">
+            <div class="dist-bar" style="width: {{ (cnt / max_src * 100) | int }}%"></div>
+          </div>
+          <div class="dist-cnt muted">{{ cnt }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="analytics-col">
+      <div class="job-section">
+        <div class="section-label">Top technology pairs (co-occurrence)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Tech A</th>
+              <th>Tech B</th>
+              <th>Vacancies</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t1, t2, cnt in cooccurrence %}
+            <tr>
+              <td><a href="/?tech={{ t1 | urlquote }}" class="tag">{{ t1 }}</a></td>
+              <td><a href="/?tech={{ t2 | urlquote }}" class="tag">{{ t2 }}</a></td>
+              <td class="muted">{{ cnt }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

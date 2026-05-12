@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel">
+  <h2>Job Roles <span class="count-label">{{ roles | length }}</span></h2>
+  <p class="muted" style="margin: 0 0 12px; font-size: 13px;">
+    Grouped by normalized title (grade prefix stripped). Click a role to browse its vacancies.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Role</th>
+          <th>Vacancies</th>
+          <th>Top Technologies</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for role, cnt, top_techs in roles %}
+        <tr>
+          <td class="muted">{{ loop.index }}</td>
+          <td><a href="/?q={{ role | urlquote }}" class="company-link"><strong>{{ role }}</strong></a></td>
+          <td>{{ cnt }}</td>
+          <td>
+            <div class="tech-stat-grid">
+              {% for tech_name, tech_cnt in top_techs %}
+              <a href="/?tech={{ tech_name | urlquote }}" class="tech-stat-card">
+                <span class="tech-stat-name">{{ tech_name }}</span>
+                <span class="tech-stat-cnt">{{ tech_cnt }}</span>
+              </a>
+              {% endfor %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

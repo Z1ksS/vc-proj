@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.playwright
+    container_name: job-vc-app
+    environment:
+      DATABASE_URL: sqlite:///./jobs.db
+      ENABLE_SOURCES: dou
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app

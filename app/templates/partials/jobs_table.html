@@ -1,0 +1,66 @@
+<table>
+  <thead>
+    <tr>
+      <th>Source</th>
+      <th>Title</th>
+      <th>Company</th>
+      <th>Grade</th>
+      <th>Technologies</th>
+      <th>Salary</th>
+      <th>Link</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for job in jobs %}
+    {% set job_techs = tech_map.get(job.id, []) %}
+    <tr>
+      <td>{{ job.source }}</td>
+      <td><a href="/jobs/{{ job.id }}" class="job-title-link">{{ job.title }}</a></td>
+      <td><a href="/?company={{ job.company | urlquote }}" class="company-link">{{ job.company }}</a></td>
+      <td>
+        {% if job.grade %}
+        <span class="grade grade-{{ job.grade | lower }}">{{ job.grade }}</span>
+        {% endif %}
+      </td>
+      <td>
+        <div class="tags">
+          {% for t in job_techs[:5] %}
+          <a href="/?tech={{ t | urlquote }}" class="tag">{{ t }}</a>
+          {% endfor %}
+          {% if job_techs | length > 5 %}
+          <a href="/jobs/{{ job.id }}" class="tag-more">+{{ job_techs | length - 5 }} more</a>
+          {% endif %}
+        </div>
+      </td>
+      <td class="salary">{{ job.salary }}</td>
+      <td><a href="{{ job.link }}" target="_blank" rel="noreferrer">open</a></td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="7">No jobs found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if total_pages > 1 %}
+{% set base = "q=" ~ q ~ "&source=" ~ source ~ "&grade=" ~ grade ~ "&tech=" ~ (tech | urlquote) ~ "&company=" ~ (company | urlquote) %}
+<div class="pagination">
+  <span class="page-info">{{ (page - 1) * 50 + 1 }}–{{ [page * 50, total] | min }} of {{ total }}</span>
+  <div class="page-btns">
+    {% if page > 1 %}
+    <button hx-get="/partials/jobs?{{ base }}&page={{ page - 1 }}"
+            hx-target="#jobs-table" hx-swap="innerHTML">← Prev</button>
+    {% endif %}
+    <span class="page-num">{{ page }} / {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <button hx-get="/partials/jobs?{{ base }}&page={{ page + 1 }}"
+            hx-target="#jobs-table" hx-swap="innerHTML">Next →</button>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<div class="pagination">
+  <span class="page-info">{{ total }} vacancies</span>
+</div>
+{% endif %}
