@@ -13,57 +13,88 @@
   .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
   .page-head h2 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
   .crumbs { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+
+  /* KPIs */
   .kpi-grid { display: grid; gap: 10px; margin-bottom: 14px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
   .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
   .kpi .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
   .kpi .value { font-size: 22px; font-weight: 700; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
   .kpi.is-accent .value { color: var(--accent); }
   .kpi .delta { font-size: 11px; color: var(--muted); margin-top: 3px; }
-  /* Filter toolbar */
-  .filter-toolbar {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-    padding: 10px 14px; margin-bottom: 14px;
-    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
-  }
-  .filter-toolbar form { display: contents; }
-  .fg { display: flex; align-items: center; gap: 6px; }
-  .fg .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-right: 2px; }
-  .pill-group { display: flex; gap: 4px; flex-wrap: wrap; }
-  .pill-group label {
-    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
-    font-size: 12px; padding: 4px 10px; border-radius: 999px; cursor: pointer; line-height: 1.4;
-    display: inline-flex; align-items: center; gap: 4px;
-    transition: background .12s, border-color .12s;
-  }
-  .pill-group label:hover { border-color: var(--muted-2); }
-  .pill-group input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
-  .pill-group label:has(input:checked) { background: var(--accent-dim); border-color: var(--accent); color: #cfe3ff; }
-  .cnt-badge { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
-  .ft-sep { width: 1px; height: 20px; background: var(--border); }
-  .ft-spacer { flex: 1; }
-  .q-input { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-size: 13px; min-width: 200px; }
-  .q-input:focus { outline: none; border-color: var(--accent); }
-  .q-input::placeholder { color: var(--muted); }
-  .tech-select { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-size: 12px; max-width: 180px; }
-  .tech-select:focus { outline: none; border-color: var(--accent); }
-  /* Active filters chips */
-  .active-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-  .active-filters:empty { display: none; }
-  .fc { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; background: var(--accent-dim); color: #cfe3ff; border: 1px solid var(--accent); border-radius: 999px; padding: 3px 8px; }
-  /* Jobs panel */
-  .jobs-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .jobs-meta { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 12px; }
-  .jobs-meta b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+  /* Layout */
+  .vac-layout { display: grid; grid-template-columns: 240px 1fr; gap: 14px; align-items: start; }
+
+  /* Facets sidebar */
+  .facets { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; position: sticky; top: 14px; }
+  .facet { border-bottom: 1px solid var(--border); padding: 12px 14px; }
+  .facet:last-child { border-bottom: none; }
+  .facet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .facet-head .ttl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .facet-head .clr { font-size: 11px; color: var(--muted); cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; }
+  .facet-head .clr:hover { color: var(--accent); }
+  .facet-head .clr.hidden { visibility: hidden; }
+
+  /* Checkbox-style radio options */
+  .opt { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; font-size: 12px; user-select: none; }
+  .opt input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+  .opt .box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); background: var(--panel-2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background .12s, border-color .12s; }
+  .opt .box::after { content: ""; width: 6px; height: 6px; border-radius: 1px; background: var(--accent); opacity: 0; transition: opacity .1s; }
+  .opt.on .box { border-color: var(--accent); background: rgba(68,147,248,.10); }
+  .opt.on .box::after { opacity: 1; }
+  .opt .nm { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .opt .cnt { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 11px; }
+  .opt:hover .nm { color: var(--accent); }
+
+  .scroll-list { max-height: 160px; overflow-y: auto; margin-right: -4px; padding-right: 4px; }
+  .scroll-list::-webkit-scrollbar { width: 4px; }
+  .scroll-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .scroll-list::-webkit-scrollbar-track { background: transparent; }
+
+  .fsearch { width: 100%; background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; color: var(--text); font-size: 12px; font-family: inherit; margin-bottom: 6px; box-sizing: border-box; }
+  .fsearch:focus { outline: none; border-color: var(--accent-dim); }
+  .fsearch::placeholder { color: var(--muted); }
+
+  /* Salary histogram + slider */
+  .sal-hist { display: flex; align-items: flex-end; gap: 2px; height: 28px; margin: 4px 0; }
+  .sal-hist .b { flex: 1; min-width: 2px; background: var(--accent-dim); border-radius: 1px; opacity: .35; }
+  .sal-hist .b.in { opacity: 1; background: var(--accent); }
+  .sal-range { position: relative; height: 20px; margin: 2px; }
+  .sal-range .track { position: absolute; top: 9px; left: 0; right: 0; height: 2px; background: var(--border); }
+  .sal-range .fill { position: absolute; top: 9px; height: 2px; background: var(--accent); }
+  .sal-range input[type=range] { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; -webkit-appearance: none; background: transparent; margin: 0; padding: 0; height: 20px; }
+  .sal-range input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 12px; height: 12px; border-radius: 50%; background: var(--text); border: 2px solid var(--accent); cursor: pointer; }
+  .sal-range input[type=range]::-moz-range-thumb { pointer-events: auto; width: 12px; height: 12px; border-radius: 50%; background: var(--text); border: 2px solid var(--accent); cursor: pointer; border: none; }
+  .sal-bounds { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+  /* Main panel */
+  .vac-main { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .toolbar-row { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .search-main { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; color: var(--text); font-size: 13px; flex: 1; min-width: 180px; font-family: inherit; }
+  .search-main:focus { outline: none; border-color: var(--accent); }
+  .search-main::placeholder { color: var(--muted); }
+  .sort-sel { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; color: var(--text); font-size: 12px; font-family: inherit; }
+  .sort-sel:focus { outline: none; border-color: var(--accent); }
+
+  /* Applied filters */
+  .applied { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 14px; border-bottom: 1px solid var(--border); }
+  .applied:empty { display: none; }
+  .filter-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; background: var(--accent-dim); color: #cfe3ff; border: 1px solid var(--accent); border-radius: 999px; padding: 3px 6px 3px 9px; }
+  .filter-chip .x { cursor: pointer; background: rgba(207,227,255,.15); color: #cfe3ff; border-radius: 50%; width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; border: none; font-family: inherit; }
+  .filter-chip .x:hover { background: rgba(207,227,255,.3); }
+  .clear-all-btn { font-size: 11px; color: var(--muted); cursor: pointer; background: none; border: none; padding: 0 2px; font-family: inherit; text-transform: uppercase; letter-spacing: .06em; }
+  .clear-all-btn:hover { color: var(--pink); }
+
   /* Table */
   .jt { width: 100%; border-collapse: collapse; font-size: 13px; }
   .jt thead th { text-align: left; padding: 8px 12px; color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--panel); white-space: nowrap; }
   .jt tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
   .jt tbody tr:last-child td { border-bottom: none; }
   .jt tbody tr:hover td { background: var(--panel-2); }
-  .jt .col-src { width: 90px; }
-  .jt .col-grade { width: 90px; }
-  .jt .col-salary { width: 160px; }
-  .jt .col-when { width: 90px; }
+  .jt .col-src { width: 80px; }
+  .jt .col-grade { width: 80px; }
+  .jt .col-salary { width: 150px; }
+  .jt .col-when { width: 80px; }
   .src-badge { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 4px; background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); text-transform: lowercase; }
   .src-badge.djinni { color: var(--green); border-color: rgba(86,211,100,.4); }
   .src-badge.dou { color: var(--accent); border-color: rgba(68,147,248,.4); }
@@ -79,21 +110,27 @@
   .grade-intern { background: var(--panel-2); color: var(--muted); }
   .job-title-link { color: var(--text); text-decoration: none; font-weight: 500; }
   .job-title-link:hover { color: var(--accent); }
+  .ext-link { color: var(--muted-2); font-size: 11px; text-decoration: none; margin-left: 5px; }
+  .ext-link:hover { color: var(--accent); }
   .company-link { color: var(--muted); text-decoration: none; font-size: 12px; }
   .company-link:hover { color: var(--accent); }
-  .tags { display: flex; flex-wrap: wrap; gap: 3px; max-width: 300px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 3px; max-width: 280px; }
   .tag { display: inline-block; font-size: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; color: var(--text); text-decoration: none; white-space: nowrap; }
   .tag:hover { border-color: var(--accent); color: var(--accent); }
   .tag-more { color: var(--accent); border-color: rgba(68,147,248,.3); background: rgba(68,147,248,.06); }
   .salary { color: var(--text); font-size: 12px; font-variant-numeric: tabular-nums; }
   .salary.none { color: var(--muted-2); }
+  .when { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .empty-row td { text-align: center; padding: 40px; color: var(--muted); }
+
   /* Pagination */
   .pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; flex-wrap: wrap; gap: 8px; }
   .page-btns { display: flex; gap: 4px; }
   .page-btns button { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
   .page-btns button:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
   .page-btns button[disabled] { opacity: .4; cursor: not-allowed; }
-  /* Ingest section */
+
+  /* Ingest */
   .ingest-section { margin-top: 14px; }
   .ingest-toggle { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: inherit; }
   .ingest-toggle:hover { color: var(--text); border-color: var(--muted); }
@@ -103,7 +140,11 @@
   .ingest-form input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: #0d1117; color: var(--text); font-size: 13px; font-family: inherit; }
   .ingest-form button { padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); color: var(--text); font-size: 13px; cursor: pointer; font-family: inherit; }
   .ingest-form button:hover { border-color: var(--accent); color: var(--accent); }
-  .empty-row td { text-align: center; padding: 40px; color: var(--muted); }
+
+  @media (max-width: 960px) {
+    .vac-layout { grid-template-columns: 1fr; }
+    .facets { position: static; }
+  }
 </style>
 {% endblock %}
 {% block content %}
@@ -117,85 +158,364 @@
 
   <div class="kpi-grid">
     <div class="kpi is-accent"><div class="label">Total vacancies</div><div class="value">{{ stats.total }}</div></div>
+    <div class="kpi"><div class="label">New today</div><div class="value">{{ stats.new_today }}</div></div>
+    <div class="kpi"><div class="label">With salary</div><div class="value">{{ stats.with_salary }}</div><div class="delta">{{ ((stats.with_salary / stats.total * 100) | int) if stats.total else 0 }}% disclose</div></div>
     <div class="kpi"><div class="label">With tech stack</div><div class="value">{{ stats.with_tech }}</div><div class="delta">{{ ((stats.with_tech / stats.total * 100) | int) if stats.total else 0 }}% coverage</div></div>
-    <div class="kpi"><div class="label">Graded</div><div class="value">{{ stats.graded }}</div></div>
-    <div class="kpi"><div class="label">With salary</div><div class="value">{{ stats.with_salary }}</div></div>
+    <div class="kpi"><div class="label">Avg stack size</div><div class="value">{{ stats.avg_stack }}</div><div class="delta">techs per vacancy</div></div>
   </div>
 
-  <div class="filter-toolbar">
-    <form
-      id="filter-form"
-      hx-get="/partials/jobs"
-      hx-target="#jobs-table"
-      hx-swap="innerHTML"
-      hx-trigger="submit, change from:.auto-filter">
+  <form id="filter-form"
+        hx-get="/partials/jobs"
+        hx-target="#jobs-table"
+        hx-swap="innerHTML"
+        hx-trigger="submit, change from:.af">
 
-      <div class="fg">
-        <span class="lbl">Source</span>
-        <div class="pill-group">
-          <label><input class="auto-filter" type="radio" name="source" value="" {% if not source %}checked{% endif %}>All</label>
-          {% for src in sources %}
-          <label><input class="auto-filter" type="radio" name="source" value="{{ src }}" {% if src == source %}checked{% endif %}>{{ src }}</label>
+    <div class="vac-layout">
+
+      <!-- Facets sidebar -->
+      <aside class="facets">
+
+        <!-- Source -->
+        <div class="facet">
+          <div class="facet-head">
+            <span class="ttl">Source</span>
+            <button type="button" class="clr hidden" data-clr="source">Clear</button>
+          </div>
+          {% for row in sources %}
+          <label class="opt{% if row.source == source %} on{% endif %}">
+            <input class="af" type="radio" name="source" value="{{ row.source }}" {% if row.source == source %}checked{% endif %}>
+            <div class="box"></div>
+            <span class="nm">{{ row.source }}</span>
+            <span class="cnt">{{ row.cnt }}</span>
+          </label>
           {% endfor %}
         </div>
-      </div>
 
-      <div class="ft-sep"></div>
-
-      <div class="fg">
-        <span class="lbl">Grade</span>
-        <div class="pill-group">
-          <label><input class="auto-filter" type="radio" name="grade" value="" {% if not grade %}checked{% endif %}>All</label>
+        <!-- Grade -->
+        <div class="facet">
+          <div class="facet-head">
+            <span class="ttl">Grade</span>
+            <button type="button" class="clr hidden" data-clr="grade">Clear</button>
+          </div>
           {% for g in grades %}
-          <label><input class="auto-filter" type="radio" name="grade" value="{{ g }}" {% if g == grade %}checked{% endif %}>{{ g }}</label>
+          {% set gcnt = grade_counts.get(g, 0) %}
+          {% if gcnt > 0 %}
+          <label class="opt{% if g == grade %} on{% endif %}">
+            <input class="af" type="radio" name="grade" value="{{ g }}" {% if g == grade %}checked{% endif %}>
+            <div class="box"></div>
+            <span class="nm">{{ g }}</span>
+            <span class="cnt">{{ gcnt }}</span>
+          </label>
+          {% endif %}
           {% endfor %}
         </div>
+
+        <!-- Salary -->
+        <div class="facet">
+          <div class="facet-head">
+            <span class="ttl">Salary ($)</span>
+            <button type="button" class="clr hidden" data-clr="salary">Clear</button>
+          </div>
+          <div class="sal-hist" id="sal-hist"></div>
+          <div class="sal-range">
+            <div class="track"></div>
+            <div class="fill" id="sal-fill"></div>
+            <input id="rng-lo" type="range" min="0" max="15000" step="200" value="{{ sal_min or 0 }}">
+            <input id="rng-hi" type="range" min="0" max="15000" step="200" value="{{ sal_max or 15000 }}">
+          </div>
+          <div class="sal-bounds">
+            <span>$<span id="sal-lo-lbl">{{ sal_min or 0 }}</span></span>
+            <span>$<span id="sal-hi-lbl">{{ (sal_max or 15000) | int }}</span>+</span>
+          </div>
+          <input type="hidden" name="sal_min" id="h-sal-min" value="{{ sal_min or 0 }}">
+          <input type="hidden" name="sal_max" id="h-sal-max" value="{{ sal_max or 0 }}">
+        </div>
+
+        <!-- Technology -->
+        <div class="facet">
+          <div class="facet-head">
+            <span class="ttl">Technology</span>
+            <button type="button" class="clr hidden" data-clr="tech">Clear</button>
+          </div>
+          <input class="fsearch" id="tech-q" type="text" placeholder="Search techs…" autocomplete="off">
+          <div class="scroll-list" id="tech-list">
+            {% for row in techs %}
+            <label class="opt tech-opt{% if row.name == tech %} on{% endif %}" data-nm="{{ row.name | lower }}">
+              <input class="af" type="radio" name="tech" value="{{ row.name }}" {% if row.name == tech %}checked{% endif %}>
+              <div class="box"></div>
+              <span class="nm">{{ row.name }}</span>
+              <span class="cnt">{{ row.cnt }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Company -->
+        <div class="facet">
+          <div class="facet-head">
+            <span class="ttl">Company</span>
+            <button type="button" class="clr hidden" data-clr="company">Clear</button>
+          </div>
+          <input class="fsearch" id="co-q" type="text" placeholder="Search companies…" autocomplete="off" value="{{ company }}">
+          <input type="hidden" name="company" id="h-company" value="{{ company }}">
+          <div class="scroll-list" id="co-list">
+            {% for row in top_companies %}
+            <div class="opt co-opt{% if row.company == company %} on{% endif %}" data-val="{{ row.company }}" data-nm="{{ row.company | lower }}">
+              <div class="box"></div>
+              <span class="nm">{{ row.company }}</span>
+              <span class="cnt">{{ row.cnt }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Main panel -->
+      <div class="vac-main">
+        <div class="toolbar-row">
+          <input class="search-main af" type="search" name="q" id="q-inp" placeholder="Search title, company, keyword…" value="{{ q }}">
+          <select class="sort-sel af" name="sort">
+            <option value="posted-desc" {% if sort == 'posted-desc' %}selected{% endif %}>Newest first</option>
+            <option value="posted-asc"  {% if sort == 'posted-asc'  %}selected{% endif %}>Oldest first</option>
+            <option value="salary-desc" {% if sort == 'salary-desc' %}selected{% endif %}>Salary: high → low</option>
+            <option value="salary-asc"  {% if sort == 'salary-asc'  %}selected{% endif %}>Salary: low → high</option>
+            <option value="title-asc"   {% if sort == 'title-asc'   %}selected{% endif %}>Title A → Z</option>
+            <option value="company-asc" {% if sort == 'company-asc' %}selected{% endif %}>Company A → Z</option>
+          </select>
+        </div>
+
+        <div class="applied" id="applied"></div>
+
+        <div id="jobs-table">
+          {% include "partials/jobs_table.html" %}
+        </div>
       </div>
-
-      <div class="ft-sep"></div>
-
-      <div class="fg">
-        <span class="lbl">Tech</span>
-        <select name="tech" class="auto-filter tech-select">
-          <option value="">All technologies</option>
-          {% for t in techs %}
-          <option value="{{ t }}" {% if t == tech %}selected{% endif %}>{{ t }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="ft-spacer"></div>
-
-      {% if company %}
-      <span class="fc">{{ company }} <a href="/" style="color:#cfe3ff;text-decoration:none;margin-left:4px">×</a></span>
-      <input type="hidden" name="company" value="{{ company }}">
-      {% endif %}
-
-      <input class="q-input auto-filter" type="search" name="q" placeholder="Search title / company…" value="{{ q }}">
-      <button type="submit" style="display:none"></button>
-    </form>
-  </div>
-
-  <div class="jobs-panel">
-    <div id="jobs-table">
-      {% include "partials/jobs_table.html" %}
     </div>
-  </div>
+
+    <button type="submit" style="display:none"></button>
+  </form>
 
   <div class="ingest-section">
-    <button class="ingest-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙ Run ingest</button>
+    <button class="ingest-toggle" onclick="this.nextElementSibling.classList.toggle('open')">&#9881; Run ingest</button>
     <div class="ingest-box">
-      <form
-        class="ingest-form"
-        hx-post="/ingest"
-        hx-target="#ingest-result"
-        hx-swap="innerHTML">
-        <label for="keywords" style="color:var(--muted);font-size:12px">Keywords:</label>
-        <input id="keywords" name="keywords" type="text" value="DevOps" style="width:220px">
+      <form class="ingest-form" hx-post="/ingest" hx-target="#ingest-result" hx-swap="innerHTML">
+        <label for="kw" style="color:var(--muted);font-size:12px">Keywords:</label>
+        <input id="kw" name="keywords" type="text" value="DevOps" style="width:220px">
         <button type="submit">Run</button>
       </form>
       <div id="ingest-result" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
     </div>
   </div>
 </div>
+
+<script>
+const _SAL_HIST = {{ sal_hist_json | safe }};
+const SAL_MAX = _SAL_HIST.max_sal;
+
+function renderSalHist(lo, hi) {
+  const h = _SAL_HIST.hist, n = h.length, mx = Math.max(...h) || 1;
+  document.getElementById('sal-hist').innerHTML = h.map((c, i) => {
+    const blo = (i / n) * SAL_MAX, bhi = ((i + 1) / n) * SAL_MAX;
+    const inp = blo >= lo - 1 && bhi <= hi + 1;
+    return `<div class="b${inp ? ' in' : ''}" style="height:${Math.max(4, (c/mx)*100)}%"></div>`;
+  }).join('');
+}
+
+function updateSalary(submit) {
+  let lo = +document.getElementById('rng-lo').value;
+  let hi = +document.getElementById('rng-hi').value;
+  if (lo > hi - 200) {
+    if (event && event.target.id === 'rng-lo') lo = hi - 200;
+    else hi = lo + 200;
+    document.getElementById('rng-lo').value = lo;
+    document.getElementById('rng-hi').value = hi;
+  }
+  document.getElementById('sal-lo-lbl').textContent = lo.toLocaleString();
+  document.getElementById('sal-hi-lbl').textContent = hi.toLocaleString();
+  document.getElementById('sal-fill').style.left  = (lo / SAL_MAX * 100) + '%';
+  document.getElementById('sal-fill').style.width = ((hi - lo) / SAL_MAX * 100) + '%';
+  document.getElementById('h-sal-min').value = lo > 0 ? lo : 0;
+  document.getElementById('h-sal-max').value = hi < SAL_MAX ? hi : 0;
+  renderSalHist(lo, hi);
+  setClr('salary', lo > 0 || hi < SAL_MAX);
+  renderApplied();
+  if (submit) document.getElementById('filter-form').requestSubmit();
+}
+
+document.getElementById('rng-lo').addEventListener('input', () => updateSalary(false));
+document.getElementById('rng-hi').addEventListener('input', () => updateSalary(false));
+document.getElementById('rng-lo').addEventListener('change', () => updateSalary(true));
+document.getElementById('rng-hi').addEventListener('change', () => updateSalary(true));
+
+// Tech search
+document.getElementById('tech-q').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.tech-opt').forEach(el => {
+    el.style.display = !q || el.dataset.nm.includes(q) ? '' : 'none';
+  });
+});
+
+// Company list
+document.querySelectorAll('.co-opt').forEach(el => {
+  el.addEventListener('click', () => {
+    const val = el.dataset.val;
+    const cur = document.getElementById('h-company').value;
+    const nv = cur === val ? '' : val;
+    document.getElementById('h-company').value = nv;
+    document.getElementById('co-q').value = nv;
+    document.querySelectorAll('.co-opt').forEach(e => e.classList.remove('on'));
+    if (nv) el.classList.add('on');
+    setClr('company', !!nv);
+    renderApplied();
+    document.getElementById('filter-form').requestSubmit();
+  });
+});
+
+document.getElementById('co-q').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.co-opt').forEach(el => {
+    el.style.display = !q || el.dataset.nm.includes(q) ? '' : 'none';
+  });
+  if (!this.value && document.getElementById('h-company').value) {
+    document.getElementById('h-company').value = '';
+    setClr('company', false);
+    renderApplied();
+    document.getElementById('filter-form').requestSubmit();
+  }
+});
+
+// Toggle-off radios (click selected radio to deselect)
+document.querySelectorAll('.opt input[type=radio]').forEach(inp => {
+  inp.addEventListener('mousedown', function() { this._was = this.checked; });
+  inp.addEventListener('click', function() {
+    if (this._was) {
+      this.checked = false;
+      this.closest('.opt').classList.remove('on');
+      setClr(this.name, false);
+      renderApplied();
+      document.getElementById('filter-form').requestSubmit();
+    } else {
+      document.querySelectorAll(`input[name="${this.name}"]`).forEach(x => {
+        x.closest('.opt').classList.toggle('on', x === this);
+      });
+    }
+  });
+});
+
+// Radio change → update .on class and clear button
+document.querySelectorAll('.af').forEach(el => {
+  if (el.type === 'radio') {
+    el.addEventListener('change', function() {
+      setClr(this.name, !!this.value);
+      renderApplied();
+    });
+  }
+});
+
+// Clear buttons
+function setClr(facet, active) {
+  const btn = document.querySelector(`[data-clr="${facet}"]`);
+  if (btn) btn.classList.toggle('hidden', !active);
+}
+
+document.querySelectorAll('[data-clr]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const f = btn.dataset.clr;
+    if (f === 'salary') {
+      document.getElementById('rng-lo').value = 0;
+      document.getElementById('rng-hi').value = SAL_MAX;
+      updateSalary(true);
+      return;
+    }
+    if (f === 'company') {
+      document.getElementById('h-company').value = '';
+      document.getElementById('co-q').value = '';
+      document.querySelectorAll('.co-opt').forEach(e => e.classList.remove('on'));
+    } else {
+      document.querySelectorAll(`input[name="${f}"]`).forEach(i => {
+        i.checked = false;
+        i.closest('.opt').classList.remove('on');
+      });
+    }
+    setClr(f, false);
+    renderApplied();
+    document.getElementById('filter-form').requestSubmit();
+  });
+});
+
+// Applied filter chips
+function renderApplied() {
+  const c = document.getElementById('applied');
+  const chips = [];
+
+  const src = document.querySelector('input[name="source"]:checked');
+  if (src?.value) chips.push({ label: 'Source: ' + src.value, field: 'source' });
+
+  const gr = document.querySelector('input[name="grade"]:checked');
+  if (gr?.value) chips.push({ label: 'Grade: ' + gr.value, field: 'grade' });
+
+  const tc = document.querySelector('input[name="tech"]:checked');
+  if (tc?.value) chips.push({ label: 'Tech: ' + tc.value, field: 'tech' });
+
+  const co = document.getElementById('h-company').value;
+  if (co) chips.push({ label: 'Company: ' + co, field: 'company' });
+
+  const lo = +document.getElementById('rng-lo').value;
+  const hi = +document.getElementById('rng-hi').value;
+  if (lo > 0 || hi < SAL_MAX)
+    chips.push({ label: `Salary: $${lo.toLocaleString()}–$${hi.toLocaleString()}`, field: 'salary' });
+
+  const q = document.getElementById('q-inp').value;
+  if (q) chips.push({ label: 'Search: ' + q, field: 'q' });
+
+  if (!chips.length) { c.innerHTML = ''; return; }
+
+  c.innerHTML = chips.map(ch =>
+    `<span class="filter-chip">${ch.label}<button class="x" type="button" data-f="${ch.field}">&times;</button></span>`
+  ).join('') + `<button class="clear-all-btn" type="button" id="ca-btn">Clear all</button>`;
+
+  c.querySelectorAll('.x').forEach(x => {
+    x.addEventListener('click', () => {
+      const f = x.dataset.f;
+      if (f === 'q') {
+        document.getElementById('q-inp').value = '';
+        renderApplied();
+        document.getElementById('filter-form').requestSubmit();
+      } else {
+        document.querySelector(`[data-clr="${f}"]`)?.click();
+      }
+    });
+  });
+  document.getElementById('ca-btn').addEventListener('click', clearAll);
+}
+
+function clearAll() {
+  ['source','grade','tech'].forEach(f => {
+    document.querySelectorAll(`input[name="${f}"]`).forEach(i => {
+      i.checked = false;
+      i.closest('.opt')?.classList.remove('on');
+    });
+    setClr(f, false);
+  });
+  document.getElementById('h-company').value = '';
+  document.getElementById('co-q').value = '';
+  document.querySelectorAll('.co-opt').forEach(e => e.classList.remove('on'));
+  setClr('company', false);
+  document.getElementById('q-inp').value = '';
+  document.getElementById('rng-lo').value = 0;
+  document.getElementById('rng-hi').value = SAL_MAX;
+  updateSalary(false);
+  renderApplied();
+  document.getElementById('filter-form').requestSubmit();
+}
+
+// Init
+document.querySelectorAll('input[name="source"]:checked, input[name="grade"]:checked, input[name="tech"]:checked').forEach(i => {
+  if (i.value) setClr(i.name, true);
+});
+if (document.getElementById('h-company').value) setClr('company', true);
+updateSalary(false);
+renderApplied();
+</script>
 {% endblock %}

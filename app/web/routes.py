@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
+from datetime import datetime
+from datetime import timezone as _tz
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -19,11 +21,46 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 templates.env.filters["urlquote"] = lambda s: quote(str(s), safe="")
 
+
+def _reltime(dt) -> str:
+    if dt is None:
+        return "—"
+    now = datetime.now(_tz.utc)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=_tz.utc)
+    d = (now - dt).days
+    if d == 0:
+        h = (now - dt).seconds // 3600
+        return f"{h}h ago" if h else "just now"
+    if d == 1:
+        return "1d ago"
+    if d < 7:
+        return f"{d}d ago"
+    if d < 30:
+        return f"{d // 7}w ago"
+    return f"{d // 30}mo ago"
+
+
+templates.env.filters["reltime"] = _reltime
+
 _GRADES = ["Junior", "Middle", "Senior", "Lead", "Staff", "Principal", "Intern"]
 _PAGE_SIZE = 50
 
+_SORT_MAP = {
+    "posted-desc": (JobRecord.created_at.desc(), JobRecord.id.desc()),
+    "posted-asc":  (JobRecord.created_at.asc(),  JobRecord.id.asc()),
+    "salary-desc": (JobRecord.salary_min.desc(),),
+    "salary-asc":  (JobRecord.salary_min.asc(),),
+    "title-asc":   (func.lower(JobRecord.title).asc(),),
+    "company-asc": (func.lower(JobRecord.company).asc(),),
+}
 
-def _apply_filters(stmt: Select, keyword, source, tech, grade, company) -> Select:
+
+def _apply_filters(
+    stmt: Select,
+    keyword, source, tech, grade, company,
+    sal_min=None, sal_max=None,
+) -> Select:
     if keyword:
         like = f"%{keyword}%"
         stmt = stmt.where(JobRecord.title.ilike(like) | JobRecord.company.ilike(like))
@@ -41,18 +78,30 @@ def _apply_filters(stmt: Select, keyword, source, tech, grade, company) -> Selec
             .scalar_subquery()
         )
         stmt = stmt.where(JobRecord.id.in_(tech_subq))
+    if sal_min:
+        stmt = stmt.where(JobRecord.salary_min >= sal_min)
+    if sal_max:
+        stmt = stmt.where(JobRecord.salary_min <= sal_max)
     return stmt
 
 
-def _query_jobs(keyword=None, source=None, tech=None, grade=None, company=None, page=1) -> Select:
-    stmt = select(JobRecord).order_by(JobRecord.created_at.desc(), JobRecord.id.desc())
-    stmt = _apply_filters(stmt, keyword, source, tech, grade, company)
+def _query_jobs(
+    keyword=None, source=None, tech=None, grade=None, company=None,
+    sal_min=None, sal_max=None, sort="posted-desc", page=1,
+) -> Select:
+    order = _SORT_MAP.get(sort, _SORT_MAP["posted-desc"])
+    stmt = select(JobRecord).order_by(*order)
+    stmt = _apply_filters(stmt, keyword, source, tech, grade, company, sal_min, sal_max)
     return stmt.offset((page - 1) * _PAGE_SIZE).limit(_PAGE_SIZE)
 
 
-def _count_jobs(db: Session, keyword=None, source=None, tech=None, grade=None, company=None) -> int:
+def _count_jobs(
+    db: Session,
+    keyword=None, source=None, tech=None, grade=None, company=None,
+    sal_min=None, sal_max=None,
+) -> int:
     stmt = select(func.count(JobRecord.id))
-    stmt = _apply_filters(stmt, keyword, source, tech, grade, company)
+    stmt = _apply_filters(stmt, keyword, source, tech, grade, company, sal_min, sal_max)
     return db.execute(stmt).scalar_one()
 
 
@@ -73,15 +122,36 @@ def _load_tech_map(db: Session, jobs: list) -> dict[int, list[str]]:
 
 def _common_context(db: Session) -> dict:
     sources = db.execute(
-        select(JobRecord.source).distinct().order_by(JobRecord.source)
-    ).scalars().all()
+        select(JobRecord.source, func.count(JobRecord.id).label("cnt"))
+        .group_by(JobRecord.source)
+        .order_by(func.count(JobRecord.id).desc())
+    ).fetchall()
     techs = db.execute(
-        select(Technology.name)
+        select(Technology.name, func.count(VacancyTechnology.vacancy_id).label("cnt"))
         .join(VacancyTechnology, VacancyTechnology.tech_id == Technology.id)
         .group_by(Technology.name)
-        .order_by(Technology.name)
-    ).scalars().all()
-    return {"sources": sources, "techs": techs, "grades": _GRADES}
+        .order_by(func.count(VacancyTechnology.vacancy_id).desc())
+        .limit(60)
+    ).fetchall()
+    grade_counts = dict(db.execute(
+        select(JobRecord.grade, func.count(JobRecord.id))
+        .where(JobRecord.grade.isnot(None))
+        .group_by(JobRecord.grade)
+        .order_by(func.count(JobRecord.id).desc())
+    ).fetchall())
+    top_companies = db.execute(
+        select(JobRecord.company, func.count(JobRecord.id).label("cnt"))
+        .group_by(JobRecord.company)
+        .order_by(func.count(JobRecord.id).desc())
+        .limit(40)
+    ).fetchall()
+    return {
+        "sources": sources,
+        "techs": techs,
+        "grades": _GRADES,
+        "grade_counts": grade_counts,
+        "top_companies": top_companies,
+    }
 
 
 def _pagination_ctx(total: int, page: int, **filters) -> dict:
@@ -102,12 +172,19 @@ def index(
     tech: str | None = None,
     grade: str | None = None,
     company: str | None = None,
+    sal_min: int | None = None,
+    sal_max: int | None = None,
+    sort: str = "posted-desc",
     page: int = 1,
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    from app.services.analytics import summary_stats
-    jobs = db.execute(_query_jobs(q, source, tech, grade, company, page)).scalars().all()
-    total = _count_jobs(db, q, source, tech, grade, company)
+    import json as _json
+    from app.services.analytics import summary_stats, salary_histogram
+    jobs = db.execute(
+        _query_jobs(q, source, tech, grade, company, sal_min, sal_max, sort, page)
+    ).scalars().all()
+    total = _count_jobs(db, q, source, tech, grade, company, sal_min, sal_max)
+    sal_hist = salary_histogram(db)
     return templates.TemplateResponse(
         request,
         "index.html",
@@ -116,8 +193,14 @@ def index(
             "jobs": jobs,
             "tech_map": _load_tech_map(db, jobs),
             "stats": summary_stats(db),
-            **_pagination_ctx(total, page, q=q or "", source=source or "",
-                              tech=tech or "", grade=grade or "", company=company or ""),
+            "sal_hist_json": _json.dumps(sal_hist),
+            "sort": sort,
+            **_pagination_ctx(
+                total, page,
+                q=q or "", source=source or "", tech=tech or "",
+                grade=grade or "", company=company or "",
+                sal_min=sal_min or 0, sal_max=sal_max or 0, sort=sort,
+            ),
         },
     )
 
@@ -130,19 +213,28 @@ def partial_jobs(
     tech: str | None = None,
     grade: str | None = None,
     company: str | None = None,
+    sal_min: int | None = None,
+    sal_max: int | None = None,
+    sort: str = "posted-desc",
     page: int = 1,
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    jobs = db.execute(_query_jobs(q, source, tech, grade, company, page)).scalars().all()
-    total = _count_jobs(db, q, source, tech, grade, company)
+    jobs = db.execute(
+        _query_jobs(q, source, tech, grade, company, sal_min, sal_max, sort, page)
+    ).scalars().all()
+    total = _count_jobs(db, q, source, tech, grade, company, sal_min, sal_max)
     return templates.TemplateResponse(
         request,
         "partials/jobs_table.html",
         {
             "jobs": jobs,
             "tech_map": _load_tech_map(db, jobs),
-            **_pagination_ctx(total, page, q=q or "", source=source or "",
-                              tech=tech or "", grade=grade or "", company=company or ""),
+            **_pagination_ctx(
+                total, page,
+                q=q or "", source=source or "", tech=tech or "",
+                grade=grade or "", company=company or "",
+                sal_min=sal_min or 0, sal_max=sal_max or 0, sort=sort,
+            ),
         },
     )
 

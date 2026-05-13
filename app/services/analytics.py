@@ -53,6 +53,9 @@ def _normalize_role(title: str) -> str:
 
 
 def summary_stats(db: Session) -> dict:
+    from datetime import datetime, timezone as _tz
+    today_start = datetime.now(_tz.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+
     total = db.execute(select(func.count(JobRecord.id))).scalar_one()
     with_tech = db.execute(
         select(func.count(VacancyTechnology.vacancy_id.distinct()))
@@ -63,11 +66,20 @@ def summary_stats(db: Session) -> dict:
     graded = db.execute(
         select(func.count(JobRecord.id)).where(JobRecord.grade.isnot(None))
     ).scalar_one()
+    new_today = db.execute(
+        select(func.count(JobRecord.id)).where(JobRecord.created_at >= today_start)
+    ).scalar_one()
+    total_assignments = db.execute(
+        select(func.count(VacancyTechnology.vacancy_id))
+    ).scalar_one()
+    avg_stack = round(total_assignments / with_tech, 1) if with_tech else 0
     return {
         "total": total,
         "with_tech": with_tech,
         "with_salary": with_salary,
         "graded": graded,
+        "new_today": new_today,
+        "avg_stack": avg_stack,
     }
 
 
