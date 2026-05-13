@@ -1,20 +1,24 @@
-<table>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);color:var(--muted);font-size:12px;">
+  <span>Showing <b style="color:var(--text);font-variant-numeric:tabular-nums">{{ (page-1)*50+1 }}–{{ [page*50, total] | min }}</b> of <b style="color:var(--text);font-variant-numeric:tabular-nums">{{ total }}</b> vacancies</span>
+  <span>Page {{ page }}/{{ total_pages }}</span>
+</div>
+<table class="jt">
   <thead>
     <tr>
-      <th>Source</th>
+      <th class="col-src">Source</th>
       <th>Title</th>
       <th>Company</th>
-      <th>Grade</th>
+      <th class="col-grade">Grade</th>
       <th>Technologies</th>
-      <th>Salary</th>
-      <th>Link</th>
+      <th class="col-salary">Salary</th>
+      <th class="col-when">Link</th>
     </tr>
   </thead>
   <tbody>
     {% for job in jobs %}
     {% set job_techs = tech_map.get(job.id, []) %}
     <tr>
-      <td>{{ job.source }}</td>
+      <td><span class="src-badge {{ job.source }}">{{ job.source }}</span></td>
       <td><a href="/jobs/{{ job.id }}" class="job-title-link">{{ job.title }}</a></td>
       <td><a href="/?company={{ job.company | urlquote }}" class="company-link">{{ job.company }}</a></td>
       <td>
@@ -28,17 +32,23 @@
           <a href="/?tech={{ t | urlquote }}" class="tag">{{ t }}</a>
           {% endfor %}
           {% if job_techs | length > 5 %}
-          <a href="/jobs/{{ job.id }}" class="tag-more">+{{ job_techs | length - 5 }} more</a>
+          <a href="/jobs/{{ job.id }}" class="tag tag-more">+{{ job_techs | length - 5 }}</a>
           {% endif %}
         </div>
       </td>
-      <td class="salary">{{ job.salary }}</td>
-      <td><a href="{{ job.link }}" target="_blank" rel="noreferrer">open</a></td>
+      <td>
+        {% if job.salary_min %}
+        <span class="salary">${{ "{:,}".format(job.salary_min) }}{% if job.salary_max %} – ${{ "{:,}".format(job.salary_max) }}{% endif %}</span>
+        {% elif job.salary %}
+        <span class="salary">{{ job.salary }}</span>
+        {% else %}
+        <span class="salary none">—</span>
+        {% endif %}
+      </td>
+      <td><a href="{{ job.link }}" target="_blank" rel="noreferrer" style="color:var(--accent);font-size:12px">open ↗</a></td>
     </tr>
     {% else %}
-    <tr>
-      <td colspan="7">No jobs found.</td>
-    </tr>
+    <tr class="empty-row"><td colspan="7">No vacancies found.</td></tr>
     {% endfor %}
   </tbody>
 </table>
@@ -52,7 +62,7 @@
     <button hx-get="/partials/jobs?{{ base }}&page={{ page - 1 }}"
             hx-target="#jobs-table" hx-swap="innerHTML">← Prev</button>
     {% endif %}
-    <span class="page-num">{{ page }} / {{ total_pages }}</span>
+    <span style="padding:0 8px;color:var(--muted);font-size:12px">{{ page }} / {{ total_pages }}</span>
     {% if page < total_pages %}
     <button hx-get="/partials/jobs?{{ base }}&page={{ page + 1 }}"
             hx-target="#jobs-table" hx-swap="innerHTML">Next →</button>
@@ -61,6 +71,6 @@
 </div>
 {% else %}
 <div class="pagination">
-  <span class="page-info">{{ total }} vacancies</span>
+  <span class="page-info" style="color:var(--muted);font-size:12px">{{ total }} vacancies</span>
 </div>
 {% endif %}

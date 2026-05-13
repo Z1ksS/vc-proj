@@ -105,6 +105,7 @@ def index(
     page: int = 1,
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
+    from app.services.analytics import summary_stats
     jobs = db.execute(_query_jobs(q, source, tech, grade, company, page)).scalars().all()
     total = _count_jobs(db, q, source, tech, grade, company)
     return templates.TemplateResponse(
@@ -114,6 +115,7 @@ def index(
             **_common_context(db),
             "jobs": jobs,
             "tech_map": _load_tech_map(db, jobs),
+            "stats": summary_stats(db),
             **_pagination_ctx(total, page, q=q or "", source=source or "",
                               tech=tech or "", grade=grade or "", company=company or ""),
         },
@@ -164,13 +166,57 @@ def companies_page(
     request: Request,
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
+    import json as _json
+    from collections import defaultdict as _dd
+
     rows = db.execute(
         select(JobRecord.company, func.count(JobRecord.id).label("cnt"))
         .group_by(JobRecord.company)
         .order_by(func.count(JobRecord.id).desc())
-        .limit(150)
+        .limit(120)
     ).fetchall()
-    return templates.TemplateResponse(request, "companies.html", {"companies": rows})
+    names = [r.company for r in rows]
+
+    grade_rows = db.execute(
+        select(JobRecord.company, JobRecord.grade, func.count(JobRecord.id))
+        .where(JobRecord.company.in_(names))
+        .where(JobRecord.grade.isnot(None))
+        .group_by(JobRecord.company, JobRecord.grade)
+    ).fetchall()
+    grade_mix: dict = _dd(dict)
+    for company, grade, cnt in grade_rows:
+        grade_mix[company][grade] = cnt
+
+    tech_rows = db.execute(
+        select(JobRecord.company, Technology.name, func.count(VacancyTechnology.vacancy_id).label("cnt"))
+        .join(VacancyTechnology, VacancyTechnology.vacancy_id == JobRecord.id)
+        .join(Technology, Technology.id == VacancyTechnology.tech_id)
+        .where(JobRecord.company.in_(names))
+        .group_by(JobRecord.company, Technology.name)
+    ).fetchall()
+    company_tech_raw: dict = _dd(list)
+    for company, tech_name, cnt in tech_rows:
+        company_tech_raw[company].append((tech_name, cnt))
+    company_techs = {
+        c: [t for t, _ in sorted(v, key=lambda x: -x[1])[:6]]
+        for c, v in company_tech_raw.items()
+    }
+
+    companies_data = [
+        {
+            "name": r.company,
+            "cnt": r.cnt,
+            "rank": i + 1,
+            "techs": company_techs.get(r.company, []),
+            "grades": grade_mix.get(r.company, {}),
+            "url": f"/companies/{quote(r.company, safe='')}",
+        }
+        for i, r in enumerate(rows)
+    ]
+    return templates.TemplateResponse(request, "companies.html", {
+        "companies_json": _json.dumps(companies_data, ensure_ascii=False),
+        "total": len(rows),
+    })
 
 
 @router.get("/companies/{company_name:path}", response_class=HTMLResponse)
@@ -229,17 +275,26 @@ def analytics_page(
     request: Request,
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
+    import json as _json
     from app.services.analytics import (
-        grade_distribution,
-        source_distribution,
-        summary_stats,
-        tech_cooccurrence,
+        grade_distribution, source_distribution, summary_stats, tech_cooccurrence,
+        source_grade_mix, salary_histogram, salary_by_grade, salary_by_role, top_tech_counts,
     )
+    stats = summary_stats(db)
+    data = {
+        'stats': stats,
+        'source_dist': dict(source_distribution(db)),
+        'grade_dist': dict(grade_distribution(db)),
+        'src_grade': source_grade_mix(db),
+        'cooccurrence': [[t1, t2, cnt] for t1, t2, cnt in tech_cooccurrence(db, limit=60)],
+        'tech_counts': top_tech_counts(db, limit=20),
+        'salary_hist': salary_histogram(db),
+        'salary_by_grade': salary_by_grade(db),
+        'salary_by_role': salary_by_role(db),
+    }
     return templates.TemplateResponse(request, "analytics.html", {
-        "stats": summary_stats(db),
-        "grade_dist": grade_distribution(db),
-        "source_dist": source_distribution(db),
-        "cooccurrence": tech_cooccurrence(db),
+        "data_json": _json.dumps(data, ensure_ascii=False),
+        "stats": stats,
     })
 
 

@@ -1,89 +1,483 @@
 {% extends "base.html" %}
+{% block title %}Analytics &middot; Job VC{% endblock %}
+{% block head %}
+<style>
+  :root {
+    --panel-2: #1c2128; --muted-2: #484f58;
+    --accent-dim: #1c4d8a; --border-soft: #21262d;
+    --green: #56d364; --purple: #bc8cff; --amber: #e3b341;
+    --pink: #ff7b72; --teal: #39c5cf;
+  }
+  body { background: var(--bg); }
+  .an-wrap { margin-top: 18px; }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .page-head h2 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
+  .crumbs { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .ts { color: var(--muted); font-size: 12px; }
+  .ts .dot { display: inline-block; width: 6px; height: 6px; background: var(--green); border-radius: 50%; margin-right: 6px; vertical-align: middle; box-shadow: 0 0 0 3px rgba(86,211,100,.15); }
+  .kpi-grid { display: grid; gap: 10px; margin-bottom: 14px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .kpi .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .kpi .value { font-size: 26px; font-weight: 700; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi .delta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .kpi.is-accent .value { color: var(--accent); }
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 0; }
+  .tab { border: none; background: transparent; cursor: pointer; color: var(--muted); font-size: 14px; font-weight: 500; padding: 10px 16px; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: inherit; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .view { display: none; animation: fadein .2s ease; }
+  .view.active { display: block; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+  .an-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-top: 14px; }
+  .panel-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .panel-head h3 { margin: 0; font-size: 15px; }
+  .panel-head .sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .panel-head .meta { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .grid-2to1 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-top: 14px; }
+  /* Source donut */
+  .donut-wrap { display: flex; align-items: center; gap: 20px; }
+  .donut { width: 160px; height: 160px; flex-shrink: 0; }
+  .legend-list { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .legend-row { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 10px; align-items: center; font-size: 13px; padding: 4px 6px; border-radius: 5px; cursor: default; }
+  .legend-row:hover { background: var(--panel-2); }
+  .legend-row .sw { width: 10px; height: 10px; border-radius: 2px; }
+  .legend-row .nm { color: var(--text); }
+  .legend-row .pct { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; }
+  .legend-row .cnt { color: var(--text); font-weight: 600; font-size: 12px; font-variant-numeric: tabular-nums; min-width: 50px; text-align: right; }
+  /* Grade pyramid */
+  .pyramid { display: flex; flex-direction: column; gap: 8px; }
+  .pyr-row { display: grid; grid-template-columns: 80px 1fr 70px; align-items: center; gap: 10px; }
+  .pyr-row .lbl { display: flex; align-items: center; }
+  .grade-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+  .gb-junior { background: #0f2c14; color: #56d364; }
+  .gb-middle { background: #0c2040; color: #4493f8; }
+  .gb-senior { background: #271040; color: #bc8cff; }
+  .gb-lead   { background: #2e1f00; color: #e3b341; }
+  .gb-staff  { background: #1a1e0f; color: #9ecf64; }
+  .gb-other  { background: var(--panel-2); color: var(--muted); }
+  .pyr-track { height: 22px; background: var(--border-soft); border-radius: 4px; overflow: hidden; position: relative; }
+  .pyr-track .fill { height: 100%; border-radius: 4px; }
+  .pyr-track .cnt-in { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text); font-variant-numeric: tabular-nums; }
+  .pyr-row .pct { font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  /* Stacked bars */
+  .stack-row { display: grid; grid-template-columns: 110px 1fr 100px; gap: 10px; align-items: center; padding: 6px 0; }
+  .src-name { font-size: 12px; color: var(--text); }
+  .src-badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 3px; background: var(--panel-2); border: 1px solid var(--border); }
+  .stack-bar { height: 18px; border-radius: 3px; overflow: hidden; display: flex; background: var(--border-soft); }
+  .stack-bar > div { height: 100%; }
+  .stack-tot { font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  /* Salary histogram */
+  .sal-hist-wrap { display: flex; align-items: flex-end; gap: 2px; height: 140px; padding-bottom: 20px; border-bottom: 1px solid var(--border); position: relative; }
+  .sal-hist-wrap .b { flex: 1; background: var(--accent-dim); border-radius: 2px 2px 0 0; cursor: pointer; }
+  .sal-hist-wrap .b:hover { background: var(--accent); }
+  .sal-axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .small-hist { background: var(--panel-2); border: 1px solid var(--border-soft); border-radius: 8px; padding: 12px 14px; }
+  .small-hist .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .small-hist .head .grade { font-size: 12px; font-weight: 600; }
+  .small-hist .head .med { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .small-hist .bars { display: flex; align-items: flex-end; gap: 1px; height: 56px; }
+  .small-hist .bars .bb { flex: 1; min-width: 1px; border-radius: 1px 1px 0 0; }
+  .small-hist .axis { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted-2); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .small-hist .stats { display: flex; gap: 14px; font-size: 11px; color: var(--muted); margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border-soft); }
+  .small-hist .stats b { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 600; }
+  /* Boxplot */
+  .boxplot-row { display: grid; grid-template-columns: 110px 1fr 100px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+  .boxplot-row:last-child { border-bottom: none; }
+  .boxplot-row .lbl { font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .boxplot-row .lbl .sw { width: 8px; height: 8px; border-radius: 2px; }
+  .bp-track { position: relative; height: 18px; }
+  .bp-track .line { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border); }
+  .bp-track .box { position: absolute; top: 4px; bottom: 4px; border-radius: 2px; }
+  .bp-track .whisker { position: absolute; top: 50%; height: 1px; }
+  .bp-track .med { position: absolute; top: 2px; bottom: 2px; width: 2px; background: var(--text); }
+  .bp-stat { font-size: 11px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .bp-stat b { color: var(--text); font-weight: 600; }
+  .bp-axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); padding: 6px 0 0; margin-left: 120px; margin-right: 110px; font-variant-numeric: tabular-nums; }
+  /* Co-occurrence */
+  .pair-list { display: flex; flex-direction: column; }
+  .pair-row { display: grid; grid-template-columns: 22px 1fr 80px 60px; align-items: center; gap: 10px; padding: 8px; border-radius: 6px; cursor: pointer; border-bottom: 1px solid var(--border-soft); }
+  .pair-row:last-child { border-bottom: none; }
+  .pair-row:hover { background: var(--panel-2); }
+  .pair-row .rank { font-size: 11px; color: var(--muted-2); text-align: right; font-variant-numeric: tabular-nums; }
+  .pair-row .pair { display: flex; align-items: center; gap: 6px; font-size: 12px; flex-wrap: wrap; }
+  .pair-row .pair .t { background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 7px; font-size: 11px; }
+  .pair-row .pair .lk { color: var(--muted-2); font-size: 10px; }
+  .pair-row .pair-bar { height: 6px; background: var(--border-soft); border-radius: 2px; overflow: hidden; }
+  .pair-row .pair-bar > div { height: 100%; background: var(--accent); border-radius: 2px; }
+  .pair-row .cnt { font-size: 12px; color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
+  /* Matrix */
+  .cocc-matrix { border-collapse: separate; border-spacing: 0; font-size: 11px; width: 100%; }
+  .cocc-matrix thead th { height: 90px; vertical-align: bottom; color: var(--muted); font-weight: 500; text-align: left; padding-bottom: 6px; }
+  .cocc-matrix thead th .lbl { display: inline-block; transform: rotate(-50deg) translateY(-2px); transform-origin: left bottom; font-size: 10px; width: 22px; }
+  .cocc-matrix th.corner { width: 90px; min-width: 90px; }
+  .cocc-matrix tbody th { text-align: right; padding: 0 8px 0 0; color: var(--text); font-weight: 500; height: 28px; font-size: 11px; }
+  .cocc-matrix td { width: 28px; height: 28px; text-align: center; cursor: pointer; border: 1px solid var(--bg); font-variant-numeric: tabular-nums; position: relative; }
+  .cocc-matrix td:hover { outline: 2px solid var(--accent); outline-offset: -1px; z-index: 2; }
+  .cocc-matrix td.diag { background: #0a0d12 !important; color: var(--muted-2); }
+  /* Tooltip */
+  .tip { position: fixed; pointer-events: none; background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 12px; line-height: 1.4; z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,.5); opacity: 0; transition: opacity .1s; white-space: nowrap; }
+  .tip.show { opacity: 1; }
+  .tip .t { color: var(--text); font-weight: 600; }
+  .tip .meta { color: var(--muted); margin-top: 2px; }
+  .no-data { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+  @media (max-width: 1000px) { .grid-2, .grid-2to1 { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
 {% block content %}
-<div class="panel">
-  <h2>Analytics</h2>
+<div class="an-wrap">
+  <div class="page-head">
+    <div>
+      <div class="crumbs">Market overview</div>
+      <h2>Analytics</h2>
+    </div>
+    <div class="ts"><span class="dot"></span>{{ stats.total }} vacancies tracked</div>
+  </div>
 
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.total }}</div>
-      <div class="stat-label">Total vacancies</div>
+  <div class="kpi-grid">
+    <div class="kpi is-accent">
+      <div class="label">Total vacancies</div>
+      <div class="value">{{ stats.total }}</div>
+      <div class="delta">across all sources</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.with_tech }}</div>
-      <div class="stat-label">With tech stack</div>
+    <div class="kpi">
+      <div class="label">With tech stack</div>
+      <div class="value">{{ stats.with_tech }}</div>
+      <div class="delta">{{ ((stats.with_tech / stats.total * 100) | int) if stats.total else 0 }}% coverage</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.graded }}</div>
-      <div class="stat-label">Graded</div>
+    <div class="kpi">
+      <div class="label">Graded</div>
+      <div class="value">{{ stats.graded }}</div>
+      <div class="delta">{{ ((stats.graded / stats.total * 100) | int) if stats.total else 0 }}% with grade</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.with_salary }}</div>
-      <div class="stat-label">With salary</div>
+    <div class="kpi">
+      <div class="label">With salary</div>
+      <div class="value">{{ stats.with_salary }}</div>
+      <div class="delta">{{ ((stats.with_salary / stats.total * 100) | int) if stats.total else 0 }}% disclosed</div>
     </div>
   </div>
 
-  <div class="analytics-columns">
-
-    <div class="analytics-col">
-      <div class="job-section">
-        <div class="section-label">Grade distribution</div>
-        {% set max_cnt = grade_dist[0][1] if grade_dist else 1 %}
-        {% for grade, cnt in grade_dist %}
-        <div class="dist-row">
-          <div class="dist-label">
-            {% if grade != "—" %}
-            <span class="grade grade-{{ grade | lower }}">{{ grade }}</span>
-            {% else %}
-            <span class="muted">{{ grade }}</span>
-            {% endif %}
-          </div>
-          <div class="dist-bar-wrap">
-            <div class="dist-bar" style="width: {{ (cnt / max_cnt * 100) | int }}%"></div>
-          </div>
-          <div class="dist-cnt muted">{{ cnt }}</div>
-        </div>
-        {% endfor %}
-      </div>
-
-      <div class="job-section">
-        <div class="section-label">Sources</div>
-        {% set max_src = source_dist[0][1] if source_dist else 1 %}
-        {% for source, cnt in source_dist %}
-        <div class="dist-row">
-          <div class="dist-label muted">{{ source }}</div>
-          <div class="dist-bar-wrap">
-            <div class="dist-bar" style="width: {{ (cnt / max_src * 100) | int }}%"></div>
-          </div>
-          <div class="dist-cnt muted">{{ cnt }}</div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <div class="analytics-col">
-      <div class="job-section">
-        <div class="section-label">Top technology pairs (co-occurrence)</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Tech A</th>
-              <th>Tech B</th>
-              <th>Vacancies</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for t1, t2, cnt in cooccurrence %}
-            <tr>
-              <td><a href="/?tech={{ t1 | urlquote }}" class="tag">{{ t1 }}</a></td>
-              <td><a href="/?tech={{ t2 | urlquote }}" class="tag">{{ t2 }}</a></td>
-              <td class="muted">{{ cnt }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
+  <div class="tabs">
+    <button class="tab active" data-view="market">Market</button>
+    <button class="tab" data-view="salary">Salary</button>
+    <button class="tab" data-view="cocc">Co-occurrence</button>
   </div>
+
+  <!-- MARKET -->
+  <section class="view active" id="view-market">
+    <div class="grid-2">
+      <div class="an-panel">
+        <div class="panel-head">
+          <div><h3>Source distribution</h3><div class="sub">Vacancy count by aggregation source</div></div>
+          <span class="meta" id="src-total"></span>
+        </div>
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 100 100" id="src-donut"></svg>
+          <div class="legend-list" id="src-legend"></div>
+        </div>
+      </div>
+      <div class="an-panel">
+        <div class="panel-head">
+          <div><h3>Grade pyramid</h3><div class="sub">Vacancies by seniority (parsed from title)</div></div>
+          <span class="meta" id="grade-total"></span>
+        </div>
+        <div class="pyramid" id="pyramid"></div>
+      </div>
+    </div>
+    <div class="an-panel">
+      <div class="panel-head">
+        <div><h3>Sources &times; grade mix</h3><div class="sub">Seniority distribution within each source</div></div>
+        <div style="display:flex;gap:12px;font-size:11px;color:var(--muted);align-items:center;" id="grade-legend"></div>
+      </div>
+      <div id="src-stack"></div>
+    </div>
+  </section>
+
+  <!-- SALARY -->
+  <section class="view" id="view-salary">
+    <div class="an-panel">
+      <div class="panel-head">
+        <div><h3>Salary distribution (all grades)</h3><div class="sub">Midpoint of disclosed range &middot; USD/month</div></div>
+        <span class="meta" id="sal-meta"></span>
+      </div>
+      <div id="sal-hist-wrap">
+        <div class="sal-hist-wrap" id="sal-hist"></div>
+        <div class="sal-axis" id="sal-axis"></div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:14px;">
+      <div class="an-panel">
+        <div class="panel-head"><div><h3>By grade</h3><div class="sub">Salary histogram per seniority level</div></div></div>
+        <div id="grade-hists" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+      </div>
+      <div class="an-panel">
+        <div class="panel-head"><div><h3>By role (P25 / median / P75)</h3><div class="sub">USD/month &middot; classified by title keywords</div></div></div>
+        <div id="role-boxplots"></div>
+        <div class="bp-axis"><span>$0</span><span>$2k</span><span>$4k</span><span>$6k</span><span>$8k</span><span>$10k+</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CO-OCCURRENCE -->
+  <section class="view" id="view-cocc">
+    <div class="grid-2to1">
+      <div class="an-panel">
+        <div class="panel-head"><div><h3>Top technology pairs</h3><div class="sub">Vacancies mentioning both technologies simultaneously</div></div></div>
+        <div class="pair-list" id="pair-list"></div>
+      </div>
+      <div class="an-panel">
+        <div class="panel-head"><div><h3>Matrix view</h3><div class="sub">Co-occurrence among top 14 techs</div></div></div>
+        <div style="overflow-x:auto;"><table class="cocc-matrix" id="cocc-matrix"></table></div>
+      </div>
+    </div>
+  </section>
 </div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+const _D = {{ data_json | safe }};
+
+const SOURCE_COLORS = {djinni:'#56d364', dou:'#4493f8', nofluffjobs:'#bc8cff', workua:'#39c5cf'};
+const GRADE_COLORS  = {Junior:'#56d364', Middle:'#4493f8', Senior:'#bc8cff', Lead:'#e3b341', Staff:'#ff7b72', Principal:'#39c5cf', Intern:'#7d8590'};
+const GRADE_ORDER   = ['Junior','Middle','Senior','Lead','Staff','Principal','Intern'];
+const GRADE_CSS     = {Junior:'gb-junior', Middle:'gb-middle', Senior:'gb-senior', Lead:'gb-lead', Staff:'gb-staff'};
+
+const SOURCES = Object.entries(_D.source_dist).map(([name, count]) => ({name, count, color: SOURCE_COLORS[name] || '#7d8590'})).sort((a,b) => b.count - a.count);
+const GRADES  = GRADE_ORDER.map(g => ({name:g, count:_D.grade_dist[g]||0, color:GRADE_COLORS[g]||'#7d8590'})).filter(g => g.count > 0);
+const TOTAL   = _D.stats.total;
+
+/* Tooltip */
+const tip = document.getElementById('tip');
+function showTip(html, ev) { tip.innerHTML = html; tip.classList.add('show'); posTip(ev); }
+function hideTip() { tip.classList.remove('show'); }
+function posTip(ev) {
+  const r = tip.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 14;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+window.addEventListener('mousemove', ev => { if (tip.classList.contains('show')) posTip(ev); });
+
+/* Source donut */
+(function() {
+  const svg = document.getElementById('src-donut');
+  const total = SOURCES.reduce((a,b) => a + b.count, 0);
+  document.getElementById('src-total').textContent = total.toLocaleString() + ' total';
+  const cx = 50, cy = 50, r = 36, ri = 26;
+  let angle = -Math.PI / 2, html = '';
+  SOURCES.forEach(s => {
+    const slice = (s.count / total) * Math.PI * 2;
+    const a0 = angle, a1 = angle + slice;
+    const large = slice > Math.PI ? 1 : 0;
+    const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    const xi1 = cx + ri*Math.cos(a1), yi1 = cy + ri*Math.sin(a1);
+    const xi0 = cx + ri*Math.cos(a0), yi0 = cy + ri*Math.sin(a0);
+    html += `<path d="M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} L${xi1.toFixed(2)} ${yi1.toFixed(2)} A${ri} ${ri} 0 ${large} 0 ${xi0.toFixed(2)} ${yi0.toFixed(2)} Z" fill="${s.color}" data-name="${s.name}" data-count="${s.count}" style="cursor:pointer"/>`;
+    angle = a1;
+  });
+  html += `<text x="50" y="48" text-anchor="middle" font-size="10" fill="#7d8590" style="text-transform:uppercase;letter-spacing:.06em">Total</text>`;
+  html += `<text x="50" y="62" text-anchor="middle" font-size="13" fill="#e6edf3" font-weight="700" style="font-variant-numeric:tabular-nums">${total.toLocaleString()}</text>`;
+  svg.innerHTML = html;
+  svg.querySelectorAll('path').forEach(p => {
+    p.addEventListener('mousemove', ev => { showTip(`<div class="t" style="color:${SOURCE_COLORS[p.dataset.name]||'#e6edf3'}">${p.dataset.name}</div><div class="meta"><b style="color:#e6edf3">${(+p.dataset.count).toLocaleString()}</b> vacancies &middot; ${((+p.dataset.count/total)*100).toFixed(1)}%</div>`, ev); p.style.opacity='.8'; });
+    p.addEventListener('mouseleave', () => { hideTip(); p.style.opacity='1'; });
+  });
+  const ld = document.getElementById('src-legend');
+  ld.innerHTML = SOURCES.map(s => `<div class="legend-row"><span class="sw" style="background:${s.color}"></span><span class="nm">${s.name}</span><span class="pct">${((s.count/total)*100).toFixed(1)}%</span><span class="cnt">${s.count.toLocaleString()}</span></div>`).join('');
+})();
+
+/* Grade pyramid */
+(function() {
+  const max = Math.max(...GRADES.map(g => g.count));
+  const total = GRADES.reduce((a,b) => a + b.count, 0);
+  document.getElementById('grade-total').textContent = total.toLocaleString() + ' graded';
+  const wrap = document.getElementById('pyramid');
+  wrap.innerHTML = GRADES.map(g => {
+    const pct = (g.count / max) * 100;
+    const share = ((g.count / total) * 100).toFixed(0);
+    const cls = GRADE_CSS[g.name] || 'gb-other';
+    return `<div class="pyr-row">
+      <div class="lbl"><span class="grade-badge ${cls}">${g.name}</span></div>
+      <div class="pyr-track"><div class="fill" style="width:${pct}%;background:${g.color}"></div><span class="cnt-in">${g.count.toLocaleString()}</span></div>
+      <div class="pct">${share}%</div>
+    </div>`;
+  }).join('');
+})();
+
+/* Sources × grade stacked bars */
+(function() {
+  const grades = GRADE_ORDER.filter(g => GRADES.find(x => x.name === g));
+  const wrap = document.getElementById('src-stack');
+  const legend = document.getElementById('grade-legend');
+  legend.innerHTML = grades.map(g => `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:${GRADE_COLORS[g]};border-radius:2px;"></span>${g}</span>`).join('');
+  wrap.innerHTML = SOURCES.map(s => {
+    const mix = _D.src_grade[s.name] || {};
+    const total = grades.reduce((a,g) => a + (mix[g]||0), 0) || 1;
+    const segs = grades.map(g => {
+      const cnt = mix[g] || 0;
+      const pct = (cnt / total) * 100;
+      return `<div style="width:${pct}%;background:${GRADE_COLORS[g]}" data-grade="${g}" data-count="${cnt}" data-pct="${pct.toFixed(1)}" data-src="${s.name}"></div>`;
+    }).join('');
+    return `<div class="stack-row">
+      <div class="src-name"><span class="src-badge" style="color:${s.color};border-color:${s.color}55">${s.name}</span></div>
+      <div class="stack-bar">${segs}</div>
+      <div class="stack-tot">${total.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.stack-bar > div').forEach(seg => {
+    seg.addEventListener('mousemove', ev => { showTip(`<div class="t">${seg.dataset.grade} &middot; ${seg.dataset.src}</div><div class="meta"><b style="color:#e6edf3">${(+seg.dataset.count).toLocaleString()}</b> vacancies &middot; ${seg.dataset.pct}%</div>`, ev); });
+    seg.addEventListener('mouseleave', hideTip);
+  });
+})();
+
+/* Salary histogram */
+(function() {
+  const sh = _D.salary_hist;
+  if (!sh || sh.total < 5) {
+    document.getElementById('sal-hist').innerHTML = '<div class="no-data">Insufficient salary data</div>';
+    return;
+  }
+  document.getElementById('sal-meta').textContent = sh.total.toLocaleString() + ' vacancies with salary';
+  const max = Math.max(...sh.hist);
+  const hist = document.getElementById('sal-hist');
+  hist.innerHTML = sh.hist.map((c, i) => {
+    const h = Math.max(2, (c / max) * 100);
+    const lo = Math.round((i / sh.hist.length) * sh.max_sal);
+    const hi = Math.round(((i+1) / sh.hist.length) * sh.max_sal);
+    return `<div class="b" style="height:${h}%" data-c="${c}" data-lo="${lo}" data-hi="${hi}"></div>`;
+  }).join('');
+  hist.querySelectorAll('.b').forEach(b => {
+    b.addEventListener('mousemove', ev => { showTip(`<div class="t">$${(+b.dataset.lo).toLocaleString()} – $${(+b.dataset.hi).toLocaleString()}</div><div class="meta"><b style="color:#e6edf3">${(+b.dataset.c).toLocaleString()}</b> vacancies</div>`, ev); });
+    b.addEventListener('mouseleave', hideTip);
+  });
+  const ax = document.getElementById('sal-axis');
+  const steps = 7;
+  ax.innerHTML = Array.from({length:steps}, (_,i) => `<span>$${Math.round(i*(sh.max_sal/(steps-1))/1000)}k</span>`).join('');
+})();
+
+/* Grade histograms */
+(function() {
+  const wrap = document.getElementById('grade-hists');
+  const gbg = _D.salary_by_grade;
+  if (!gbg || !Object.keys(gbg).length) { wrap.innerHTML = '<div class="no-data" style="grid-column:1/-1">No grade salary data</div>'; return; }
+  const gradeOrder = ['Junior','Middle','Senior','Lead'];
+  wrap.innerHTML = gradeOrder.filter(g => gbg[g]).map(g => {
+    const d = gbg[g];
+    const color = GRADE_COLORS[g] || '#7d8590';
+    const bins = 16;
+    const range = d.max - d.min || 1;
+    const hist = new Array(bins).fill(0);
+    // Approximate histogram from P-values using triangular distribution
+    [[d.min,0],[d.p25,.25],[d.median,.5],[d.p75,.75],[d.max,1]].forEach(([v]) => {
+      const idx = Math.min(bins-1, Math.floor(((v - d.min) / range) * bins));
+      hist[idx]++;
+    });
+    const hmax = Math.max(...hist, 1);
+    const bars = hist.map(v => `<div class="bb" style="height:${Math.max(2,(v/hmax)*100)}%;background:${color}"></div>`).join('');
+    return `<div class="small-hist">
+      <div class="head"><span class="grade" style="color:${color}">${g}</span><span class="med">${d.n} vacancies</span></div>
+      <div class="bars">${bars}</div>
+      <div class="axis"><span>$${(d.min/1000).toFixed(0)}k</span><span>$${(d.max/1000).toFixed(0)}k</span></div>
+      <div class="stats"><span><b>$${d.p25.toLocaleString()}</b> P25</span><span><b>$${d.median.toLocaleString()}</b> Median</span><span><b>$${d.p75.toLocaleString()}</b> P75</span></div>
+    </div>`;
+  }).join('');
+})();
+
+/* Role boxplots */
+(function() {
+  const wrap = document.getElementById('role-boxplots');
+  const rb = _D.salary_by_role;
+  if (!rb || !Object.keys(rb).length) { wrap.innerHTML = '<div class="no-data">No role salary data</div>'; return; }
+  const SCALE_MAX = 11000;
+  const pos = x => (Math.min(x, SCALE_MAX) / SCALE_MAX) * 100;
+  wrap.innerHTML = Object.entries(rb).sort((a,b) => b[1].median - a[1].median).map(([role, d]) => `
+    <div class="boxplot-row" data-role="${role}">
+      <div class="lbl"><span class="sw" style="background:${d.color}"></span>${role}</div>
+      <div class="bp-track">
+        <div class="line"></div>
+        <div class="whisker" style="left:${pos(d.min)}%;width:${pos(d.max)-pos(d.min)}%;background:${d.color};opacity:.4;"></div>
+        <div class="box" style="left:${pos(d.p25)}%;width:${pos(d.p75)-pos(d.p25)}%;background:${d.color}33;border:1px solid ${d.color}"></div>
+        <div class="med" style="left:${pos(d.median)}%"></div>
+      </div>
+      <div class="bp-stat"><b>$${d.median.toLocaleString()}</b> &middot; ${d.n}</div>
+    </div>`).join('');
+  wrap.querySelectorAll('.boxplot-row').forEach(row => {
+    const d = rb[row.dataset.role];
+    row.addEventListener('mousemove', ev => { showTip(`<div class="t" style="color:${d.color}">${row.dataset.role}</div><div class="meta">Median <b style="color:#e6edf3">$${d.median.toLocaleString()}</b><br>P25 <b style="color:#e6edf3">$${d.p25.toLocaleString()}</b> &middot; P75 <b style="color:#e6edf3">$${d.p75.toLocaleString()}</b><br>${d.n} vacancies with salary</div>`, ev); });
+    row.addEventListener('mouseleave', hideTip);
+  });
+})();
+
+/* Co-occurrence pair list */
+(function() {
+  const pairs = _D.cooccurrence;
+  if (!pairs.length) { document.getElementById('pair-list').innerHTML = '<div class="no-data">No co-occurrence data</div>'; return; }
+  const max = pairs[0][2];
+  document.getElementById('pair-list').innerHTML = pairs.slice(0, 25).map(([a, b, cnt], i) => `
+    <div class="pair-row">
+      <div class="rank">${i+1}</div>
+      <div class="pair"><span class="t">${a}</span><span class="lk">+</span><span class="t">${b}</span>
+        <div class="pair-bar" style="flex:1;min-width:60px"><div style="width:${(cnt/max*100).toFixed(0)}%"></div></div>
+      </div>
+      <div class="cnt">${cnt.toLocaleString()}</div>
+    </div>`).join('');
+  document.querySelectorAll('.pair-row').forEach((row, i) => {
+    const [a, b, cnt] = pairs[i];
+    row.addEventListener('mousemove', ev => { showTip(`<div class="t">${a} + ${b}</div><div class="meta"><b style="color:#e6edf3">${cnt.toLocaleString()}</b> vacancies mention both</div>`, ev); });
+    row.addEventListener('mouseleave', hideTip);
+  });
+})();
+
+/* Co-occurrence matrix */
+(function() {
+  const pairs = _D.cooccurrence;
+  const tc = _D.tech_counts;
+  if (!pairs.length) { document.getElementById('cocc-matrix').innerHTML = '<tr><td class="no-data">No data</td></tr>'; return; }
+  const TECHS = Object.keys(tc).slice(0, 14);
+  const N = TECHS.length;
+  const M = Array.from({length:N}, (_,i) => Array.from({length:N}, (_,j) => i===j ? tc[TECHS[i]]||0 : 0));
+  pairs.forEach(([a, b, cnt]) => {
+    const i = TECHS.indexOf(a), j = TECHS.indexOf(b);
+    if (i >= 0 && j >= 0) { M[i][j] = cnt; M[j][i] = cnt; }
+  });
+  let maxVal = 0;
+  for (let i=0;i<N;i++) for (let j=0;j<N;j++) if (i!==j && M[i][j]>maxVal) maxVal=M[i][j];
+  function heat(t) {
+    if (t<=0) return '#161b22';
+    return `oklch(${(0.18+t*0.46).toFixed(3)} ${(0.03+t*0.13).toFixed(3)} 252)`;
+  }
+  function fg(t) { return t>.55?'#0d1117':t>.28?'#e6edf3':'#7d8590'; }
+  let h = '<thead><tr><th class="corner"></th>' + TECHS.map(t => `<th><div class="lbl">${t}</div></th>`).join('') + '</tr></thead><tbody>';
+  for (let i=0;i<N;i++) {
+    h += `<tr><th>${TECHS[i]}</th>`;
+    for (let j=0;j<N;j++) {
+      const v = M[i][j];
+      if (i===j) { h += `<td class="diag" title="${TECHS[i]}: ${v.toLocaleString()}">·</td>`; continue; }
+      const t = maxVal > 0 ? v/maxVal : 0;
+      h += `<td data-i="${i}" data-j="${j}" data-v="${v}" style="background:${heat(t)};color:${fg(t)}">${v>=1000?Math.round(v/100)+'h':v||''}</td>`;
+    }
+    h += '</tr>';
+  }
+  h += '</tbody>';
+  const tbl = document.getElementById('cocc-matrix');
+  tbl.innerHTML = h;
+  tbl.querySelectorAll('td:not(.diag)').forEach(td => {
+    td.addEventListener('mousemove', ev => { showTip(`<div class="t">${TECHS[+td.dataset.i]} + ${TECHS[+td.dataset.j]}</div><div class="meta"><b style="color:#e6edf3">${(+td.dataset.v).toLocaleString()}</b> vacancies with both</div>`, ev); });
+    td.addEventListener('mouseleave', hideTip);
+  });
+})();
+
+/* Tabs */
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + t.dataset.view).classList.add('active');
+  });
+});
+</script>
 {% endblock %}

@@ -1,52 +1,201 @@
 {% extends "base.html" %}
+{% block title %}Vacancies &middot; Job VC{% endblock %}
+{% block head %}
+<style>
+  :root {
+    --panel-2: #1c2128; --muted-2: #484f58;
+    --accent-dim: #1c4d8a; --border-soft: #21262d;
+    --green: #56d364; --purple: #bc8cff; --amber: #e3b341;
+    --pink: #ff7b72; --teal: #39c5cf;
+  }
+  body { background: var(--bg); }
+  .vac-wrap { margin-top: 18px; }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .page-head h2 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
+  .crumbs { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .kpi-grid { display: grid; gap: 10px; margin-bottom: 14px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .kpi .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .kpi .value { font-size: 22px; font-weight: 700; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi.is-accent .value { color: var(--accent); }
+  .kpi .delta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  /* Filter toolbar */
+  .filter-toolbar {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px; margin-bottom: 14px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  }
+  .filter-toolbar form { display: contents; }
+  .fg { display: flex; align-items: center; gap: 6px; }
+  .fg .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-right: 2px; }
+  .pill-group { display: flex; gap: 4px; flex-wrap: wrap; }
+  .pill-group label {
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    font-size: 12px; padding: 4px 10px; border-radius: 999px; cursor: pointer; line-height: 1.4;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: background .12s, border-color .12s;
+  }
+  .pill-group label:hover { border-color: var(--muted-2); }
+  .pill-group input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .pill-group label:has(input:checked) { background: var(--accent-dim); border-color: var(--accent); color: #cfe3ff; }
+  .cnt-badge { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .ft-sep { width: 1px; height: 20px; background: var(--border); }
+  .ft-spacer { flex: 1; }
+  .q-input { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-size: 13px; min-width: 200px; }
+  .q-input:focus { outline: none; border-color: var(--accent); }
+  .q-input::placeholder { color: var(--muted); }
+  .tech-select { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-size: 12px; max-width: 180px; }
+  .tech-select:focus { outline: none; border-color: var(--accent); }
+  /* Active filters chips */
+  .active-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .active-filters:empty { display: none; }
+  .fc { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; background: var(--accent-dim); color: #cfe3ff; border: 1px solid var(--accent); border-radius: 999px; padding: 3px 8px; }
+  /* Jobs panel */
+  .jobs-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .jobs-meta { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+  .jobs-meta b { color: var(--text); font-variant-numeric: tabular-nums; }
+  /* Table */
+  .jt { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .jt thead th { text-align: left; padding: 8px 12px; color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--panel); white-space: nowrap; }
+  .jt tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+  .jt tbody tr:last-child td { border-bottom: none; }
+  .jt tbody tr:hover td { background: var(--panel-2); }
+  .jt .col-src { width: 90px; }
+  .jt .col-grade { width: 90px; }
+  .jt .col-salary { width: 160px; }
+  .jt .col-when { width: 90px; }
+  .src-badge { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 4px; background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); text-transform: lowercase; }
+  .src-badge.djinni { color: var(--green); border-color: rgba(86,211,100,.4); }
+  .src-badge.dou { color: var(--accent); border-color: rgba(68,147,248,.4); }
+  .src-badge.nofluffjobs { color: var(--purple); border-color: rgba(188,140,255,.4); }
+  .src-badge.workua { color: var(--teal); border-color: rgba(57,197,207,.4); }
+  .grade { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
+  .grade-junior { background: #0f2c14; color: #56d364; }
+  .grade-middle { background: #0c2040; color: #4493f8; }
+  .grade-senior { background: #271040; color: #bc8cff; }
+  .grade-lead   { background: #2e1f00; color: #e3b341; }
+  .grade-staff  { background: #1a1e0f; color: #9ecf64; }
+  .grade-principal { background: #1a1220; color: #d19fff; }
+  .grade-intern { background: var(--panel-2); color: var(--muted); }
+  .job-title-link { color: var(--text); text-decoration: none; font-weight: 500; }
+  .job-title-link:hover { color: var(--accent); }
+  .company-link { color: var(--muted); text-decoration: none; font-size: 12px; }
+  .company-link:hover { color: var(--accent); }
+  .tags { display: flex; flex-wrap: wrap; gap: 3px; max-width: 300px; }
+  .tag { display: inline-block; font-size: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; color: var(--text); text-decoration: none; white-space: nowrap; }
+  .tag:hover { border-color: var(--accent); color: var(--accent); }
+  .tag-more { color: var(--accent); border-color: rgba(68,147,248,.3); background: rgba(68,147,248,.06); }
+  .salary { color: var(--text); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .salary.none { color: var(--muted-2); }
+  /* Pagination */
+  .pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; flex-wrap: wrap; gap: 8px; }
+  .page-btns { display: flex; gap: 4px; }
+  .page-btns button { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .page-btns button:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
+  .page-btns button[disabled] { opacity: .4; cursor: not-allowed; }
+  /* Ingest section */
+  .ingest-section { margin-top: 14px; }
+  .ingest-toggle { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .ingest-toggle:hover { color: var(--text); border-color: var(--muted); }
+  .ingest-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 8px; display: none; }
+  .ingest-box.open { display: block; }
+  .ingest-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .ingest-form input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: #0d1117; color: var(--text); font-size: 13px; font-family: inherit; }
+  .ingest-form button { padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); color: var(--text); font-size: 13px; cursor: pointer; font-family: inherit; }
+  .ingest-form button:hover { border-color: var(--accent); color: var(--accent); }
+  .empty-row td { text-align: center; padding: 40px; color: var(--muted); }
+</style>
+{% endblock %}
 {% block content %}
-<section class="panel">
-  <form
-    class="ingest-form"
-    hx-post="/ingest"
-    hx-target="#ingest-result"
-    hx-swap="innerHTML">
-    <label for="keywords">Ingest keywords (comma-separated)</label>
-    <input id="keywords" name="keywords" type="text" value="DevOps">
-    <button type="submit">Run ingest</button>
-  </form>
-  <div id="ingest-result"></div>
-</section>
-
-<section class="panel">
-  <form
-    class="filters"
-    hx-get="/partials/jobs"
-    hx-target="#jobs-table"
-    hx-swap="innerHTML"
-    hx-trigger="submit, change from:.auto-filter">
-    <input type="search" name="q" placeholder="Search title / company" value="{{ q }}">
-    <select name="source" class="auto-filter">
-      <option value="">All sources</option>
-      {% for src in sources %}
-      <option value="{{ src }}" {% if src == source %}selected{% endif %}>{{ src }}</option>
-      {% endfor %}
-    </select>
-    <select name="grade" class="auto-filter">
-      <option value="">All grades</option>
-      {% for g in grades %}
-      <option value="{{ g }}" {% if g == grade %}selected{% endif %}>{{ g }}</option>
-      {% endfor %}
-    </select>
-    <select name="tech" class="auto-filter">
-      <option value="">All technologies</option>
-      {% for t in techs %}
-      <option value="{{ t }}" {% if t == tech %}selected{% endif %}>{{ t }}</option>
-      {% endfor %}
-    </select>
-    {% if company %}
-    <span class="filter-chip">{{ company }} <a href="/">×</a></span>
-    <input type="hidden" name="company" value="{{ company }}">
-    {% endif %}
-    <button type="submit">Filter</button>
-  </form>
-  <div id="jobs-table">
-    {% include "partials/jobs_table.html" %}
+<div class="vac-wrap">
+  <div class="page-head">
+    <div>
+      <div class="crumbs">Browse</div>
+      <h2>Vacancies</h2>
+    </div>
   </div>
-</section>
+
+  <div class="kpi-grid">
+    <div class="kpi is-accent"><div class="label">Total vacancies</div><div class="value">{{ stats.total }}</div></div>
+    <div class="kpi"><div class="label">With tech stack</div><div class="value">{{ stats.with_tech }}</div><div class="delta">{{ ((stats.with_tech / stats.total * 100) | int) if stats.total else 0 }}% coverage</div></div>
+    <div class="kpi"><div class="label">Graded</div><div class="value">{{ stats.graded }}</div></div>
+    <div class="kpi"><div class="label">With salary</div><div class="value">{{ stats.with_salary }}</div></div>
+  </div>
+
+  <div class="filter-toolbar">
+    <form
+      id="filter-form"
+      hx-get="/partials/jobs"
+      hx-target="#jobs-table"
+      hx-swap="innerHTML"
+      hx-trigger="submit, change from:.auto-filter">
+
+      <div class="fg">
+        <span class="lbl">Source</span>
+        <div class="pill-group">
+          <label><input class="auto-filter" type="radio" name="source" value="" {% if not source %}checked{% endif %}>All</label>
+          {% for src in sources %}
+          <label><input class="auto-filter" type="radio" name="source" value="{{ src }}" {% if src == source %}checked{% endif %}>{{ src }}</label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="ft-sep"></div>
+
+      <div class="fg">
+        <span class="lbl">Grade</span>
+        <div class="pill-group">
+          <label><input class="auto-filter" type="radio" name="grade" value="" {% if not grade %}checked{% endif %}>All</label>
+          {% for g in grades %}
+          <label><input class="auto-filter" type="radio" name="grade" value="{{ g }}" {% if g == grade %}checked{% endif %}>{{ g }}</label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="ft-sep"></div>
+
+      <div class="fg">
+        <span class="lbl">Tech</span>
+        <select name="tech" class="auto-filter tech-select">
+          <option value="">All technologies</option>
+          {% for t in techs %}
+          <option value="{{ t }}" {% if t == tech %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="ft-spacer"></div>
+
+      {% if company %}
+      <span class="fc">{{ company }} <a href="/" style="color:#cfe3ff;text-decoration:none;margin-left:4px">×</a></span>
+      <input type="hidden" name="company" value="{{ company }}">
+      {% endif %}
+
+      <input class="q-input auto-filter" type="search" name="q" placeholder="Search title / company…" value="{{ q }}">
+      <button type="submit" style="display:none"></button>
+    </form>
+  </div>
+
+  <div class="jobs-panel">
+    <div id="jobs-table">
+      {% include "partials/jobs_table.html" %}
+    </div>
+  </div>
+
+  <div class="ingest-section">
+    <button class="ingest-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙ Run ingest</button>
+    <div class="ingest-box">
+      <form
+        class="ingest-form"
+        hx-post="/ingest"
+        hx-target="#ingest-result"
+        hx-swap="innerHTML">
+        <label for="keywords" style="color:var(--muted);font-size:12px">Keywords:</label>
+        <input id="keywords" name="keywords" type="text" value="DevOps" style="width:220px">
+        <button type="submit">Run</button>
+      </form>
+      <div id="ingest-result" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
+    </div>
+  </div>
+</div>
 {% endblock %}

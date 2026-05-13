@@ -150,6 +150,102 @@ def role_tech_stats(
     return result
 
 
+def source_grade_mix(db: Session) -> dict[str, dict[str, int]]:
+    rows = db.execute(
+        select(JobRecord.source, JobRecord.grade, func.count(JobRecord.id))
+        .where(JobRecord.grade.isnot(None))
+        .group_by(JobRecord.source, JobRecord.grade)
+    ).fetchall()
+    result: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for source, grade, cnt in rows:
+        result[source][grade] = cnt
+    return {s: dict(g) for s, g in result.items()}
+
+
+def salary_histogram(db: Session) -> dict:
+    BUCKETS = 30
+    MAX_SAL = 15000
+    rows = db.execute(
+        select(JobRecord.salary_min, JobRecord.salary_max)
+        .where(JobRecord.salary_min.isnot(None))
+        .where(JobRecord.salary_min > 100)
+    ).fetchall()
+    hist = [0] * BUCKETS
+    for sal_min, sal_max in rows:
+        mid = sal_min + (sal_max - sal_min) // 2 if sal_max else sal_min
+        idx = min(BUCKETS - 1, int(mid / MAX_SAL * BUCKETS))
+        hist[idx] += 1
+    return {'hist': hist, 'total': len(rows), 'max_sal': MAX_SAL}
+
+
+def salary_by_grade(db: Session) -> dict[str, dict]:
+    rows = db.execute(
+        select(JobRecord.grade, JobRecord.salary_min, JobRecord.salary_max)
+        .where(JobRecord.grade.isnot(None))
+        .where(JobRecord.salary_min.isnot(None))
+        .where(JobRecord.salary_min > 100)
+    ).fetchall()
+    grade_sals: dict[str, list[int]] = defaultdict(list)
+    for grade, sal_min, sal_max in rows:
+        mid = sal_min + (sal_max - sal_min) // 2 if sal_max else sal_min
+        grade_sals[grade].append(mid)
+    result: dict[str, dict] = {}
+    for grade, values in grade_sals.items():
+        if len(values) < 3:
+            continue
+        vals = sorted(values)
+        n = len(vals)
+        result[grade] = {
+            'n': n,
+            'p25': vals[int(n * 0.25)],
+            'median': vals[int(n * 0.50)],
+            'p75': vals[int(n * 0.75)],
+            'min': vals[0],
+            'max': vals[-1],
+        }
+    return result
+
+
+def salary_by_role(db: Session) -> dict[str, dict]:
+    rows = db.execute(
+        select(JobRecord.normalized_title, JobRecord.salary_min, JobRecord.salary_max)
+        .where(JobRecord.salary_min.isnot(None))
+        .where(JobRecord.salary_min > 100)
+    ).fetchall()
+    role_sals: dict[str, list[int]] = defaultdict(list)
+    for title, sal_min, sal_max in rows:
+        role = _classify_role(title or '')
+        if role:
+            mid = sal_min + (sal_max - sal_min) // 2 if sal_max else sal_min
+            role_sals[role].append(mid)
+    result: dict[str, dict] = {}
+    for role, values in role_sals.items():
+        if len(values) < 3:
+            continue
+        vals = sorted(values)
+        n = len(vals)
+        result[role] = {
+            'n': n,
+            'p25': vals[int(n * 0.25)],
+            'median': vals[int(n * 0.50)],
+            'p75': vals[int(n * 0.75)],
+            'min': vals[0],
+            'max': vals[-1],
+            'color': _ROLE_COLORS.get(role, '#7d8590'),
+        }
+    return result
+
+
+def top_tech_counts(db: Session, limit: int = 20) -> dict[str, int]:
+    return dict(db.execute(
+        select(Technology.name, func.count(VacancyTechnology.vacancy_id).label("cnt"))
+        .join(VacancyTechnology, VacancyTechnology.tech_id == Technology.id)
+        .group_by(Technology.name)
+        .order_by(func.count(VacancyTechnology.vacancy_id).desc())
+        .limit(limit)
+    ).fetchall())
+
+
 def tech_analytics_data(db: Session) -> dict:
     jobs = db.execute(
         select(JobRecord.id, JobRecord.source, JobRecord.grade, JobRecord.normalized_title)
