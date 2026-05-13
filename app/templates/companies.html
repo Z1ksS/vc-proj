@@ -6,62 +6,116 @@
     --panel-2: #1c2128; --muted-2: #484f58;
     --accent-dim: #1c4d8a; --border-soft: #21262d;
     --green: #56d364; --purple: #bc8cff; --amber: #e3b341;
-    --pink: #ff7b72; --teal: #39c5cf;
+    --pink: #ff7b72; --teal: #39c5cf; --blue: #4493f8;
   }
-  body { background: var(--bg); }
   .co-wrap { margin-top: 18px; }
   .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
   .page-head h2 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
   .crumbs { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
-  .kpi-grid { display: grid; gap: 10px; margin-bottom: 14px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
+  /* KPI row */
+  .kpi-grid { display: grid; gap: 10px; margin-bottom: 14px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
   .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
   .kpi .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
   .kpi .value { font-size: 22px; font-weight: 700; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
   .kpi.is-accent .value { color: var(--accent); }
   .kpi .delta { font-size: 11px; color: var(--muted); margin-top: 3px; }
-  .toolbar { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-  .toolbar .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-  .co-search { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-size: 13px; width: 240px; }
+
+  /* Toolbar */
+  .toolbar { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .toolbar .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+  .co-search { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-size: 13px; width: 220px; }
   .co-search:focus { outline: none; border-color: var(--accent); }
   .co-search::placeholder { color: var(--muted); }
-  .pill-btn { border: 1px solid var(--border); background: var(--panel-2); color: var(--text); font-size: 12px; padding: 4px 10px; border-radius: 999px; cursor: pointer; font-family: inherit; line-height: 1.4; }
+  .pill-btn { border: 1px solid var(--border); background: var(--panel-2); color: var(--text); font-size: 12px; padding: 4px 10px; border-radius: 999px; cursor: pointer; font-family: inherit; line-height: 1.4; white-space: nowrap; }
   .pill-btn:hover { border-color: var(--muted-2); }
   .pill-btn.active { background: var(--accent-dim); border-color: var(--accent); color: #cfe3ff; }
   .spacer { flex: 1; }
-  /* Table */
+
+  /* 2-col layout */
+  .co-layout { display: grid; grid-template-columns: 1fr 400px; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .co-layout { grid-template-columns: 1fr; } .drill-col { display: none; } }
+
+  /* Leaderboard */
   .co-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .co-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .co-table thead th { text-align: left; padding: 10px 14px; color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--panel); cursor: pointer; user-select: none; white-space: nowrap; }
-  .co-table thead th:hover { color: var(--text); }
-  .co-table thead th .arr { margin-left: 4px; color: var(--muted-2); font-size: 9px; }
-  .co-table thead th.sorted .arr { color: var(--accent); }
-  .co-table thead th.sorted { color: var(--accent); }
-  .co-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+  .co-table thead th { text-align: left; padding: 9px 12px; color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--panel); white-space: nowrap; }
+  .co-table tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
   .co-table tbody tr:last-child td { border-bottom: none; }
-  .co-table tbody tr { cursor: pointer; text-decoration: none; color: inherit; }
-  .co-table tbody tr:hover td { background: var(--panel-2); }
-  .rank-cell { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; width: 40px; }
-  .name-cell .name { font-size: 14px; font-weight: 500; color: var(--text); text-decoration: none; }
-  .name-cell .name:hover { color: var(--accent); }
-  .vac-cell { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; width: 80px; }
-  /* Tech chips */
-  .fp { display: flex; flex-wrap: wrap; gap: 3px; }
-  .fp .t { display: inline-block; font-size: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; color: var(--text); white-space: nowrap; }
-  /* Grade mix */
-  .mix-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--border-soft); min-width: 120px; }
+  .co-table tbody tr { cursor: pointer; transition: background .1s; }
+  .co-table tbody tr:hover td, .co-table tbody tr.selected td { background: var(--panel-2); }
+  .co-table tbody tr.selected td { border-left: 2px solid var(--accent); }
+  .co-table tbody tr.selected td:not(:first-child) { border-left: none; }
+  .rank-cell { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; width: 32px; }
+  .name-cell { min-width: 160px; }
+  .name-cell .cname { font-size: 13px; font-weight: 500; color: var(--text); }
+  .vac-cell { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; width: 60px; text-align: right; }
+  .spark-cell { width: 90px; }
+
+  /* Grade mix bar (compact) */
+  .mix-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--border-soft); min-width: 80px; }
   .mix-bar > div { height: 100%; }
+
   /* Pagination */
-  .pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; flex-wrap: wrap; gap: 8px; }
+  .pagination { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; flex-wrap: wrap; gap: 8px; }
   .pgn { display: flex; align-items: center; gap: 4px; }
   .pgn button { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
   .pgn button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-  .pgn button.pg-active { background: var(--accent-dim); border-color: var(--accent); color: #cfe3ff; }
   .pgn button:disabled { opacity: .4; cursor: not-allowed; }
-  /* Tooltip */
-  .tip { position: fixed; pointer-events: none; background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 12px; line-height: 1.4; z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,.5); opacity: 0; transition: opacity .1s; white-space: nowrap; }
-  .tip.show { opacity: 1; }
-  .tip .t { color: var(--text); font-weight: 600; }
-  .tip .meta { color: var(--muted); margin-top: 2px; }
+
+  /* Drilldown panel */
+  .drill-col { position: sticky; top: 16px; }
+  .drill-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .drill-empty { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 13px; }
+  .drill-empty .icon { font-size: 28px; margin-bottom: 8px; }
+  .drill-content { display: none; }
+  .drill-content.visible { display: block; }
+
+  .drill-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); }
+  .drill-co-name { font-size: 18px; font-weight: 600; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .drill-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .drill-meta .cnt-big { font-size: 20px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .drill-link { font-size: 12px; color: var(--accent); text-decoration: none; }
+  .drill-link:hover { text-decoration: underline; }
+
+  .drill-section { padding: 14px 18px; border-bottom: 1px solid var(--border-soft); }
+  .drill-section:last-child { border-bottom: none; }
+  .drill-section-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; font-weight: 600; }
+
+  /* Big sparkline */
+  .big-spark { width: 100%; height: 72px; }
+  .spark-weeks { display: flex; justify-content: space-between; margin-top: 4px; }
+  .spark-weeks span { font-size: 10px; color: var(--muted-2); }
+
+  /* Tech bars */
+  .tech-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .tech-bar-row:last-child { margin-bottom: 0; }
+  .tech-bar-label { font-size: 12px; color: var(--text); width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .tech-bar-track { flex: 1; height: 6px; background: var(--border-soft); border-radius: 3px; overflow: hidden; }
+  .tech-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .3s; }
+  .tech-bar-cnt { font-size: 11px; color: var(--muted); width: 28px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+  /* Grade mix (drilldown) */
+  .grade-mix-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--border-soft); margin-bottom: 8px; }
+  .grade-mix-bar > div { height: 100%; }
+  .grade-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .grade-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .grade-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Salary grid */
+  .sal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sal-card { background: var(--panel-2); border: 1px solid var(--border-soft); border-radius: 8px; padding: 8px 10px; }
+  .sal-card .sal-grade { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .sal-card .sal-val { font-size: 14px; font-weight: 600; margin-top: 3px; font-variant-numeric: tabular-nums; }
+
+  /* Recent jobs */
+  .recent-job { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border-soft); }
+  .recent-job:last-child { border-bottom: none; }
+  .recent-job-title { font-size: 12px; color: var(--text); text-decoration: none; flex: 1; line-height: 1.35; }
+  .recent-job-title:hover { color: var(--accent); }
+  .recent-job-meta { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .grade-badge { display: inline-block; font-size: 10px; border-radius: 4px; padding: 1px 5px; font-weight: 500; }
+
   .empty-row td { text-align: center; padding: 40px; color: var(--muted); }
 </style>
 {% endblock %}
@@ -70,147 +124,307 @@
   <div class="page-head">
     <div>
       <div class="crumbs">Hiring</div>
-      <h2>Companies <span style="color:var(--muted);font-size:16px;font-weight:400">{{ total }}</span></h2>
+      <h2>Companies <span style="color:var(--muted);font-size:16px;font-weight:400" id="h-total">{{ total }}</span></h2>
     </div>
   </div>
 
   <div class="kpi-grid">
     <div class="kpi is-accent"><div class="label">Companies hiring</div><div class="value" id="kpi-co">{{ total }}</div></div>
-    <div class="kpi"><div class="label">Top employer</div><div class="value" style="font-size:18px" id="kpi-top">—</div><div class="delta" id="kpi-top-cnt"></div></div>
+    <div class="kpi"><div class="label">Top employer</div><div class="value" style="font-size:16px;line-height:1.2" id="kpi-top">—</div><div class="delta" id="kpi-top-cnt"></div></div>
     <div class="kpi"><div class="label">Median vacancies</div><div class="value" id="kpi-med">—</div></div>
-    <div class="kpi"><div class="label">Total tracked</div><div class="value" id="kpi-total">—</div><div class="delta">across all companies</div></div>
+    <div class="kpi"><div class="label">Total vacancies</div><div class="value" id="kpi-total">—</div><div class="delta">across all companies</div></div>
   </div>
 
   <div class="toolbar">
     <span class="lbl">Sort</span>
     <button class="pill-btn active" data-sort="cnt-desc">Most vacancies</button>
-    <button class="pill-btn" data-sort="cnt-asc">Fewest vacancies</button>
+    <button class="pill-btn" data-sort="cnt-asc">Fewest</button>
     <button class="pill-btn" data-sort="name-asc">A → Z</button>
     <div class="spacer"></div>
-    <input class="co-search" id="co-q" type="text" placeholder="Search companies…">
+    <input class="co-search" id="co-q" type="text" placeholder="Search companies…" autocomplete="off">
   </div>
 
-  <div class="co-panel">
-    <table class="co-table">
-      <thead>
-        <tr>
-          <th class="sorted" data-sort="cnt-desc"># <span class="arr">↓</span></th>
-          <th>Company</th>
-          <th data-sort="cnt-desc">Vacancies <span class="arr">↓</span></th>
-          <th>Tech stack</th>
-          <th>Grade mix</th>
-        </tr>
-      </thead>
-      <tbody id="co-tbody"></tbody>
-    </table>
-    <div class="pagination">
-      <span><b id="pg-count" style="color:var(--text)">—</b> of <span id="pg-total">—</span> companies</span>
-      <div class="pgn">
-        <button id="pg-prev" disabled>← Prev</button>
-        <span id="pg-info" style="padding:0 8px;color:var(--muted);font-size:12px;">Page 1 of —</span>
-        <button id="pg-next">Next →</button>
+  <div class="co-layout">
+    <!-- Leaderboard -->
+    <div>
+      <div class="co-panel">
+        <table class="co-table">
+          <thead>
+            <tr>
+              <th class="rank-cell">#</th>
+              <th>Company</th>
+              <th class="spark-cell">8-week trend</th>
+              <th class="vac-cell" style="text-align:right">Jobs</th>
+            </tr>
+          </thead>
+          <tbody id="co-tbody"></tbody>
+        </table>
+        <div class="pagination">
+          <span style="color:var(--muted)"><b id="pg-count" style="color:var(--text)">—</b> / <span id="pg-total">—</span></span>
+          <div class="pgn">
+            <button id="pg-prev" disabled>← Prev</button>
+            <span id="pg-info" style="padding:0 8px;color:var(--muted);font-size:12px">—</span>
+            <button id="pg-next">Next →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drilldown panel -->
+    <div class="drill-col">
+      <div class="drill-panel">
+        <div class="drill-empty" id="drill-empty">
+          <div class="icon">🏢</div>
+          <div>Click a company to see details</div>
+        </div>
+        <div class="drill-content" id="drill-content">
+          <div class="drill-header">
+            <div class="drill-co-name" id="d-name"></div>
+            <div class="drill-meta">
+              <span class="cnt-big" id="d-cnt"></span>
+              <span id="d-cnt-label" style="color:var(--muted)">vacancies</span>
+              <a class="drill-link" id="d-link" href="#">View all →</a>
+            </div>
+          </div>
+
+          <div class="drill-section">
+            <div class="drill-section-title">8-week activity</div>
+            <svg class="big-spark" id="d-spark" viewBox="0 0 340 72" preserveAspectRatio="none"></svg>
+            <div class="spark-weeks" id="d-spark-weeks"></div>
+          </div>
+
+          <div class="drill-section" id="d-tech-section">
+            <div class="drill-section-title">Top technologies</div>
+            <div id="d-techs"></div>
+          </div>
+
+          <div class="drill-section" id="d-grade-section">
+            <div class="drill-section-title">Grade mix</div>
+            <div class="grade-mix-bar" id="d-grade-bar"></div>
+            <div class="grade-legend" id="d-grade-legend"></div>
+          </div>
+
+          <div class="drill-section" id="d-sal-section">
+            <div class="drill-section-title">Avg salary by grade</div>
+            <div class="sal-grid" id="d-sal-grid"></div>
+          </div>
+
+          <div class="drill-section" id="d-recent-section">
+            <div class="drill-section-title">Recent vacancies</div>
+            <div id="d-recent"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="tip" id="tip"></div>
-
 <script>
 const COMPANIES = {{ companies_json | safe }};
 
-const GRADE_COLORS = {Junior:'#56d364', Middle:'#4493f8', Senior:'#bc8cff', Lead:'#e3b341', Staff:'#ff7b72'};
-const GRADE_ORDER  = ['Junior','Middle','Senior','Lead','Staff','Principal'];
+const GRADE_COLORS = {
+  Junior: '#56d364', Middle: '#4493f8', Senior: '#bc8cff',
+  Lead: '#e3b341', Staff: '#ff7b72', Principal: '#39c5cf', Intern: '#7d8590'
+};
+const GRADE_ORDER = ['Junior', 'Middle', 'Senior', 'Lead', 'Staff', 'Principal', 'Intern'];
 
-const state = { sort: 'cnt-desc', q: '', page: 1, perPage: 20 };
+const state = { sort: 'cnt-desc', q: '', page: 1, perPage: 25, selected: null };
 
-/* KPIs */
+/* ── KPIs ──────────────────────────────────────── */
 (function() {
-  const sorted = [...COMPANIES].sort((a,b) => b.cnt - a.cnt);
+  const sorted = [...COMPANIES].sort((a, b) => b.cnt - a.cnt);
   if (sorted.length) {
     document.getElementById('kpi-top').textContent = sorted[0].name;
     document.getElementById('kpi-top-cnt').textContent = sorted[0].cnt + ' vacancies';
   }
-  const cnts = sorted.map(c => c.cnt).sort((a,b) => a-b);
-  const med = cnts[Math.floor(cnts.length/2)] || 0;
-  document.getElementById('kpi-med').textContent = med;
-  document.getElementById('kpi-total').textContent = COMPANIES.reduce((s,c) => s+c.cnt, 0).toLocaleString();
+  const cnts = sorted.map(c => c.cnt).sort((a, b) => a - b);
+  document.getElementById('kpi-med').textContent = cnts[Math.floor(cnts.length / 2)] || 0;
+  document.getElementById('kpi-total').textContent = COMPANIES.reduce((s, c) => s + c.cnt, 0).toLocaleString();
 })();
 
-/* Tooltip */
-const tip = document.getElementById('tip');
-function showTip(html, ev) { tip.innerHTML = html; tip.classList.add('show'); posTip(ev); }
-function hideTip() { tip.classList.remove('show'); }
-function posTip(ev) {
-  const r = tip.getBoundingClientRect();
-  let x = ev.clientX+14, y = ev.clientY+14;
-  if (x+r.width > innerWidth-8) x = ev.clientX-r.width-14;
-  if (y+r.height > innerHeight-8) y = ev.clientY-r.height-14;
-  tip.style.left = x+'px'; tip.style.top = y+'px';
+/* ── Sparkline helpers ─────────────────────────── */
+function sparklineSVG(weekly, w, h, fill) {
+  const max = Math.max(...weekly, 1);
+  const pad = 2;
+  const pts = weekly.map((v, i) => {
+    const x = pad + (i / (weekly.length - 1)) * (w - 2 * pad);
+    const y = h - pad - (v / max) * (h - 2 * pad);
+    return [x, y];
+  });
+  const line = pts.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(' ');
+  if (!fill) {
+    return `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round"/>`;
+  }
+  const area = `M${pts[0][0]},${h} ${line} L${pts[pts.length-1][0]},${h} Z`;
+  return `<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity=".3"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#sg)"/>
+    <polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`;
 }
-window.addEventListener('mousemove', ev => { if (tip.classList.contains('show')) posTip(ev); });
 
+/* ── Filter + sort ─────────────────────────────── */
 function applyFilters() {
   const q = state.q.toLowerCase();
   let arr = COMPANIES.filter(c => !q || c.name.toLowerCase().includes(q));
   const [key, dir] = state.sort.split('-');
   const sgn = dir === 'asc' ? 1 : -1;
-  arr.sort((a,b) => key === 'name' ? a.name.localeCompare(b.name)*sgn : (a.cnt - b.cnt)*sgn);
+  arr.sort((a, b) => key === 'name' ? a.name.localeCompare(b.name) * sgn : (a.cnt - b.cnt) * sgn);
   return arr;
 }
 
-function mixHTML(grades) {
-  const total = GRADE_ORDER.reduce((s,g) => s + (grades[g]||0), 0);
-  if (!total) return '<span style="color:var(--muted-2);font-size:11px">—</span>';
-  const segs = GRADE_ORDER.filter(g => grades[g]).map(g => {
-    const pct = (grades[g]/total)*100;
-    return `<div style="width:${pct}%;background:${GRADE_COLORS[g]||'#7d8590'}" data-grade="${g}" data-cnt="${grades[g]}" data-pct="${pct.toFixed(0)}"></div>`;
-  }).join('');
-  return `<div class="mix-bar" data-total="${total}">${segs}</div>`;
+/* ── Drilldown ─────────────────────────────────── */
+function reltime(iso) {
+  if (!iso) return '—';
+  const d = Math.floor((Date.now() - new Date(iso)) / 86400000);
+  if (d === 0) return 'today';
+  if (d === 1) return '1d ago';
+  if (d < 7) return d + 'd ago';
+  if (d < 30) return Math.floor(d / 7) + 'w ago';
+  return Math.floor(d / 30) + 'mo ago';
 }
 
+function showDrill(co) {
+  state.selected = co.name;
+  document.getElementById('drill-empty').style.display = 'none';
+  const dc = document.getElementById('drill-content');
+  dc.classList.add('visible');
+
+  document.getElementById('d-name').textContent = co.name;
+  document.getElementById('d-cnt').textContent = co.cnt.toLocaleString();
+  const link = document.getElementById('d-link');
+  link.href = co.url;
+
+  /* Big sparkline */
+  const svgEl = document.getElementById('d-spark');
+  svgEl.innerHTML = sparklineSVG(co.weekly, 340, 72, true);
+
+  /* Week labels */
+  const weeksEl = document.getElementById('d-spark-weeks');
+  const now = new Date();
+  const labels = co.weekly.map((_, i) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - (7 - i) * 7);
+    return d.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+  });
+  weeksEl.innerHTML = [labels[0], labels[3], labels[7]].map(l => `<span>${l}</span>`).join('');
+
+  /* Tech bars */
+  const techsEl = document.getElementById('d-techs');
+  const techSec = document.getElementById('d-tech-section');
+  if (co.techs && co.techs.length) {
+    techSec.style.display = '';
+    const maxCnt = co.techs[0].cnt;
+    techsEl.innerHTML = co.techs.slice(0, 8).map(t => `
+      <div class="tech-bar-row">
+        <span class="tech-bar-label" title="${t.name}">${t.name}</span>
+        <div class="tech-bar-track"><div class="tech-bar-fill" style="width:${(t.cnt/maxCnt*100).toFixed(1)}%"></div></div>
+        <span class="tech-bar-cnt">${t.cnt}</span>
+      </div>`).join('');
+  } else {
+    techSec.style.display = 'none';
+  }
+
+  /* Grade mix */
+  const gradeSec = document.getElementById('d-grade-section');
+  const gradeBar = document.getElementById('d-grade-bar');
+  const gradeLeg = document.getElementById('d-grade-legend');
+  const gradeTotal = GRADE_ORDER.reduce((s, g) => s + (co.grades[g] || 0), 0);
+  if (gradeTotal) {
+    gradeSec.style.display = '';
+    gradeBar.innerHTML = GRADE_ORDER.filter(g => co.grades[g]).map(g => {
+      const pct = (co.grades[g] / gradeTotal * 100).toFixed(1);
+      return `<div style="width:${pct}%;background:${GRADE_COLORS[g]||'#7d8590'}" title="${g}: ${co.grades[g]}"></div>`;
+    }).join('');
+    gradeLeg.innerHTML = GRADE_ORDER.filter(g => co.grades[g]).map(g =>
+      `<span class="grade-legend-item"><span class="grade-dot" style="background:${GRADE_COLORS[g]||'#7d8590'}"></span>${g} <b style="color:var(--text)">${co.grades[g]}</b></span>`
+    ).join('');
+  } else {
+    gradeSec.style.display = 'none';
+  }
+
+  /* Salary by grade */
+  const salSec = document.getElementById('d-sal-section');
+  const salGrid = document.getElementById('d-sal-grid');
+  const salEntries = GRADE_ORDER.filter(g => co.salary_by_grade && co.salary_by_grade[g]);
+  if (salEntries.length) {
+    salSec.style.display = '';
+    salGrid.innerHTML = salEntries.map(g => `
+      <div class="sal-card">
+        <div class="sal-grade">${g}</div>
+        <div class="sal-val" style="color:${GRADE_COLORS[g]||'var(--text)'}">$${Math.round(co.salary_by_grade[g]/1000)}k</div>
+      </div>`).join('');
+  } else {
+    salSec.style.display = 'none';
+  }
+
+  /* Recent jobs */
+  const recentSec = document.getElementById('d-recent-section');
+  const recentEl = document.getElementById('d-recent');
+  if (co.recent && co.recent.length) {
+    recentSec.style.display = '';
+    recentEl.innerHTML = co.recent.map(j => `
+      <div class="recent-job">
+        <div style="flex:1;min-width:0">
+          <a class="recent-job-title" href="/jobs/${j.id}">${j.title}</a>
+          <div style="margin-top:3px;display:flex;gap:6px;align-items:center">
+            ${j.grade ? `<span class="grade-badge" style="background:${(GRADE_COLORS[j.grade]||'#7d8590')}22;color:${GRADE_COLORS[j.grade]||'#7d8590'}">${j.grade}</span>` : ''}
+            <span class="recent-job-meta">${reltime(j.created_at)}</span>
+          </div>
+        </div>
+      </div>`).join('');
+  } else {
+    recentSec.style.display = 'none';
+  }
+}
+
+/* ── Render table ──────────────────────────────── */
 function render() {
   const arr = applyFilters();
   const pages = Math.max(1, Math.ceil(arr.length / state.perPage));
   if (state.page > pages) state.page = 1;
-  const start = (state.page-1) * state.perPage;
-  const slice = arr.slice(start, start+state.perPage);
+  const start = (state.page - 1) * state.perPage;
+  const slice = arr.slice(start, start + state.perPage);
 
   document.getElementById('pg-count').textContent = arr.length;
   document.getElementById('pg-total').textContent = COMPANIES.length;
-  document.getElementById('pg-info').textContent = `Page ${state.page} of ${pages}`;
+  document.getElementById('pg-info').textContent = `${state.page} / ${pages}`;
   document.getElementById('pg-prev').disabled = state.page === 1;
   document.getElementById('pg-next').disabled = state.page === pages;
   document.getElementById('kpi-co').textContent = arr.length;
+  document.getElementById('h-total').textContent = arr.length;
 
   const tbody = document.getElementById('co-tbody');
   if (!slice.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No companies match your search</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No companies match your search</td></tr>';
     return;
   }
-  tbody.innerHTML = slice.map(c => `
-    <tr data-url="${c.url}">
+
+  tbody.innerHTML = slice.map(c => {
+    const spark = `<svg viewBox="0 0 80 28" width="80" height="28" preserveAspectRatio="none">${sparklineSVG(c.weekly, 80, 28, false)}</svg>`;
+    const isSelected = c.name === state.selected;
+    return `<tr data-name="${c.name}" class="${isSelected ? 'selected' : ''}">
       <td class="rank-cell">${c.rank}</td>
-      <td class="name-cell"><a class="name" href="${c.url}">${c.name}</a></td>
+      <td class="name-cell"><span class="cname">${c.name}</span></td>
+      <td class="spark-cell">${spark}</td>
       <td class="vac-cell">${c.cnt}</td>
-      <td><div class="fp">${c.techs.slice(0,5).map(t => `<span class="t">${t}</span>`).join('')}${c.techs.length>5?`<span class="t" style="color:var(--accent);border-color:rgba(68,147,248,.3)">+${c.techs.length-5}</span>`:''}</div></td>
-      <td>${mixHTML(c.grades)}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   tbody.querySelectorAll('tr').forEach(row => {
-    row.addEventListener('click', e => { if (!e.target.closest('a')) window.location.href = row.dataset.url; });
-    row.querySelectorAll('.mix-bar > div').forEach(seg => {
-      seg.addEventListener('mousemove', ev => { showTip(`<div class="t">${seg.dataset.grade}</div><div class="meta"><b style="color:#e6edf3">${(+seg.dataset.cnt).toLocaleString()}</b> vacancies (${seg.dataset.pct}%)</div>`, ev); });
-      seg.addEventListener('mouseleave', hideTip);
+    row.addEventListener('click', () => {
+      const name = row.dataset.name;
+      const co = COMPANIES.find(c => c.name === name);
+      if (!co) return;
+      tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+      row.classList.add('selected');
+      showDrill(co);
     });
   });
 
-  /* Pagination */
-  document.getElementById('pg-prev').onclick = () => { if (state.page>1){state.page--; render();} };
-  document.getElementById('pg-next').onclick = () => { if (state.page<pages){state.page++; render();} };
+  document.getElementById('pg-prev').onclick = () => { if (state.page > 1) { state.page--; render(); } };
+  document.getElementById('pg-next').onclick = () => { if (state.page < pages) { state.page++; render(); } };
 }
 
-/* Sort pills */
+/* ── Sort pills ────────────────────────────────── */
 document.querySelectorAll('.pill-btn[data-sort]').forEach(b => {
   b.addEventListener('click', () => {
     document.querySelectorAll('.pill-btn[data-sort]').forEach(x => x.classList.remove('active'));
@@ -221,13 +435,15 @@ document.querySelectorAll('.pill-btn[data-sort]').forEach(b => {
   });
 });
 
-/* Search */
+/* ── Search ────────────────────────────────────── */
 let qTO;
 document.getElementById('co-q').addEventListener('input', e => {
   clearTimeout(qTO);
   qTO = setTimeout(() => { state.q = e.target.value; state.page = 1; render(); }, 100);
 });
 
+/* Auto-select first company on load */
+if (COMPANIES.length) showDrill(COMPANIES[0]);
 render();
 </script>
 {% endblock %}

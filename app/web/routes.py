@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from datetime import timezone as _tz
 from urllib.parse import quote
 
@@ -290,11 +290,64 @@ def companies_page(
     ).fetchall()
     company_tech_raw: dict = _dd(list)
     for company, tech_name, cnt in tech_rows:
-        company_tech_raw[company].append((tech_name, cnt))
+        company_tech_raw[company].append({"name": tech_name, "cnt": cnt})
     company_techs = {
-        c: [t for t, _ in sorted(v, key=lambda x: -x[1])[:6]]
+        c: sorted(v, key=lambda x: -x["cnt"])[:10]
         for c, v in company_tech_raw.items()
     }
+
+    # Weekly sparkline data (8 weeks)
+    now = datetime.now(_tz.utc)
+    cutoff = now - timedelta(weeks=8)
+    spark_rows = db.execute(
+        select(JobRecord.company, JobRecord.created_at)
+        .where(JobRecord.company.in_(names))
+        .where(JobRecord.created_at >= cutoff)
+    ).fetchall()
+    weekly_counts: dict = {n: [0] * 8 for n in names}
+    for co, created_at in spark_rows:
+        dt = created_at if created_at.tzinfo else created_at.replace(tzinfo=_tz.utc)
+        wk = int((now - dt).total_seconds() / 604800)
+        slot = 7 - min(wk, 7)
+        if 0 <= slot < 8:
+            weekly_counts[co][slot] += 1
+
+    # Average salary by grade per company
+    sal_rows = db.execute(
+        select(JobRecord.company, JobRecord.grade, JobRecord.salary_min, JobRecord.salary_max)
+        .where(JobRecord.company.in_(names))
+        .where(JobRecord.grade.isnot(None))
+        .where(JobRecord.salary_min.isnot(None))
+        .where(JobRecord.salary_min > 100)
+    ).fetchall()
+    salary_raw: dict = _dd(lambda: _dd(list))
+    for co, grade, sal_min, sal_max in sal_rows:
+        avg = (sal_min + sal_max) / 2 if sal_max else sal_min
+        salary_raw[co][grade].append(avg)
+    salary_by_grade: dict = {
+        co: {g: round(sum(vals) / len(vals)) for g, vals in grades.items() if vals}
+        for co, grades in salary_raw.items()
+    }
+
+    # Recent jobs per company (top 6 by recency, using window function)
+    row_num = func.row_number().over(
+        partition_by=JobRecord.company,
+        order_by=JobRecord.created_at.desc(),
+    ).label("rn")
+    subq = select(
+        JobRecord.id, JobRecord.company, JobRecord.title,
+        JobRecord.grade, JobRecord.created_at, row_num,
+    ).where(JobRecord.company.in_(names)).subquery()
+    recent_rows = db.execute(select(subq).where(subq.c.rn <= 6)).fetchall()
+    recent_jobs: dict = _dd(list)
+    for row in recent_rows:
+        dt_str = row.created_at.isoformat() if row.created_at else None
+        recent_jobs[row.company].append({
+            "id": row.id,
+            "title": row.title,
+            "grade": row.grade,
+            "created_at": dt_str,
+        })
 
     companies_data = [
         {
@@ -303,6 +356,9 @@ def companies_page(
             "rank": i + 1,
             "techs": company_techs.get(r.company, []),
             "grades": grade_mix.get(r.company, {}),
+            "weekly": weekly_counts.get(r.company, [0] * 8),
+            "salary_by_grade": salary_by_grade.get(r.company, {}),
+            "recent": recent_jobs.get(r.company, []),
             "url": f"/companies/{quote(r.company, safe='')}",
         }
         for i, r in enumerate(rows)
