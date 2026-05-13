@@ -244,13 +244,15 @@ def technologies_page(
     request: Request,
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    rows = db.execute(
-        select(Technology.name, func.count(VacancyTechnology.vacancy_id).label("cnt"))
-        .join(VacancyTechnology, VacancyTechnology.tech_id == Technology.id)
-        .group_by(Technology.name)
-        .order_by(func.count(VacancyTechnology.vacancy_id).desc())
-    ).fetchall()
-    return templates.TemplateResponse(request, "technologies.html", {"techs": rows})
+    import json as _json
+    from app.services.analytics import tech_analytics_data
+    data = tech_analytics_data(db)
+    return templates.TemplateResponse(request, "tech_analytics.html", {
+        "data_json": _json.dumps(data, ensure_ascii=False),
+        "kpi": data["kpi"],
+        "source_counts": data["source_counts"],
+        "grade_counts": data["grade_counts"],
+    })
 
 
 @router.get("/companies", response_class=HTMLResponse)
@@ -390,30 +392,6 @@ def analytics_page(
     })
 
 
-@router.get("/roles", response_class=HTMLResponse)
-def roles_page(
-    request: Request,
-    db: Session = Depends(get_db),
-) -> HTMLResponse:
-    from app.services.analytics import role_tech_stats
-    roles = role_tech_stats(db)
-    return templates.TemplateResponse(request, "roles.html", {"roles": roles})
-
-
-@router.get("/tech-analytics", response_class=HTMLResponse)
-def tech_analytics_page(
-    request: Request,
-    db: Session = Depends(get_db),
-) -> HTMLResponse:
-    import json as _json
-    from app.services.analytics import tech_analytics_data
-    data = tech_analytics_data(db)
-    return templates.TemplateResponse(request, "tech_analytics.html", {
-        "data_json": _json.dumps(data, ensure_ascii=False),
-        "kpi": data["kpi"],
-        "source_counts": data["source_counts"],
-        "grade_counts": data["grade_counts"],
-    })
 
 
 @router.post("/ingest", response_class=HTMLResponse)
