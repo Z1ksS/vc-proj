@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Job VC</title>
+  <title>{% block title %}Job VC{% endblock %}</title>
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <link rel="stylesheet" href="/static/style.css?v=5c">
+  {% block head %}{% endblock %}
 </head>
 <body>
   <main class="container">
@@ -17,6 +18,7 @@
         <a href="/companies">Companies</a>
         <a href="/roles">Roles</a>
         <a href="/analytics">Analytics</a>
+        <a href="/tech-analytics">Tech Analytics</a>
       </nav>
     </header>
     {% block content %}{% endblock %}

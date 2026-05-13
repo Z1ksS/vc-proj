@@ -253,6 +253,22 @@ def roles_page(
     return templates.TemplateResponse(request, "roles.html", {"roles": roles})
 
 
+@router.get("/tech-analytics", response_class=HTMLResponse)
+def tech_analytics_page(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> HTMLResponse:
+    import json as _json
+    from app.services.analytics import tech_analytics_data
+    data = tech_analytics_data(db)
+    return templates.TemplateResponse(request, "tech_analytics.html", {
+        "data_json": _json.dumps(data, ensure_ascii=False),
+        "kpi": data["kpi"],
+        "source_counts": data["source_counts"],
+        "grade_counts": data["grade_counts"],
+    })
+
+
 @router.post("/ingest", response_class=HTMLResponse)
 def ingest(
     request: Request,

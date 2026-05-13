@@ -8,6 +8,35 @@ from sqlalchemy.orm import Session, aliased
 
 from app.models import JobRecord, Technology, VacancyTechnology
 
+_ROLES = ['Backend', 'Frontend', 'DevOps', 'Data', 'QA', 'Mobile']
+
+_ROLE_COLORS = {
+    'Backend':  '#4493f8',
+    'Frontend': '#56d364',
+    'DevOps':   '#e3b341',
+    'Data':     '#bc8cff',
+    'QA':       '#ff7b72',
+    'Mobile':   '#39c5cf',
+}
+
+_ROLE_MAP = [
+    ('DevOps',   ['devops', 'sre ', 'site reliability', 'platform engineer', 'cloud engineer', 'infrastructure engineer', 'devsecops', 'mlops engineer']),
+    ('Data',     ['data engineer', 'data scientist', 'machine learning engineer', 'ml engineer', 'data analyst', 'analytics engineer', 'bi developer', 'data platform', 'mlops']),
+    ('Mobile',   ['ios developer', 'ios engineer', 'android developer', 'android engineer', 'mobile developer', 'mobile engineer', 'flutter', 'react native developer']),
+    ('QA',       ['qa engineer', 'qa automation', 'quality assurance', 'test engineer', 'manual tester', 'automation tester', 'sdet', 'test automation engineer']),
+    ('Frontend', ['frontend', 'front-end', 'front end', 'ui developer', 'ui engineer']),
+    ('Backend',  ['backend', 'back-end', 'back end', 'python developer', 'java developer', 'golang developer', 'go developer', 'php developer', 'node.js developer', 'c# developer', '.net developer']),
+]
+
+
+def _classify_role(title: str) -> str | None:
+    t = ' ' + title.lower() + ' '
+    for role, keywords in _ROLE_MAP:
+        if any(kw in t for kw in keywords):
+            return role
+    return None
+
+
 _GRADE_RE = re.compile(
     r"\b(junior|middle|senior|lead|staff|principal|intern|sr\.?|jr\.?|trainee|стажер)\b",
     re.IGNORECASE,
@@ -119,3 +148,77 @@ def role_tech_stats(
         result.append((role, len(job_ids), top_techs))
 
     return result
+
+
+def tech_analytics_data(db: Session) -> dict:
+    jobs = db.execute(
+        select(JobRecord.id, JobRecord.source, JobRecord.grade, JobRecord.normalized_title)
+    ).fetchall()
+
+    job_roles: dict[int, str] = {}
+    role_totals: dict[str, int] = defaultdict(int)
+    for job_id, source, grade, title in jobs:
+        role = _classify_role(title or '')
+        if role:
+            job_roles[job_id] = role
+            role_totals[role] += 1
+
+    tech_rows = db.execute(
+        select(VacancyTechnology.vacancy_id, Technology.name)
+        .join(Technology, Technology.id == VacancyTechnology.tech_id)
+    ).fetchall()
+
+    tech_role: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    tech_total: dict[str, int] = defaultdict(int)
+    for vac_id, tech_name in tech_rows:
+        tech_total[tech_name] += 1
+        role = job_roles.get(vac_id)
+        if role:
+            tech_role[tech_name][role] += 1
+
+    sorted_techs = sorted(tech_total.items(), key=lambda x: -x[1])
+
+    techs_raw = {}
+    for tech, _ in sorted_techs[:60]:
+        counts = tech_role.get(tech, {})
+        techs_raw[tech] = [counts.get(r, 0) for r in _ROLES]
+
+    total = len(jobs)
+    top_tech, top_tech_cnt = sorted_techs[0] if sorted_techs else ('N/A', 0)
+    with_tech_count = db.execute(
+        select(func.count(VacancyTechnology.vacancy_id.distinct()))
+    ).scalar_one()
+    total_assignments = db.execute(
+        select(func.count(VacancyTechnology.vacancy_id))
+    ).scalar_one()
+    avg_stack = round(total_assignments / with_tech_count, 1) if with_tech_count else 0
+
+    source_counts = dict(db.execute(
+        select(JobRecord.source, func.count(JobRecord.id))
+        .group_by(JobRecord.source)
+        .order_by(func.count(JobRecord.id).desc())
+    ).fetchall())
+
+    grade_counts = dict(db.execute(
+        select(JobRecord.grade, func.count(JobRecord.id))
+        .where(JobRecord.grade.isnot(None))
+        .group_by(JobRecord.grade)
+        .order_by(func.count(JobRecord.id).desc())
+    ).fetchall())
+
+    return {
+        'roles': _ROLES,
+        'role_totals': {r: role_totals.get(r, 0) for r in _ROLES},
+        'role_colors': _ROLE_COLORS,
+        'techs_raw': techs_raw,
+        'kpi': {
+            'total': total,
+            'unique_techs': len(tech_total),
+            'top_tech': top_tech,
+            'top_tech_cnt': top_tech_cnt,
+            'avg_stack': avg_stack,
+            'coverage_pct': round(with_tech_count / total * 100) if total else 0,
+        },
+        'source_counts': source_counts,
+        'grade_counts': grade_counts,
+    }
