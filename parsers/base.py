@@ -23,8 +23,18 @@ class BaseParser(ABC):
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
 
+    _HEADERS = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Accept-Language": "uk-UA,uk;q=0.9,en-US;q=0.8",
+    }
+
     def _get(self, url: str, **kwargs) -> requests.Response | None:
         kwargs.setdefault("timeout", self.timeout_seconds)
+        kwargs.setdefault("headers", self._HEADERS)
         try:
             response = self.session.get(url, **kwargs)
             response.raise_for_status()

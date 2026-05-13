@@ -5,7 +5,8 @@ import logging
 import os
 import sys
 
-import os
+from dotenv import load_dotenv
+load_dotenv()
 
 from sqlalchemy import delete, select
 
