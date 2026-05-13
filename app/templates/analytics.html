@@ -20,7 +20,13 @@
   .kpi .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
   .kpi .value { font-size: 26px; font-weight: 700; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
   .kpi .delta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .kpi .delta.up { color: var(--green); }
   .kpi.is-accent .value { color: var(--accent); }
+  .kpi .spark { display: block; margin-top: 6px; width: 100%; height: 24px; }
+  /* Trend chart */
+  .trend-wrap { background: var(--panel-2); border: 1px solid var(--border-soft); border-radius: 6px; padding: 10px; }
+  .trend-wrap svg { display: block; width: 100%; height: 200px; }
+  .trend-axis { font-size: 10px; fill: var(--muted-2); font-variant-numeric: tabular-nums; }
   .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 0; }
   .tab { border: none; background: transparent; cursor: pointer; color: var(--muted); font-size: 14px; font-weight: 500; padding: 10px 16px; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: inherit; }
   .tab:hover { color: var(--text); }
@@ -138,22 +144,28 @@
     <div class="kpi is-accent">
       <div class="label">Total vacancies</div>
       <div class="value">{{ stats.total }}</div>
-      <div class="delta">across all sources</div>
+      <div class="delta up" id="kpi-new-delta">+{{ stats.new_today }} today</div>
+      <svg class="spark" id="kpi-spark"></svg>
     </div>
     <div class="kpi">
-      <div class="label">With tech stack</div>
-      <div class="value">{{ stats.with_tech }}</div>
-      <div class="delta">{{ ((stats.with_tech / stats.total * 100) | int) if stats.total else 0 }}% coverage</div>
+      <div class="label">New today</div>
+      <div class="value">{{ stats.new_today }}</div>
+      <div class="delta">vacancies added</div>
     </div>
     <div class="kpi">
-      <div class="label">Graded</div>
-      <div class="value">{{ stats.graded }}</div>
-      <div class="delta">{{ ((stats.graded / stats.total * 100) | int) if stats.total else 0 }}% with grade</div>
+      <div class="label">Companies hiring</div>
+      <div class="value">{{ stats.companies }}</div>
+      <div class="delta">unique employers</div>
     </div>
     <div class="kpi">
-      <div class="label">With salary</div>
-      <div class="value">{{ stats.with_salary }}</div>
-      <div class="delta">{{ ((stats.with_salary / stats.total * 100) | int) if stats.total else 0 }}% disclosed</div>
+      <div class="label">Median salary</div>
+      <div class="value" id="kpi-median-sal">—</div>
+      <div class="delta">USD/month (disclosed)</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Disclosure rate</div>
+      <div class="value">{{ ((stats.with_salary / stats.total * 100) | int) if stats.total else 0 }}%</div>
+      <div class="delta">{{ stats.with_salary }} with salary</div>
     </div>
   </div>
 
@@ -184,6 +196,16 @@
         <div class="pyramid" id="pyramid"></div>
       </div>
     </div>
+    <div class="an-panel">
+      <div class="panel-head">
+        <div><h3>Weekly vacancy volume</h3><div class="sub">New vacancies per week &middot; last 16 weeks</div></div>
+        <span class="meta" id="trend-meta"></span>
+      </div>
+      <div class="trend-wrap">
+        <svg id="trend-svg"></svg>
+      </div>
+    </div>
+
     <div class="an-panel">
       <div class="panel-head">
         <div><h3>Sources &times; grade mix</h3><div class="sub">Seniority distribution within each source</div></div>
@@ -222,7 +244,13 @@
   <section class="view" id="view-cocc">
     <div class="grid-2to1">
       <div class="an-panel">
-        <div class="panel-head"><div><h3>Top technology pairs</h3><div class="sub">Vacancies mentioning both technologies simultaneously</div></div></div>
+        <div class="panel-head">
+          <div><h3>Top technology pairs</h3><div class="sub">Co-occurrence count &middot; lift = how much more common together than independent</div></div>
+          <select id="cocc-sort" style="background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:inherit;">
+            <option value="count">Sort by count</option>
+            <option value="lift">Sort by lift</option>
+          </select>
+        </div>
         <div class="pair-list" id="pair-list"></div>
       </div>
       <div class="an-panel">
@@ -259,6 +287,93 @@ function posTip(ev) {
   tip.style.left = x + 'px'; tip.style.top = y + 'px';
 }
 window.addEventListener('mousemove', ev => { if (tip.classList.contains('show')) posTip(ev); });
+
+/* KPI sparkline */
+(function() {
+  const W = _D.weekly || [];
+  if (!W.length) return;
+  const svg = document.getElementById('kpi-spark');
+  const min = Math.min(...W), max = Math.max(...W), range = max - min || 1;
+  const pts = W.map((v, i) => [
+    (i / (W.length - 1)) * 200,
+    22 - 2 - ((v - min) / range) * 18
+  ]);
+  const d = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const areaD = d + ` L${pts[pts.length-1][0]} 24 L${pts[0][0]} 24 Z`;
+  svg.setAttribute('viewBox', '0 0 200 24');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.innerHTML = `<path d="${areaD}" fill="rgba(68,147,248,0.15)"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="1.4"/>`;
+})();
+
+/* Median salary from histogram */
+(function() {
+  const sh = _D.salary_hist;
+  if (!sh || sh.total < 5) return;
+  const half = sh.total / 2;
+  let cum = 0;
+  for (let i = 0; i < sh.hist.length; i++) {
+    cum += sh.hist[i];
+    if (cum >= half) {
+      const med = Math.round((i / sh.hist.length) * sh.max_sal / 100) * 100;
+      document.getElementById('kpi-median-sal').textContent = '$' + med.toLocaleString();
+      return;
+    }
+  }
+})();
+
+/* Weekly trend chart */
+(function() {
+  const W = _D.weekly || [];
+  if (!W.length) return;
+  const svg = document.getElementById('trend-svg');
+  const PW = 800, PH = 200, padL = 36, padR = 16, padT = 12, padB = 28;
+  const min = Math.min(...W), max = Math.max(...W), range = max - min || 1;
+  const y0 = padT, y1 = PH - padB, x0 = padL, x1 = PW - padR;
+  const mapX = i => x0 + (i / (W.length - 1)) * (x1 - x0);
+  const mapY = v => y1 - ((v - min) / range) * (y1 - y0);
+
+  let inner = '';
+  for (let t = 0; t <= 4; t++) {
+    const yv = min + ((max - min) * (4 - t)) / 4;
+    const yp = mapY(yv);
+    inner += `<line x1="${x0}" x2="${x1}" y1="${yp}" y2="${yp}" stroke="var(--border-soft)" stroke-dasharray="2 4" stroke-width="1"/>`;
+    inner += `<text x="${x0 - 6}" y="${yp + 3}" text-anchor="end" class="trend-axis">${Math.round(yv)}</text>`;
+  }
+  for (let i = 0; i < W.length; i += 4) {
+    inner += `<text x="${mapX(i)}" y="${PH - 8}" text-anchor="middle" class="trend-axis">W-${W.length - i}</text>`;
+  }
+  inner += `<text x="${mapX(W.length - 1)}" y="${PH - 8}" text-anchor="middle" class="trend-axis">now</text>`;
+
+  const pts = W.map((v, i) => [mapX(i), mapY(v)]);
+  const d = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const areaD = d + ` L${pts[pts.length-1][0]} ${y1} L${pts[0][0]} ${y1} Z`;
+
+  let dots = '';
+  pts.forEach((p, i) => {
+    dots += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="var(--accent)" data-i="${i}" data-v="${W[i]}" style="cursor:pointer"/>`;
+  });
+
+  svg.setAttribute('viewBox', `0 0 ${PW} ${PH}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.innerHTML = inner +
+    `<path d="${areaD}" fill="rgba(68,147,248,0.15)"/>` +
+    `<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>` +
+    dots;
+
+  const totalInPeriod = W.reduce((a, b) => a + b, 0);
+  const meta = document.getElementById('trend-meta');
+  if (meta) meta.textContent = totalInPeriod.toLocaleString() + ' in 16 weeks';
+
+  svg.querySelectorAll('circle').forEach(c => {
+    c.addEventListener('mousemove', ev => {
+      const i = +c.dataset.i, v = +c.dataset.v;
+      const weeksAgo = W.length - 1 - i;
+      const label = weeksAgo === 0 ? 'This week' : `${weeksAgo} week${weeksAgo > 1 ? 's' : ''} ago`;
+      showTip(`<div class="t">${label}</div><div class="meta"><b style="color:#e6edf3">${v.toLocaleString()}</b> new vacancies</div>`, ev);
+    });
+    c.addEventListener('mouseleave', hideTip);
+  });
+})();
 
 /* Source donut */
 (function() {
@@ -412,23 +527,34 @@ window.addEventListener('mousemove', ev => { if (tip.classList.contains('show'))
 })();
 
 /* Co-occurrence pair list */
-(function() {
+let pairSort = 'count';
+function renderPairs() {
   const pairs = _D.cooccurrence;
-  if (!pairs.length) { document.getElementById('pair-list').innerHTML = '<div class="no-data">No co-occurrence data</div>'; return; }
-  const max = pairs[0][2];
-  document.getElementById('pair-list').innerHTML = pairs.slice(0, 25).map(([a, b, cnt], i) => `
-    <div class="pair-row">
+  if (!pairs || !pairs.length) { document.getElementById('pair-list').innerHTML = '<div class="no-data">No co-occurrence data</div>'; return; }
+  const sorted = [...pairs].sort((a, b) => pairSort === 'lift' ? b[3] - a[3] : b[2] - a[2]);
+  const maxCnt = Math.max(...sorted.map(p => p[2]));
+  document.getElementById('pair-list').innerHTML = sorted.slice(0, 25).map(([a, b, cnt, lift], i) => {
+    const liftCls = lift >= 3 ? 'style="color:var(--green)"' : '';
+    return `<div class="pair-row" data-a="${a}" data-b="${b}" data-cnt="${cnt}" data-lift="${lift}">
       <div class="rank">${i+1}</div>
       <div class="pair"><span class="t">${a}</span><span class="lk">+</span><span class="t">${b}</span>
-        <div class="pair-bar" style="flex:1;min-width:60px"><div style="width:${(cnt/max*100).toFixed(0)}%"></div></div>
+        <div class="pair-bar" style="flex:1;min-width:40px"><div style="width:${(cnt/maxCnt*100).toFixed(0)}%"></div></div>
       </div>
       <div class="cnt">${cnt.toLocaleString()}</div>
-    </div>`).join('');
-  document.querySelectorAll('.pair-row').forEach((row, i) => {
-    const [a, b, cnt] = pairs[i];
-    row.addEventListener('mousemove', ev => { showTip(`<div class="t">${a} + ${b}</div><div class="meta"><b style="color:#e6edf3">${cnt.toLocaleString()}</b> vacancies mention both</div>`, ev); });
+      <div class="cnt" ${liftCls} style="min-width:42px;font-size:11px;color:var(--muted)">&times;${(lift||0).toFixed(1)}</div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('#pair-list .pair-row').forEach(row => {
+    row.addEventListener('mousemove', ev => {
+      showTip(`<div class="t">${row.dataset.a} + ${row.dataset.b}</div><div class="meta"><b style="color:#e6edf3">${(+row.dataset.cnt).toLocaleString()}</b> co-occurring vacancies &middot; lift <b style="color:#e6edf3">&times;${(+row.dataset.lift).toFixed(1)}</b></div>`, ev);
+    });
     row.addEventListener('mouseleave', hideTip);
   });
+}
+(function() {
+  renderPairs();
+  const sel = document.getElementById('cocc-sort');
+  if (sel) sel.addEventListener('change', e => { pairSort = e.target.value; renderPairs(); });
 })();
 
 /* Co-occurrence matrix */

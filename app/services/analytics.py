@@ -72,6 +72,9 @@ def summary_stats(db: Session) -> dict:
     total_assignments = db.execute(
         select(func.count(VacancyTechnology.vacancy_id))
     ).scalar_one()
+    companies = db.execute(
+        select(func.count(JobRecord.company.distinct()))
+    ).scalar_one()
     avg_stack = round(total_assignments / with_tech, 1) if with_tech else 0
     return {
         "total": total,
@@ -80,6 +83,7 @@ def summary_stats(db: Session) -> dict:
         "graded": graded,
         "new_today": new_today,
         "avg_stack": avg_stack,
+        "companies": companies,
     }
 
 
@@ -100,14 +104,40 @@ def source_distribution(db: Session) -> list[tuple[str, int]]:
     ).fetchall()
 
 
+def weekly_vacancy_counts(db: Session, weeks: int = 16) -> list[int]:
+    from datetime import datetime, timedelta, timezone as _tz
+    now = datetime.now(_tz.utc)
+    cutoff = now - timedelta(weeks=weeks)
+    rows = db.execute(
+        select(JobRecord.created_at).where(JobRecord.created_at >= cutoff)
+    ).fetchall()
+    counts = [0] * weeks
+    for (created_at,) in rows:
+        dt = created_at if created_at.tzinfo else created_at.replace(tzinfo=_tz.utc)
+        wk = int((now - dt).total_seconds() / 604800)
+        slot = weeks - 1 - min(wk, weeks - 1)
+        if 0 <= slot < weeks:
+            counts[slot] += 1
+    return counts
+
+
 def tech_cooccurrence(
     db: Session, min_count: int = 10, limit: int = 40
-) -> list[tuple[str, str, int]]:
+) -> list[tuple[str, str, int, float]]:
+    total_with_tech = db.execute(
+        select(func.count(VacancyTechnology.vacancy_id.distinct()))
+    ).scalar_one() or 1
+    tech_counts = dict(db.execute(
+        select(Technology.name, func.count(VacancyTechnology.vacancy_id).label("cnt"))
+        .join(VacancyTechnology, VacancyTechnology.tech_id == Technology.id)
+        .group_by(Technology.name)
+    ).fetchall())
+
     vt1 = aliased(VacancyTechnology, name="vt1")
     vt2 = aliased(VacancyTechnology, name="vt2")
     t1 = aliased(Technology, name="t1")
     t2 = aliased(Technology, name="t2")
-    return db.execute(
+    rows = db.execute(
         select(t1.name.label("tech1"), t2.name.label("tech2"), func.count().label("cnt"))
         .select_from(vt1)
         .join(vt2, (vt2.vacancy_id == vt1.vacancy_id) & (vt2.tech_id > vt1.tech_id))
@@ -118,6 +148,14 @@ def tech_cooccurrence(
         .order_by(func.count().desc())
         .limit(limit)
     ).fetchall()
+
+    result = []
+    for tech1, tech2, cnt in rows:
+        cnt_a = tech_counts.get(tech1, 1)
+        cnt_b = tech_counts.get(tech2, 1)
+        lift = round((cnt * total_with_tech) / (cnt_a * cnt_b), 1)
+        result.append((tech1, tech2, cnt, lift))
+    return result
 
 
 def role_tech_stats(

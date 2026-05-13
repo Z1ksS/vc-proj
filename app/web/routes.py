@@ -428,7 +428,8 @@ def analytics_page(
     import json as _json
     from app.services.analytics import (
         grade_distribution, source_distribution, summary_stats, tech_cooccurrence,
-        source_grade_mix, salary_histogram, salary_by_grade, salary_by_role, top_tech_counts,
+        source_grade_mix, salary_histogram, salary_by_grade, salary_by_role,
+        top_tech_counts, weekly_vacancy_counts,
     )
     stats = summary_stats(db)
     data = {
@@ -436,11 +437,12 @@ def analytics_page(
         'source_dist': dict(source_distribution(db)),
         'grade_dist': dict(grade_distribution(db)),
         'src_grade': source_grade_mix(db),
-        'cooccurrence': [[t1, t2, cnt] for t1, t2, cnt in tech_cooccurrence(db, limit=60)],
+        'cooccurrence': [[t1, t2, cnt, lift] for t1, t2, cnt, lift in tech_cooccurrence(db, limit=60)],
         'tech_counts': top_tech_counts(db, limit=20),
         'salary_hist': salary_histogram(db),
         'salary_by_grade': salary_by_grade(db),
         'salary_by_role': salary_by_role(db),
+        'weekly': weekly_vacancy_counts(db, weeks=16),
     }
     return templates.TemplateResponse(request, "analytics.html", {
         "data_json": _json.dumps(data, ensure_ascii=False),
