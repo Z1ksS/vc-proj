@@ -269,6 +269,15 @@
           </div>
         </div>
 
+        <!-- Show closed -->
+        <div class="facet">
+          <label class="opt{% if include_closed %} on{% endif %}" id="closed-opt">
+            <input class="af" type="checkbox" name="include_closed" id="closed-chk" value="true" {% if include_closed %}checked{% endif %}>
+            <div class="box"></div>
+            <span class="nm">Show closed</span>
+          </label>
+        </div>
+
       </aside>
 
       <!-- Main panel -->
@@ -461,6 +470,9 @@ function renderApplied() {
   const co = document.getElementById('h-company').value;
   if (co) chips.push({ label: 'Company: ' + co, field: 'company' });
 
+  if (document.getElementById('closed-chk').checked)
+    chips.push({ label: 'Including closed', field: 'closed' });
+
   const lo = +document.getElementById('rng-lo').value;
   const hi = +document.getElementById('rng-hi').value;
   if (lo > 0 || hi < SAL_MAX)
@@ -480,6 +492,12 @@ function renderApplied() {
       const f = x.dataset.f;
       if (f === 'q') {
         document.getElementById('q-inp').value = '';
+        renderApplied();
+        document.getElementById('filter-form').requestSubmit();
+      } else if (f === 'closed') {
+        const chk = document.getElementById('closed-chk');
+        chk.checked = false;
+        document.getElementById('closed-opt').classList.remove('on');
         renderApplied();
         document.getElementById('filter-form').requestSubmit();
       } else {
@@ -505,10 +523,19 @@ function clearAll() {
   document.getElementById('q-inp').value = '';
   document.getElementById('rng-lo').value = 0;
   document.getElementById('rng-hi').value = SAL_MAX;
+  const chk = document.getElementById('closed-chk');
+  chk.checked = false;
+  document.getElementById('closed-opt').classList.remove('on');
   updateSalary(false);
   renderApplied();
   document.getElementById('filter-form').requestSubmit();
 }
+
+// Closed toggle .on sync
+document.getElementById('closed-chk').addEventListener('change', function() {
+  document.getElementById('closed-opt').classList.toggle('on', this.checked);
+  renderApplied();
+});
 
 // Init
 document.querySelectorAll('input[name="source"]:checked, input[name="grade"]:checked, input[name="tech"]:checked').forEach(i => {

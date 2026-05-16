@@ -59,8 +59,10 @@ _SORT_MAP = {
 def _apply_filters(
     stmt: Select,
     keyword, source, tech, grade, company,
-    sal_min=None, sal_max=None,
+    sal_min=None, sal_max=None, include_closed=False,
 ) -> Select:
+    if not include_closed:
+        stmt = stmt.where(JobRecord.closed_at.is_(None))
     if keyword:
         like = f"%{keyword}%"
         stmt = stmt.where(JobRecord.title.ilike(like) | JobRecord.company.ilike(like))
@@ -87,21 +89,21 @@ def _apply_filters(
 
 def _query_jobs(
     keyword=None, source=None, tech=None, grade=None, company=None,
-    sal_min=None, sal_max=None, sort="posted-desc", page=1,
+    sal_min=None, sal_max=None, sort="posted-desc", page=1, include_closed=False,
 ) -> Select:
     order = _SORT_MAP.get(sort, _SORT_MAP["posted-desc"])
     stmt = select(JobRecord).order_by(*order)
-    stmt = _apply_filters(stmt, keyword, source, tech, grade, company, sal_min, sal_max)
+    stmt = _apply_filters(stmt, keyword, source, tech, grade, company, sal_min, sal_max, include_closed)
     return stmt.offset((page - 1) * _PAGE_SIZE).limit(_PAGE_SIZE)
 
 
 def _count_jobs(
     db: Session,
     keyword=None, source=None, tech=None, grade=None, company=None,
-    sal_min=None, sal_max=None,
+    sal_min=None, sal_max=None, include_closed=False,
 ) -> int:
     stmt = select(func.count(JobRecord.id))
-    stmt = _apply_filters(stmt, keyword, source, tech, grade, company, sal_min, sal_max)
+    stmt = _apply_filters(stmt, keyword, source, tech, grade, company, sal_min, sal_max, include_closed)
     return db.execute(stmt).scalar_one()
 
 
@@ -176,14 +178,15 @@ def index(
     sal_max: int | None = None,
     sort: str = "posted-desc",
     page: int = 1,
+    include_closed: bool = False,
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
     import json as _json
     from app.services.analytics import summary_stats, salary_histogram
     jobs = db.execute(
-        _query_jobs(q, source, tech, grade, company, sal_min, sal_max, sort, page)
+        _query_jobs(q, source, tech, grade, company, sal_min, sal_max, sort, page, include_closed)
     ).scalars().all()
-    total = _count_jobs(db, q, source, tech, grade, company, sal_min, sal_max)
+    total = _count_jobs(db, q, source, tech, grade, company, sal_min, sal_max, include_closed)
     sal_hist = salary_histogram(db)
     return templates.TemplateResponse(
         request,
@@ -195,11 +198,13 @@ def index(
             "stats": summary_stats(db),
             "sal_hist_json": _json.dumps(sal_hist),
             "sort": sort,
+            "include_closed": include_closed,
             **_pagination_ctx(
                 total, page,
                 q=q or "", source=source or "", tech=tech or "",
                 grade=grade or "", company=company or "",
                 sal_min=sal_min or 0, sal_max=sal_max or 0, sort=sort,
+                include_closed=include_closed,
             ),
         },
     )
@@ -217,12 +222,13 @@ def partial_jobs(
     sal_max: int | None = None,
     sort: str = "posted-desc",
     page: int = 1,
+    include_closed: bool = False,
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
     jobs = db.execute(
-        _query_jobs(q, source, tech, grade, company, sal_min, sal_max, sort, page)
+        _query_jobs(q, source, tech, grade, company, sal_min, sal_max, sort, page, include_closed)
     ).scalars().all()
-    total = _count_jobs(db, q, source, tech, grade, company, sal_min, sal_max)
+    total = _count_jobs(db, q, source, tech, grade, company, sal_min, sal_max, include_closed)
     return templates.TemplateResponse(
         request,
         "partials/jobs_table.html",
@@ -234,6 +240,7 @@ def partial_jobs(
                 q=q or "", source=source or "", tech=tech or "",
                 grade=grade or "", company=company or "",
                 sal_min=sal_min or 0, sal_max=sal_max or 0, sort=sort,
+                include_closed=include_closed,
             ),
         },
     )
