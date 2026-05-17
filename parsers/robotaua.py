@@ -11,6 +11,7 @@ _BASE_SITE = "https://robota.ua"
 _API_URL = "https://api.robota.ua/vacancy/search"
 _PAGE_SIZE = 20
 _MAX_PAGES = 50
+_IT_RUBRIC_IDS = [1, 2]  # 1=IT, 2=Telecommunication (from api.robota.ua/dictionary/rubric)
 
 _API_HEADERS = {
     "User-Agent": (
@@ -40,7 +41,7 @@ class RobotauaParser(BaseParser):
                 "page": page,
                 "period": 0,
                 "regionId": 0,
-                "rubricIds": [],
+                "rubricIds": _IT_RUBRIC_IDS,
                 "subrubricIds": [],
                 "cityId": 0,
                 "sort": 0,
