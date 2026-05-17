@@ -132,7 +132,7 @@
     text-decoration: none;
   }
   .tech-detail .summary .chip:hover { background: #235699; }
-  .role-split { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .role-split { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
   .role-split .cell {
     background: var(--panel); border: 1px solid var(--border);
     border-radius: 6px; padding: 8px 10px;
@@ -279,7 +279,7 @@
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab active" data-view="top">Top Technologies <span class="num">30</span></button>
-    <button class="tab" data-view="byrole">By Role <span class="num">6</span></button>
+    <button class="tab" data-view="byrole">By Role <span class="num">10</span></button>
     <button class="tab" data-view="heatmap">Heatmap</button>
   </div>
 
@@ -379,13 +379,13 @@ const state = { source: 'all', grade: 'all', search: '', selectedTech: null, sho
 const SOURCE_WEIGHTS = { all: 1.0 };
 Object.entries(SOURCE_COUNTS).forEach(([src, cnt]) => { SOURCE_WEIGHTS[src] = cnt / TOTAL_VACANCIES; });
 
-// Grade weights (approximations)
+// Grade weights (approximations per role)
 const GRADE_WEIGHTS = {
-  all:    { Backend:1, Frontend:1, DevOps:1, Data:1, QA:1, Mobile:1 },
-  junior: { Backend:.10, Frontend:.20, DevOps:.06, Data:.08, QA:.22, Mobile:.14 },
-  middle: { Backend:.45, Frontend:.46, DevOps:.40, Data:.42, QA:.48, Mobile:.44 },
-  senior: { Backend:.36, Frontend:.27, DevOps:.42, Data:.38, QA:.24, Mobile:.30 },
-  lead:   { Backend:.09, Frontend:.07, DevOps:.12, Data:.12, QA:.06, Mobile:.12 },
+  all:    { Backend:1, Frontend:1, DevOps:1, Data:1, QA:1, Mobile:1, Security:1, PM:1, Support:1, Hardware:1 },
+  junior: { Backend:.10, Frontend:.20, DevOps:.06, Data:.08, QA:.22, Mobile:.14, Security:.04, PM:.05, Support:.30, Hardware:.10 },
+  middle: { Backend:.45, Frontend:.46, DevOps:.40, Data:.42, QA:.48, Mobile:.44, Security:.35, PM:.40, Support:.45, Hardware:.40 },
+  senior: { Backend:.36, Frontend:.27, DevOps:.42, Data:.38, QA:.24, Mobile:.30, Security:.45, PM:.38, Support:.20, Hardware:.38 },
+  lead:   { Backend:.09, Frontend:.07, DevOps:.12, Data:.12, QA:.06, Mobile:.12, Security:.16, PM:.17, Support:.05, Hardware:.12 },
 };
 
 function applyFilters(counts) {
