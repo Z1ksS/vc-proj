@@ -1,6 +1,6 @@
 # Migration Plan — job-vc
 
-**Date:** 2026-05-06 (last updated: 2026-05-17)
+**Date:** 2026-05-06 (last updated: 2026-05-17 — role classification done)
 
 ---
 
@@ -19,7 +19,7 @@
 | Phase 5c — Analytics UI | **DONE** | /analytics: 5-card KPI strip with sparkline, grade/source dist, weekly chart, co-occurrence with lift column. |
 | Phase 6a — PostgreSQL migration | **DONE** | Production DB migrated from SQLite to PostgreSQL. |
 | Phase 6b — robota.ua parser | pending | — |
-| Phase 7 — Role classification | pending | Expand beyond 6 hardcoded roles; see notes below. |
+| Phase 7 — Role classification | **DONE** | 10 broad categories + `top_job_titles()` real-title view on /analytics Roles tab. |
 
 ---
 
@@ -161,6 +161,19 @@
 
 ---
 
+### Phase 7 — Role Classification ✅
+
+**Combo approach implemented** (broad categories + data-driven titles):
+
+- `_ROLES` expanded from 6 → 10: Backend, Frontend, DevOps, Data, QA, Mobile, **Security, PM, Support, Hardware**.
+- `_ROLE_MAP` reordered — specific roles first (Security before DevOps to catch "devsecops" correctly), Backend last as catch-all.
+- `role_category_stats(db)` — counts vacancies per category + "Other" (unclassified tail).
+- `top_job_titles(db, limit=60)` — normalizes titles (strips grade prefix), groups by normalized title, returns top 60 with count + top-5 techs per title.
+- `/analytics` **Roles tab**: left panel = category bars with % coverage; right panel = salary boxplots by role; bottom = top-60 real job titles table with progress bars + tech chips.
+- `/technologies` "By Role" grid updated to 10 cards; `GRADE_WEIGHTS` extended for new roles; `.role-split` changed to `auto-fill` grid.
+
+---
+
 ## Upcoming Phases
 
 ### Phase 6b — robota.ua Parser
@@ -170,19 +183,6 @@
 3. Likely: `requests` + BeautifulSoup; XHR endpoint if needed.
 
 **Risk:** anti-bot is the main unknown. Start with polite crawling. Avoid Playwright unless confirmed necessary.
-
----
-
-### Phase 7 — Role Classification
-
-Current state: 6 hardcoded roles in `_ROLE_MAP` in `app/services/analytics.py`. Everything else falls into "Other".
-
-**Options under consideration:**
-- **Option A**: Expand `_ROLE_MAP` to ~15 roles (Backend, Frontend, Fullstack, DevOps/SRE, Data/ML, Mobile, QA, Security, PM, Sysadmin, Embedded, Support, Design, Hardware, Management).
-- **Option B**: Data-driven — `GROUP BY normalized_title` from DB, render as table without aggregation.
-- **Option C (recommended)**: Combo — broad categories chart (Option A) + "Top job titles" table (Option B) on the same `/analytics` page.
-
-**Risk:** Low — read-only queries + frontend rendering change.
 
 ---
 

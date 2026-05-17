@@ -129,8 +129,8 @@ pytest -q
 | `/jobs/{id}` | Vacancy detail — title, company, grade, salary, full tech list, description |
 | `/companies` | Companies leaderboard (2-column layout) — sparklines, tech bars, drilldown panel, sort + search |
 | `/companies/{name}` | Company detail — KPI strip, tech stack, Active / History tabs |
-| `/technologies` | All technologies ranked by vacancy count |
-| `/analytics` | Market analytics — 5 KPI cards (weekly sparkline), grade/source distribution, weekly trend chart, tech co-occurrence with lift |
+| `/technologies` | Technologies ranked by vacancy count — top 30 bars, by-role breakdown (10 roles), heatmap |
+| `/analytics` | Market analytics — 5 KPI cards, weekly trend chart, co-occurrence with lift, **Roles tab** (category bars + top-60 real job titles) |
 
 ## Project Phases
 
@@ -145,4 +145,4 @@ pytest -q
 - [x] **Phase 5c** — Analytics UI: 5-card KPI strip, grade/source charts, weekly trend chart, tech co-occurrence with lift score
 - [x] **Phase 6a** — PostgreSQL migration
 - [ ] **Phase 6b** — robota.ua parser
-- [ ] **Phase 7** — Role classification improvements (expand beyond 6 hardcoded roles)
+- [x] **Phase 7** — Role classification: 10 broad categories + "Top job titles" data-driven view on `/analytics`
