@@ -401,11 +401,16 @@ def company_detail(
 
     tech_map = _load_tech_map(db, jobs)
 
+    active_count = sum(1 for j in jobs if j.closed_at is None)
+    closed_count = len(jobs) - active_count
+
     return templates.TemplateResponse(request, "company.html", {
         "company_name": company_name,
         "jobs": jobs,
         "tech_counts": tech_counts,
         "tech_map": tech_map,
+        "active_count": active_count,
+        "closed_count": closed_count,
     })
 
 
