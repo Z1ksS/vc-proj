@@ -441,7 +441,7 @@ def analytics_page(
     from app.services.analytics import (
         grade_distribution, source_distribution, summary_stats, tech_cooccurrence,
         source_grade_mix, salary_histogram, salary_by_grade, salary_by_role,
-        top_tech_counts, weekly_vacancy_counts,
+        top_tech_counts, weekly_vacancy_counts, role_category_stats, top_job_titles,
     )
     stats = summary_stats(db)
     data = {
@@ -455,6 +455,8 @@ def analytics_page(
         'salary_by_grade': salary_by_grade(db),
         'salary_by_role': salary_by_role(db),
         'weekly': weekly_vacancy_counts(db, weeks=16),
+        'role_categories': role_category_stats(db),
+        'top_titles': top_job_titles(db),
     }
     return templates.TemplateResponse(request, "analytics.html", {
         "data_json": _json.dumps(data, ensure_ascii=False),

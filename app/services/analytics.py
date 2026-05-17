@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, aliased
 
 from app.models import JobRecord, Technology, VacancyTechnology
 
-_ROLES = ['Backend', 'Frontend', 'DevOps', 'Data', 'QA', 'Mobile']
+_ROLES = ['Backend', 'Frontend', 'DevOps', 'Data', 'QA', 'Mobile', 'Security', 'PM', 'Support', 'Hardware']
 
 _ROLE_COLORS = {
     'Backend':  '#4493f8',
@@ -17,15 +17,41 @@ _ROLE_COLORS = {
     'Data':     '#bc8cff',
     'QA':       '#ff7b72',
     'Mobile':   '#39c5cf',
+    'Security': '#f78166',
+    'PM':       '#ffa657',
+    'Support':  '#a5d6ff',
+    'Hardware': '#7ee787',
 }
 
 _ROLE_MAP = [
-    ('DevOps',   ['devops', 'sre ', 'site reliability', 'platform engineer', 'cloud engineer', 'infrastructure engineer', 'devsecops', 'mlops engineer']),
-    ('Data',     ['data engineer', 'data scientist', 'machine learning engineer', 'ml engineer', 'data analyst', 'analytics engineer', 'bi developer', 'data platform', 'mlops']),
-    ('Mobile',   ['ios developer', 'ios engineer', 'android developer', 'android engineer', 'mobile developer', 'mobile engineer', 'flutter', 'react native developer']),
-    ('QA',       ['qa engineer', 'qa automation', 'quality assurance', 'test engineer', 'manual tester', 'automation tester', 'sdet', 'test automation engineer']),
-    ('Frontend', ['frontend', 'front-end', 'front end', 'ui developer', 'ui engineer']),
-    ('Backend',  ['backend', 'back-end', 'back end', 'python developer', 'java developer', 'golang developer', 'go developer', 'php developer', 'node.js developer', 'c# developer', '.net developer']),
+    # specific roles first to avoid false positives
+    ('Security',  ['security engineer', 'security analyst', 'penetration tester', 'pentester',
+                   'information security', 'devsecops', 'soc analyst', 'cybersecurity',
+                   'appsec', 'security researcher', 'application security']),
+    ('DevOps',    ['devops', 'sre ', 'site reliability', 'platform engineer', 'cloud engineer',
+                   'infrastructure engineer', 'mlops engineer']),
+    ('Data',      ['data engineer', 'data scientist', 'machine learning engineer', 'ml engineer',
+                   'data analyst', 'analytics engineer', 'bi developer', 'data platform',
+                   'mlops', 'llm engineer', 'ai engineer', 'computer vision']),
+    ('Mobile',    ['ios developer', 'ios engineer', 'android developer', 'android engineer',
+                   'mobile developer', 'mobile engineer', 'flutter', 'react native developer']),
+    ('QA',        ['qa engineer', 'qa automation', 'quality assurance', 'test engineer',
+                   'manual tester', 'automation tester', 'sdet', 'test automation engineer', 'qa lead']),
+    ('Hardware',  ['hardware engineer', 'embedded', 'fpga', 'firmware engineer',
+                   'electronics engineer', 'pcb', 'verilog', 'rtos engineer']),
+    ('PM',        ['product manager', 'project manager', 'product owner', 'scrum master',
+                   'program manager', 'delivery manager', 'agile coach']),
+    ('Support',   ['technical support', 'tech support', 'customer support', 'helpdesk',
+                   'support engineer', 'it support', 'system administrator', 'sysadmin',
+                   'it administrator', 'service desk']),
+    ('Frontend',  ['frontend', 'front-end', 'front end', 'ui developer', 'ui engineer',
+                   'react developer', 'vue developer', 'angular developer']),
+    # Backend last — broadest catch-all
+    ('Backend',   ['backend', 'back-end', 'back end', 'python developer', 'java developer',
+                   'golang developer', 'go developer', 'php developer', 'node.js developer',
+                   'c# developer', '.net developer', 'ruby developer', 'kotlin developer',
+                   'scala developer', 'rust developer', 'c++ developer', 'software engineer',
+                   'software developer', 'fullstack', 'full-stack', 'full stack']),
 ]
 
 
@@ -283,6 +309,54 @@ def salary_by_role(db: Session) -> dict[str, dict]:
             'max': vals[-1],
             'color': _ROLE_COLORS.get(role, '#7d8590'),
         }
+    return result
+
+
+def role_category_stats(db: Session) -> dict[str, int]:
+    rows = db.execute(select(JobRecord.title)).fetchall()
+    counts: dict[str, int] = defaultdict(int)
+    total = 0
+    for (title,) in rows:
+        total += 1
+        role = _classify_role(title or '')
+        if role:
+            counts[role] += 1
+    result = {r: counts.get(r, 0) for r in _ROLES}
+    result['Other'] = total - sum(counts.values())
+    return result
+
+
+def top_job_titles(db: Session, limit: int = 60) -> list[dict]:
+    rows = db.execute(select(JobRecord.id, JobRecord.title)).fetchall()
+    title_ids: dict[str, list[int]] = defaultdict(list)
+    for job_id, title in rows:
+        norm = _normalize_role(title or '')
+        if norm:
+            title_ids[norm].append(job_id)
+
+    top = sorted(title_ids.items(), key=lambda x: -len(x[1]))[:limit]
+    all_ids = [jid for _, ids in top for jid in ids]
+    if not all_ids:
+        return []
+
+    tech_rows = db.execute(
+        select(VacancyTechnology.vacancy_id, Technology.name)
+        .join(Technology, Technology.id == VacancyTechnology.tech_id)
+        .where(VacancyTechnology.vacancy_id.in_(all_ids))
+    ).fetchall()
+
+    vac_techs: dict[int, list[str]] = defaultdict(list)
+    for vac_id, tech_name in tech_rows:
+        vac_techs[vac_id].append(tech_name)
+
+    result = []
+    for title, job_ids in top:
+        tech_counter: dict[str, int] = defaultdict(int)
+        for jid in job_ids:
+            for tech in vac_techs[jid]:
+                tech_counter[tech] += 1
+        top_techs = sorted(tech_counter.items(), key=lambda x: -x[1])[:5]
+        result.append({'title': title, 'count': len(job_ids), 'techs': [[t, c] for t, c in top_techs]})
     return result
 
 

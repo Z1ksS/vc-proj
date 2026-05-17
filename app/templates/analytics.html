@@ -127,7 +127,27 @@
   .tip .t { color: var(--text); font-weight: 600; }
   .tip .meta { color: var(--muted); margin-top: 2px; }
   .no-data { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
-  @media (max-width: 1000px) { .grid-2, .grid-2to1 { grid-template-columns: 1fr; } }
+  /* Role category bars */
+  .role-bar-row { display:grid; grid-template-columns:110px 1fr 52px; gap:10px; align-items:center; padding:5px 0; }
+  .role-bar-row .lbl { font-size:12px; color:var(--text); display:flex; align-items:center; gap:6px; }
+  .role-bar-row .lbl .sw { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+  .role-track { height:20px; background:var(--border-soft); border-radius:3px; overflow:hidden; position:relative; }
+  .role-track .fill { height:100%; border-radius:3px; }
+  .role-track .cnt-in { position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:11px; color:var(--text); font-variant-numeric:tabular-nums; }
+  .role-bar-row .pct { font-size:12px; color:var(--muted); text-align:right; font-variant-numeric:tabular-nums; }
+  /* Top job titles table */
+  .title-row { display:grid; grid-template-columns:28px minmax(160px,220px) 1fr 200px; gap:10px; align-items:center; padding:7px 8px; border-radius:5px; border-bottom:1px solid var(--border-soft); }
+  .title-row:last-child { border-bottom:none; }
+  .title-row:hover { background:var(--panel-2); }
+  .title-row .rank { font-size:11px; color:var(--muted-2); text-align:right; }
+  .title-row .ttl { font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .title-bar-col { display:flex; align-items:center; gap:8px; }
+  .title-bar-col .mini-bar { flex:1; height:6px; background:var(--border-soft); border-radius:2px; overflow:hidden; }
+  .title-bar-col .mini-bar > div { height:100%; background:var(--accent); border-radius:2px; opacity:.5; }
+  .title-bar-col .n { font-size:12px; color:var(--text); font-variant-numeric:tabular-nums; white-space:nowrap; min-width:32px; text-align:right; }
+  .title-techs { display:flex; flex-wrap:wrap; gap:3px; }
+  .tc { font-size:10px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; padding:1px 5px; color:var(--muted); }
+  @media (max-width: 1000px) { .grid-2, .grid-2to1 { grid-template-columns: 1fr; } .title-row { grid-template-columns: 28px 1fr auto; } .title-row .title-techs { display:none; } }
 </style>
 {% endblock %}
 {% block content %}
@@ -173,6 +193,7 @@
     <button class="tab active" data-view="market">Market</button>
     <button class="tab" data-view="salary">Salary</button>
     <button class="tab" data-view="cocc">Co-occurrence</button>
+    <button class="tab" data-view="roles">Roles</button>
   </div>
 
   <!-- MARKET -->
@@ -257,6 +278,33 @@
         <div class="panel-head"><div><h3>Matrix view</h3><div class="sub">Co-occurrence among top 14 techs</div></div></div>
         <div style="overflow-x:auto;"><table class="cocc-matrix" id="cocc-matrix"></table></div>
       </div>
+    </div>
+  </section>
+
+  <!-- ROLES -->
+  <section class="view" id="view-roles">
+    <div class="grid-2">
+      <div class="an-panel">
+        <div class="panel-head">
+          <div><h3>Role categories</h3><div class="sub">Classified by title keywords &middot; 10 broad categories</div></div>
+          <span class="meta" id="roles-classified"></span>
+        </div>
+        <div id="role-bars"></div>
+      </div>
+      <div class="an-panel">
+        <div class="panel-head">
+          <div><h3>By role (P25 / median / P75)</h3><div class="sub">USD/month &middot; classified by title keywords</div></div>
+        </div>
+        <div id="role-boxplots-2"></div>
+        <div class="bp-axis"><span>$0</span><span>$2k</span><span>$4k</span><span>$6k</span><span>$8k</span><span>$10k+</span></div>
+      </div>
+    </div>
+    <div class="an-panel">
+      <div class="panel-head">
+        <div><h3>Top job titles</h3><div class="sub">Real titles from DB &middot; grade prefix stripped &middot; top 60 by vacancy count</div></div>
+        <span class="meta" id="titles-meta"></span>
+      </div>
+      <div id="title-list"></div>
     </div>
   </section>
 </div>
@@ -594,6 +642,79 @@ function renderPairs() {
     td.addEventListener('mousemove', ev => { showTip(`<div class="t">${TECHS[+td.dataset.i]} + ${TECHS[+td.dataset.j]}</div><div class="meta"><b style="color:#e6edf3">${(+td.dataset.v).toLocaleString()}</b> vacancies with both</div>`, ev); });
     td.addEventListener('mouseleave', hideTip);
   });
+})();
+
+/* Role categories */
+(function() {
+  const cats = _D.role_categories || {};
+  if (!Object.keys(cats).length) return;
+  const RC = {Backend:'#4493f8', Frontend:'#56d364', DevOps:'#e3b341', Data:'#bc8cff', QA:'#ff7b72',
+              Mobile:'#39c5cf', Security:'#f78166', PM:'#ffa657', Support:'#a5d6ff', Hardware:'#7ee787', Other:'#7d8590'};
+  const entries = Object.entries(cats).filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]);
+  const max = Math.max(...entries.map(([,v]) => v));
+  const total = entries.reduce((a,[,v]) => a+v, 0);
+  const classified = entries.filter(([r]) => r !== 'Other').reduce((a,[,v]) => a+v, 0);
+  const el = document.getElementById('roles-classified');
+  if (el) el.textContent = `${classified.toLocaleString()} classified · ${((classified/total)*100).toFixed(0)}% coverage`;
+  const wrap = document.getElementById('role-bars');
+  if (!wrap) return;
+  wrap.innerHTML = entries.map(([r, cnt]) => {
+    const color = RC[r] || '#7d8590';
+    const pct = total > 0 ? ((cnt / total) * 100).toFixed(1) : 0;
+    return `<div class="role-bar-row">
+      <div class="lbl"><span class="sw" style="background:${color}"></span>${r}</div>
+      <div class="role-track"><div class="fill" style="width:${(cnt/max*100).toFixed(1)}%;background:${color}"></div><span class="cnt-in">${cnt.toLocaleString()}</span></div>
+      <div class="pct">${pct}%</div>
+    </div>`;
+  }).join('');
+})();
+
+/* Role boxplots (duplicate in Roles tab) */
+(function() {
+  const wrap = document.getElementById('role-boxplots-2');
+  if (!wrap) return;
+  const rb = _D.salary_by_role;
+  if (!rb || !Object.keys(rb).length) { wrap.innerHTML = '<div class="no-data">No role salary data</div>'; return; }
+  const SCALE_MAX = 11000;
+  const pos = x => (Math.min(x, SCALE_MAX) / SCALE_MAX) * 100;
+  wrap.innerHTML = Object.entries(rb).sort((a,b) => b[1].median - a[1].median).map(([role, d]) => `
+    <div class="boxplot-row">
+      <div class="lbl"><span class="sw" style="background:${d.color}"></span>${role}</div>
+      <div class="bp-track">
+        <div class="line"></div>
+        <div class="whisker" style="left:${pos(d.min)}%;width:${pos(d.max)-pos(d.min)}%;background:${d.color};opacity:.4;"></div>
+        <div class="box" style="left:${pos(d.p25)}%;width:${pos(d.p75)-pos(d.p25)}%;background:${d.color}33;border:1px solid ${d.color}"></div>
+        <div class="med" style="left:${pos(d.median)}%"></div>
+      </div>
+      <div class="bp-stat"><b>$${d.median.toLocaleString()}</b> · ${d.n}</div>
+    </div>`).join('');
+  wrap.querySelectorAll('.boxplot-row').forEach(row => {
+    const role = row.querySelector('.lbl').textContent.trim();
+    const d = rb[role];
+    if (!d) return;
+    row.addEventListener('mousemove', ev => { showTip(`<div class="t" style="color:${d.color}">${role}</div><div class="meta">Median <b style="color:#e6edf3">$${d.median.toLocaleString()}</b><br>P25 <b style="color:#e6edf3">$${d.p25.toLocaleString()}</b> · P75 <b style="color:#e6edf3">$${d.p75.toLocaleString()}</b><br>${d.n} vacancies with salary</div>`, ev); });
+    row.addEventListener('mouseleave', hideTip);
+  });
+})();
+
+/* Top job titles */
+(function() {
+  const titles = _D.top_titles || [];
+  if (!titles.length) return;
+  const meta = document.getElementById('titles-meta');
+  if (meta) meta.textContent = `top ${titles.length}`;
+  const maxCnt = Math.max(...titles.map(t => t.count));
+  const wrap = document.getElementById('title-list');
+  if (!wrap) return;
+  wrap.innerHTML = titles.map((t, i) => {
+    const techs = (t.techs || []).slice(0, 4).map(([name]) => `<span class="tc">${name}</span>`).join('');
+    return `<div class="title-row">
+      <div class="rank">${i+1}</div>
+      <div class="ttl" title="${t.title}">${t.title}</div>
+      <div class="title-bar-col"><div class="mini-bar"><div style="width:${(t.count/maxCnt*100).toFixed(0)}%"></div></div><span class="n">${t.count.toLocaleString()}</span></div>
+      <div class="title-techs">${techs}</div>
+    </div>`;
+  }).join('');
 })();
 
 /* Tabs */
