@@ -14,6 +14,9 @@
         ],
         "nofluffjobs": [
           "Python"
+        ],
+        "robotaua": [
+          "python"
         ]
       }
     },
@@ -36,6 +39,9 @@
         ],
         "nofluffjobs": [
           "JavaScript"
+        ],
+        "robotaua": [
+          "javascript"
         ]
       }
     },
@@ -51,6 +57,9 @@
         ],
         "nofluffjobs": [
           "Full Stack"
+        ],
+        "robotaua": [
+          "full stack"
         ]
       }
     },
@@ -68,6 +77,9 @@
         ],
         "nofluffjobs": [
           "Java"
+        ],
+        "robotaua": [
+          "java"
         ]
       }
     },
@@ -89,6 +101,9 @@
         ],
         "nofluffjobs": [
           ".NET"
+        ],
+        "robotaua": [
+          ".net"
         ]
       }
     },
@@ -106,6 +121,9 @@
         ],
         "nofluffjobs": [
           "Node.js"
+        ],
+        "robotaua": [
+          "node.js"
         ]
       }
     },
@@ -129,6 +147,9 @@
         ],
         "nofluffjobs": [
           "PHP"
+        ],
+        "robotaua": [
+          "php"
         ]
       }
     },
@@ -146,6 +167,9 @@
         ],
         "nofluffjobs": [
           "iOS"
+        ],
+        "robotaua": [
+          "ios"
         ]
       }
     },
@@ -163,6 +187,9 @@
         ],
         "nofluffjobs": [
           "Android"
+        ],
+        "robotaua": [
+          "android"
         ]
       }
     },
@@ -180,6 +207,9 @@
         ],
         "nofluffjobs": [
           "React Native"
+        ],
+        "robotaua": [
+          "react native"
         ]
       }
     },
@@ -197,6 +227,9 @@
         ],
         "nofluffjobs": [
           "Flutter"
+        ],
+        "robotaua": [
+          "flutter"
         ]
       }
     },
@@ -214,6 +247,9 @@
         ],
         "nofluffjobs": [
           "Golang"
+        ],
+        "robotaua": [
+          "golang"
         ]
       }
     },
@@ -233,6 +269,9 @@
         ],
         "nofluffjobs": [
           "C++"
+        ],
+        "robotaua": [
+          "c++"
         ]
       }
     },
@@ -250,6 +289,9 @@
         ],
         "nofluffjobs": [
           "Embedded"
+        ],
+        "robotaua": [
+          "embedded"
         ]
       }
     },
@@ -267,6 +309,9 @@
         ],
         "nofluffjobs": [
           "Ruby"
+        ],
+        "robotaua": [
+          "ruby"
         ]
       }
     },
@@ -284,6 +329,9 @@
         ],
         "nofluffjobs": [
           "Scala"
+        ],
+        "robotaua": [
+          "scala"
         ]
       }
     },
@@ -301,6 +349,9 @@
         ],
         "nofluffjobs": [
           "Rust"
+        ],
+        "robotaua": [
+          "rust"
         ]
       }
     },
@@ -316,6 +367,9 @@
         ],
         "nofluffjobs": [
           "Kotlin"
+        ],
+        "robotaua": [
+          "kotlin"
         ]
       }
     },
@@ -333,6 +387,9 @@
         ],
         "nofluffjobs": [
           "Elixir"
+        ],
+        "robotaua": [
+          "elixir"
         ]
       }
     },
@@ -352,6 +409,9 @@
         ],
         "nofluffjobs": [
           "QA"
+        ],
+        "robotaua": [
+          "qa"
         ]
       }
     },
@@ -369,6 +429,9 @@
         ],
         "nofluffjobs": [
           "DevOps"
+        ],
+        "robotaua": [
+          "devops"
         ]
       }
     },
@@ -389,6 +452,9 @@
         ],
         "nofluffjobs": [
           "Security"
+        ],
+        "robotaua": [
+          "security"
         ]
       }
     },
@@ -406,6 +472,9 @@
         ],
         "nofluffjobs": [
           "Sysadmin"
+        ],
+        "robotaua": [
+          "sysadmin"
         ]
       }
     },
@@ -423,6 +492,9 @@
         ],
         "nofluffjobs": [
           "Data Science"
+        ],
+        "robotaua": [
+          "data science"
         ]
       }
     },
@@ -444,6 +516,9 @@
           "Machine Learning",
           "AI",
           "AI / ML"
+        ],
+        "robotaua": [
+          "machine learning"
         ]
       }
     },
@@ -461,6 +536,9 @@
         ],
         "nofluffjobs": [
           "Data Engineering"
+        ],
+        "robotaua": [
+          "data engineer"
         ]
       }
     },
@@ -478,6 +556,9 @@
         ],
         "nofluffjobs": [
           "DBA"
+        ],
+        "robotaua": [
+          "dba"
         ]
       }
     },
@@ -493,6 +574,9 @@
         ],
         "nofluffjobs": [
           "Big Data"
+        ],
+        "robotaua": [
+          "big data"
         ]
       }
     },
@@ -508,6 +592,9 @@
         ],
         "nofluffjobs": [
           "Blockchain"
+        ],
+        "robotaua": [
+          "blockchain"
         ]
       }
     },
@@ -531,6 +618,9 @@
         ],
         "nofluffjobs": [
           "Gamedev"
+        ],
+        "robotaua": [
+          "gamedev"
         ]
       }
     },
@@ -554,6 +644,9 @@
         ],
         "nofluffjobs": [
           "Hardware"
+        ],
+        "robotaua": [
+          "hardware"
         ]
       }
     },
@@ -571,6 +664,9 @@
         ],
         "nofluffjobs": [
           "No Code"
+        ],
+        "robotaua": [
+          "no-code"
         ]
       }
     },
@@ -588,6 +684,9 @@
         ],
         "nofluffjobs": [
           "Project Manager"
+        ],
+        "robotaua": [
+          "project manager"
         ]
       }
     },
@@ -605,6 +704,9 @@
         ],
         "nofluffjobs": [
           "Product Manager"
+        ],
+        "robotaua": [
+          "product manager"
         ]
       }
     },
@@ -622,6 +724,9 @@
         ],
         "nofluffjobs": [
           "Engineering Manager"
+        ],
+        "robotaua": [
+          "engineering manager"
         ]
       }
     },
@@ -639,6 +744,9 @@
         ],
         "nofluffjobs": [
           "Architect"
+        ],
+        "robotaua": [
+          "architect"
         ]
       }
     },
@@ -656,6 +764,9 @@
         ],
         "nofluffjobs": [
           "Salesforce"
+        ],
+        "robotaua": [
+          "salesforce"
         ]
       }
     },
@@ -675,6 +786,9 @@
         ],
         "nofluffjobs": [
           "Support"
+        ],
+        "robotaua": [
+          "support"
         ]
       }
     }

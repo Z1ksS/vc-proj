@@ -36,6 +36,18 @@ _SELECTORS: dict[str, str] = {
     "nofluffjobs": "article",
 }
 
+# robota.ua uses a JSON API for descriptions — vacancy page is a client-rendered SPA
+_ROBOTAUA_API = "https://api.robota.ua/vacancy?id={job_id}"
+_ROBOTAUA_API_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json, text/plain, */*",
+    "Origin": "https://robota.ua",
+}
+
 
 def _get_logger() -> logging.Logger:
     logger = logging.getLogger(LOGGER_NAME)
@@ -73,6 +85,29 @@ def _extract_text(el) -> str:
 _GONE = object()  # sentinel: vacancy deleted/hidden
 
 
+def _fetch_robotaua_description(session: requests.Session, link: str):
+    """Fetch description from robota.ua JSON API. link is https://robota.ua/job/{id}."""
+    job_id = link.rstrip("/").rsplit("/", 1)[-1]
+    api_url = _ROBOTAUA_API.format(job_id=job_id)
+    try:
+        resp = session.get(api_url, headers=_ROBOTAUA_API_HEADERS, timeout=15)
+    except requests.RequestException:
+        return None
+    if resp.status_code == 404:
+        return _GONE
+    try:
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception:
+        return None
+    html = data.get("description") or ""
+    if not html:
+        return _GONE
+    soup = BeautifulSoup(html, "lxml")
+    text = _extract_text(soup)
+    return text if text else _GONE
+
+
 def _fetch_description(session: requests.Session, url: str, selector: str):
     try:
         resp = session.get(url, headers=_HEADERS, timeout=15)
@@ -92,15 +127,18 @@ def _fetch_description(session: requests.Session, url: str, selector: str):
     return text if text else _GONE
 
 
+_ALL_SOURCES = list(_SELECTORS.keys()) + ["robotaua"]
+
+
 def run_enrichment(sources: list[str] | None = None, limit: int | None = None) -> dict[str, int]:
     logger = _get_logger()
     session = requests.Session()
 
-    target_sources = sources or list(_SELECTORS.keys())
-    unknown = [s for s in target_sources if s not in _SELECTORS]
+    target_sources = sources or _ALL_SOURCES
+    unknown = [s for s in target_sources if s not in _ALL_SOURCES]
     if unknown:
-        logger.warning("Unknown sources (no selector defined): %s", unknown)
-        target_sources = [s for s in target_sources if s in _SELECTORS]
+        logger.warning("Unknown sources: %s", unknown)
+        target_sources = [s for s in target_sources if s in _ALL_SOURCES]
 
     stats: dict[str, int] = {s: 0 for s in target_sources}
     stats["errors"] = 0
@@ -110,7 +148,6 @@ def run_enrichment(sources: list[str] | None = None, limit: int | None = None) -
 
     with SessionLocal() as db:
         for source in target_sources:
-            selector = _SELECTORS[source]
             query = (
                 select(JobRecord.id, JobRecord.link)
                 .where(JobRecord.source == source)
@@ -126,7 +163,11 @@ def run_enrichment(sources: list[str] | None = None, limit: int | None = None) -
                 if i > 0:
                     time.sleep(REQUEST_DELAY)
 
-                result = _fetch_description(session, link, selector)
+                if source == "robotaua":
+                    result = _fetch_robotaua_description(session, link)
+                else:
+                    selector = _SELECTORS[source]
+                    result = _fetch_description(session, link, selector)
                 if result is _GONE:
                     db.execute(
                         update(JobRecord)
@@ -166,8 +207,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--sources",
         nargs="+",
         default=None,
-        choices=list(_SELECTORS.keys()),
-        help="Sources to enrich. Defaults to all: djinni dou workua nofluffjobs",
+        choices=_ALL_SOURCES,
+        help="Sources to enrich. Defaults to all: djinni dou workua nofluffjobs robotaua",
     )
     p.add_argument(
         "--limit",

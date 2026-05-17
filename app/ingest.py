@@ -18,6 +18,7 @@ from app.services.normalize import normalize_job
 from parsers.djinni import DjinniParser
 from parsers.dou import DouParser
 from parsers.nofluffjobs import NoFluffJobsParser
+from parsers.robotaua import RobotauaParser
 from parsers.workua import WorkUaParser
 
 
@@ -26,6 +27,7 @@ _PARSER_REGISTRY = {
     "workua": WorkUaParser,
     "nofluffjobs": NoFluffJobsParser,
     "dou": DouParser,
+    "robotaua": RobotauaParser,
 }
 
 ALL_SOURCES = tuple(_PARSER_REGISTRY.keys())
