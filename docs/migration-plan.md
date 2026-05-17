@@ -1,6 +1,6 @@
 # Migration Plan — job-vc
 
-**Date:** 2026-05-06 (last updated: 2026-05-12)
+**Date:** 2026-05-06 (last updated: 2026-05-17)
 
 ---
 
@@ -14,10 +14,12 @@
 | Phase 4a — Regex extraction | **DONE** | `data/tech_terms.json` ~220 terms, `technologies` + `vacancy_technologies` tables, `app/extract.py` batch script. |
 | Phase 4b — LLM evaluation | **DONE** | 5 iterations via `app/eval_extract.py`, zero-tech rate 28% → 9%, 58,492 tech mentions across 7,824 vacancies. |
 | Phase 4c — Salary + grade | **DONE** | `app/enrich_meta.py`: salary_min/max/currency + grade from title. 2,651 graded (34%), 1,318 with salary (17%). |
-| Phase 5a — Enhanced UI | **DONE** | Tech/grade/company filters on main page; /technologies and /companies pages. |
-| Phase 5c — Analytics UI | **DONE** | /analytics (grade/source dist, tech co-occurrence), /roles (tech stack by role). |
-| Phase 5b — Trend analytics | pending | requires ≥1 month of data |
-| Phase 6 — PostgreSQL + robota.ua | pending | revisit when SQLite shows real bottlenecks |
+| Phase 5a — Enhanced UI | **DONE** | Tech/grade/company filters; pagination; /technologies, /companies (redesign), /companies/{name} (Active/History tabs), /jobs/{id}. |
+| Phase 5b — Trend analytics | **DONE** | Weekly trend chart on /analytics; sparklines on companies page; "Show closed" toggle on main page. |
+| Phase 5c — Analytics UI | **DONE** | /analytics: 5-card KPI strip with sparkline, grade/source dist, weekly chart, co-occurrence with lift column. |
+| Phase 6a — PostgreSQL migration | **DONE** | Production DB migrated from SQLite to PostgreSQL. |
+| Phase 6b — robota.ua parser | pending | — |
+| Phase 7 — Role classification | pending | Expand beyond 6 hardcoded roles; see notes below. |
 
 ---
 
@@ -42,6 +44,7 @@
 - `app/scheduler.py` — 2×/day cron (08:00 + 20:00 UTC), `coalesce=True, max_instances=1`.
 - `app/main.py` — `@asynccontextmanager lifespan`; scheduler starts on startup.
 - `SCHEDULER_ENABLED`, `SCHEDULE_HOURS` env vars.
+- Production: replaced APScheduler with systemd cron jobs (`/etc/cron.d/job-vc`); logs to `/var/log/job-vc/cron.log`.
 
 ---
 
@@ -64,8 +67,6 @@
   - Deleted vacancies: `closed_at = now()` instead of erroring.
   - Commits every 50 records; skips already-enriched and already-closed rows.
 - **Result**: 7,826 records with `description` populated.
-
----
 
 ---
 
@@ -97,8 +98,6 @@
 
 ---
 
----
-
 ### Phase 4c — Salary + Grade Extraction ✅
 
 - `app/services/salary_parse.py` — parses raw `salary` field: `"$3000–5000"`, `"від 1500 до 3000 USD"`, `"3 000 грн"` → `(salary_min, salary_max, salary_currency)`.
@@ -108,15 +107,18 @@
 
 ---
 
----
-
 ### Phase 5a — Enhanced UI ✅
 
-- **Main page filters**: grade + technology + company chip — HTMX partial update, no full reload.
+- **Main page filters**: grade + technology + company chip + salary range — HTMX partial update, no full reload.
+- **"Show closed" toggle**: checkbox in sidebar; `include_closed` bool param on `/` and `/partials/jobs`; closed vacancies shown with strikethrough styling.
 - **Pagination**: 50 per page, Prev/Next via HTMX, resets on filter change.
 - **`/technologies`** — all technologies ranked by vacancy count; click → filtered vacancies.
-- **`/companies`** — top 150 companies by vacancy count; click → company detail page.
-- **`/companies/{name}`** — company detail: full tech stack as clickable cards (with per-vacancy counts) + table of all company vacancies.
+- **`/companies`** (redesigned) — 2-column layout: leaderboard on left + sticky drilldown panel on right.
+  - Leaderboard: each row has inline SVG sparkline (8-week trend), grade mix pill, tech chip count, salary range.
+  - Drilldown panel: big sparkline, tech frequency bars, grade mix bar + legend, salary by grade cards ($Xk format), recent 6 vacancies.
+  - Sort pills (Most active / Fewest / A→Z), search, pagination.
+  - Auto-selects first company on page load.
+- **`/companies/{name}`** (redesigned) — KPI strip (Active now / Total tracked / Closed % / Tech count); tech chip grid (top 30); **Active / History tabs** — client-side filtering via `data-closed` attribute; closed rows at 55% opacity with "Closed" badge.
 - **`/jobs/{id}`** — vacancy detail: title, company, grade, salary, full tech list, full description.
 - Tech tags in jobs table (up to 5 + "+N more" → vacancy detail page); company name clickable.
 - Grade badges with colour coding per level.
@@ -124,62 +126,63 @@
 
 ---
 
+### Phase 5b — Trend Analytics ✅
+
+- **`weekly_vacancy_counts(db, weeks=16)`** in `app/services/analytics.py` — buckets all vacancies into 16 weekly slots using UTC timestamps.
+- **Weekly trend chart** on `/analytics` Market view — SVG line + area fill, interactive dots with tooltips (absolute count + week label).
+- **Sparklines** on `/companies` leaderboard rows — 8-week inline SVG per company, area-fill, auto-scaled.
+- **Drilldown sparkline** in `/companies` side panel — same data, larger render, zero-state handled.
+
+---
+
 ### Phase 5c — Analytics UI ✅
 
-- **`/analytics`** — dashboard with 4 summary stat cards (total vacancies, with tech, graded, with salary); grade distribution bar chart; source breakdown; top-40 tech co-occurrence pairs (technologies that appear most often together in the same vacancy).
-- **`/roles`** — normalized job roles ranked by vacancy count (grade prefix stripped from titles); top-5 technologies per role with frequency count badge.
-- `app/services/analytics.py` — query functions: `summary_stats`, `grade_distribution`, `source_distribution`, `tech_cooccurrence` (self-join on `vacancy_technologies`), `role_tech_stats` (Python-side title normalization + batched tech aggregation).
-- Nav updated: Roles + Analytics links added.
+- **`/analytics`** — 5-card KPI strip:
+  1. Total vacancies (with 16-week sparkline)
+  2. New today
+  3. Companies hiring
+  4. Median salary (computed client-side from salary histogram)
+  5. Disclosure rate (vacancies with salary / total)
+- Grade distribution bar chart; source breakdown; weekly trend chart (see Phase 5b).
+- **Tech co-occurrence** — top 60 pairs; added **Lift** column (green highlight when ≥3×; formula: `(cnt_ab × total) / (cnt_a × cnt_b)`); sortable by Count or Lift.
+- `app/services/analytics.py`:
+  - `summary_stats` — added `companies` (distinct count).
+  - `tech_cooccurrence` — now returns 4-tuple `(tech1, tech2, cnt, lift)`.
+  - `weekly_vacancy_counts` — new function.
+
+---
+
+### Phase 6a — PostgreSQL Migration ✅
+
+- Production DB migrated from SQLite to PostgreSQL.
+- `DATABASE_URL` in `.env` updated to `postgresql+psycopg2://...`.
+- `psycopg2-binary` added to `requirements.txt`.
+- `check_same_thread` SQLite workaround removed.
 
 ---
 
 ## Upcoming Phases
 
-### Phase 5b — Trend Analytics
+### Phase 6b — robota.ua Parser
 
-**Prerequisite:** ≥1 month of data accumulated via APScheduler.
-
-**Goal:** trend queries, dashboards.
-
-1. `app/services/analytics.py`:
-   - `tech_trends(days=30)` — new vacancies per tech per day (by `first_seen_at`).
-   - `rising_technologies(window=7)` — 7-day moving average vs prior 7-day (delta + % change).
-   - `falling_technologies(window=7)` — same, descending.
-   - `closed_vacancies_report(days=30)` — breakdown by tech/grade/source.
-   - `cooccurrence_matrix(min_count=5)` — tech pairs in the same vacancy.
-   - `salary_distribution(tech, grade, city)` — min/p25/median/p75/max.
-   - `vacancy_lifecycle(source)` — median days `first_seen_at` → `closed_at`.
-2. Expose as `/api/analytics/*` endpoints.
-3. Metabase (or similar) connected to the same DB:
-   - Top 20 technologies (rolling 30 days).
-   - Rising vs declining (7-day delta, smoothed).
-   - "What closed this week" — proxy for real demand.
-   - Salary ranges by grade × city.
-   - Co-occurrence heatmap.
-
-**Risk:** Low. All read-only queries. Needs accumulated data — running Phase 5 on <2 weeks of data produces noise.
-
----
-
-### Phase 6 — PostgreSQL Migration + robota.ua Parser
-
-**Trigger for PostgreSQL:** only if SQLite shows a real bottleneck (slow queries, write conflicts, DB size).  
-Before starting: check current DB size/row count, observed slow queries, scheduler + web server conflicts.
-
-**PostgreSQL steps (when triggered):**
-1. Update `docker-compose.yml`: add `postgres:16` service, named volume, `DATABASE_URL=postgresql+psycopg2://...`.
-2. Run `alembic upgrade head` against fresh Postgres.
-3. Remove `check_same_thread` SQLite workaround from `app/db.py`.
-4. One-time data migration: dump SQLite → import to Postgres.
-5. `requirements.txt`: add `psycopg2-binary`.
-
-**robota.ua steps:**
-1. Manual investigation first: DevTools, check for Cloudflare, login walls, JS rendering, XHR pagination (same approach as DOU's `/xhr-load/`).
+1. Manual investigation first: DevTools, check for Cloudflare, login walls, JS rendering, XHR pagination.
 2. Implement `parsers/robotaua.py` following `BaseParser` interface.
 3. Likely: `requests` + BeautifulSoup; XHR endpoint if needed.
 
-**Risk (Postgres):** Medium. SQLite→Postgres type differences must be verified in migrations.  
-**Risk (robota.ua):** anti-bot is the main unknown. Start with polite crawling. Avoid Playwright unless confirmed necessary.
+**Risk:** anti-bot is the main unknown. Start with polite crawling. Avoid Playwright unless confirmed necessary.
+
+---
+
+### Phase 7 — Role Classification
+
+Current state: 6 hardcoded roles in `_ROLE_MAP` in `app/services/analytics.py`. Everything else falls into "Other".
+
+**Options under consideration:**
+- **Option A**: Expand `_ROLE_MAP` to ~15 roles (Backend, Frontend, Fullstack, DevOps/SRE, Data/ML, Mobile, QA, Security, PM, Sysadmin, Embedded, Support, Design, Hardware, Management).
+- **Option B**: Data-driven — `GROUP BY normalized_title` from DB, render as table without aggregation.
+- **Option C (recommended)**: Combo — broad categories chart (Option A) + "Top job titles" table (Option B) on the same `/analytics` page.
+
+**Risk:** Low — read-only queries + frontend rendering change.
 
 ---
 
@@ -208,7 +211,9 @@ Before starting: check current DB size/row count, observed slow queries, schedul
 |------|-----------|--------|-----------|
 | DOU XHR endpoint changes | Medium | Medium | No contract on private API; add smoke test asserting >0 results per run |
 | NoFluffJobs API changes | Medium | Low | Monitor response shape; not documented |
+| work.ua IP rate limiting on server | **High** | Medium | Server IP gets blocked; runs 0 results in <10s. Workaround: run ingest locally with `DATABASE_URL` pointing to remote DB, or add delays + User-Agent rotation |
 | robota.ua blocks scrapers | High | Low (additive) | Start with polite crawling |
 | LLM costs in Phase 4 | Low (if regex-first) | Medium | Gate LLM behind recall threshold; regex handles 85%+ |
 | Postgres migration loses data | Low | High | Backup `jobs.db` before Phase 6; idempotent migration script |
 | APScheduler overlapping runs | Low | Medium | `coalesce=True, max_instances=1` already set |
+| DOU enrich backlog latency | Medium | Low | ~2785 pending items × 1.5s = ~82 min per full enrich run; acceptable for nightly batch |

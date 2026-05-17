@@ -4,7 +4,7 @@ Internal tool for ingesting IT vacancies from Ukrainian job boards, normalizing 
 
 ## Stack
 - FastAPI + Jinja2 + HTMX
-- SQLAlchemy 2.x + SQLite (`jobs.db`)
+- SQLAlchemy 2.x + PostgreSQL
 - Parsers: Djinni, DOU, work.ua, NoFluffJobs
 
 ## Quick Start
@@ -12,6 +12,8 @@ Internal tool for ingesting IT vacancies from Ukrainian job boards, normalizing 
 ```bash
 pip install -r requirements.txt
 ```
+
+Copy `.env.example` to `.env` and fill in `DATABASE_URL` + `ANTHROPIC_API_KEY`.
 
 Run web app:
 ```bash
@@ -89,6 +91,8 @@ python -m app.extract
 python -m app.enrich_meta --only-new
 ```
 
+On the production server this is handled by systemd cron jobs (see `/etc/cron.d/job-vc`).
+
 ## Categories
 
 `data/categories.json` — 38 canonical IT categories (Python, JavaScript, DevOps, etc.) with per-source keyword mappings. Each source uses its own slugs:
@@ -96,11 +100,13 @@ python -m app.enrich_meta --only-new
 - **Djinni** — fixed category slugs (e.g. `ML AI`, `Fullstack`, subcategories like `Angular`, `React.js`)
 - **work.ua** — IT-filtered URLs (`/jobs-it-{keyword}/`)
 
+> **Note:** work.ua may return 0 results when run from a server IP due to rate limiting / IP blocking. It works correctly from a local machine. If ingest shows 0 results for all work.ua keywords, the server IP is likely blocked.
+
 ## Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `DATABASE_URL` | `sqlite:///./jobs.db` | DB connection string |
+| `DATABASE_URL` | `sqlite:///./jobs.db` | DB connection string (PostgreSQL in production) |
 | `ENABLE_SOURCES` | `djinni,dou,nofluffjobs,workua` | Active parsers |
 | `INGEST_LOG_PATH` | `logs/ingest.log` | Ingest log file |
 | `ENRICH_LOG_PATH` | `logs/enrich.log` | Enrich log file |
@@ -115,6 +121,17 @@ python -m app.enrich_meta --only-new
 pytest -q
 ```
 
+## UI Pages
+
+| URL | Description |
+|-----|-------------|
+| `/` | Main vacancies list — filter by keyword, source, grade, tech, company, salary; "Show closed" toggle |
+| `/jobs/{id}` | Vacancy detail — title, company, grade, salary, full tech list, description |
+| `/companies` | Companies leaderboard (2-column layout) — sparklines, tech bars, drilldown panel, sort + search |
+| `/companies/{name}` | Company detail — KPI strip, tech stack, Active / History tabs |
+| `/technologies` | All technologies ranked by vacancy count |
+| `/analytics` | Market analytics — 5 KPI cards (weekly sparkline), grade/source distribution, weekly trend chart, tech co-occurrence with lift |
+
 ## Project Phases
 
 - [x] **Phase 1** — Parsers + SQLite ingest + deduplication + lifecycle tracking
@@ -123,7 +140,9 @@ pytest -q
 - [x] **Phase 4a** — Tech stack extraction: regex dictionary (~220 terms), `technologies` + `vacancy_technologies` tables
 - [x] **Phase 4b** — LLM evaluation of extraction quality (5 iterations, zero-tech rate 28% → 9%)
 - [x] **Phase 4c** — Salary parsing + grade extraction (2,651 graded, 1,318 with salary)
-- [x] **Phase 5a** — Enhanced UI: filters, `/technologies`, `/companies`, `/companies/{name}`, `/jobs/{id}`, pagination, dark theme
-- [x] **Phase 5c** — Analytics UI: `/analytics` (grade/source distribution, tech co-occurrence), `/roles` (tech stack by normalized job role)
-- [ ] **Phase 5b** — Trend analytics: rising/falling tech, salary trends (requires ≥1 month of data)
-- [ ] **Phase 6** — PostgreSQL migration + robota.ua parser
+- [x] **Phase 5a** — Enhanced UI: filters, `/technologies`, `/companies` (redesigned), `/companies/{name}` (Active/History tabs), `/jobs/{id}`, dark theme
+- [x] **Phase 5b** — Weekly trend chart on analytics; sparklines on companies page; "Show closed" toggle
+- [x] **Phase 5c** — Analytics UI: 5-card KPI strip, grade/source charts, weekly trend chart, tech co-occurrence with lift score
+- [x] **Phase 6a** — PostgreSQL migration
+- [ ] **Phase 6b** — robota.ua parser
+- [ ] **Phase 7** — Role classification improvements (expand beyond 6 hardcoded roles)
