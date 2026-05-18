@@ -3,784 +3,1105 @@
 
 {% block head %}
 <style>
-/* ── Board layout ─────────────────────────────────────── */
-.board-wrap {
-  overflow-x: auto;
-  padding-bottom: 24px;
-  margin-top: 16px;
-}
-.board {
-  display: flex;
-  gap: 14px;
-  padding: 4px 2px 12px;
-  align-items: flex-start;
-  min-height: 60vh;
+/* Widen container for the board */
+.container { max-width: 1480px !important; }
+
+:root {
+  --panel-2: #1c2128;
+  --muted-2: #484f58;
+  --border-soft: #21262d;
+  --green:  #56d364;
+  --purple: #bc8cff;
+  --amber:  #e3b341;
+  --pink:   #ff7b72;
+  --teal:   #39c5cf;
 }
 
-/* ── Column ───────────────────────────────────────────── */
-.col {
-  flex: 0 0 260px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  max-height: calc(100vh - 160px);
+/* ── Page head ─────────────────────────────── */
+.page-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-top: 18px; gap: 16px; flex-wrap: wrap;
+}
+.page-head h2 { margin: 0; font-size: 22px; letter-spacing: -0.01em; }
+.crumbs { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+
+/* ── KPIs ──────────────────────────────────── */
+.kpi-grid {
+  display: grid; gap: 10px; margin-top: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.kpi .k-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.kpi .k-val { font-size: 22px; font-weight: 700; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.kpi.is-accent .k-val { color: var(--accent); }
+.kpi .k-delta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* ── Toolbar ───────────────────────────────── */
+.toolbar { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; }
+.ghost-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--muted);
+  border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer;
+  font-family: inherit; transition: color .12s, border-color .12s, background .12s;
+}
+.ghost-btn:hover { color: var(--text); border-color: var(--muted); }
+.ghost-btn.accent:hover { color: var(--accent); border-color: var(--accent); }
+.ghost-btn.danger:hover { color: var(--pink); border-color: rgba(255,123,114,.5); background: rgba(255,123,114,.06); }
+
+/* ── Board ─────────────────────────────────── */
+.board-wrap {
+  overflow-x: auto; padding-bottom: 12px;
+  margin: 0 -22px; padding-left: 22px; padding-right: 22px;
+}
+.board-wrap::-webkit-scrollbar { height: 10px; }
+.board-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.board { display: flex; gap: 12px; align-items: flex-start; min-height: 480px; }
+
+/* ── Column ────────────────────────────────── */
+.column {
+  width: 280px; flex-shrink: 0;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  max-height: calc(100vh - 320px); display: flex; flex-direction: column;
 }
 .col-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 12px 8px;
-  border-top: 3px solid transparent;
-  border-radius: 10px 10px 0 0;
-  flex-shrink: 0;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; position: relative; flex-shrink: 0;
 }
-.col-name {
-  flex: 1;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.col-name:hover { color: var(--accent); }
-.col-name-input {
-  flex: 1;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 2px 4px;
-  background: var(--bg);
-  border: 1px solid var(--accent);
-  border-radius: 4px;
-  color: var(--text);
-  outline: none;
+.col-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.col-title {
+  font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+  font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .col-count {
-  font-size: 11px;
-  color: var(--muted);
-  background: var(--bg);
-  border-radius: 10px;
-  padding: 1px 7px;
-  flex-shrink: 0;
+  font-size: 11px; background: var(--border-soft); color: var(--muted);
+  border-radius: 4px; padding: 1px 7px; font-variant-numeric: tabular-nums;
 }
-.col-menu-btn {
-  background: none;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0 2px;
-  line-height: 1;
-  flex-shrink: 0;
-  border-radius: 4px;
+.col-iconbtn {
+  background: transparent; border: none; padding: 0; color: var(--muted); cursor: pointer;
+  width: 22px; height: 22px; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 14px;
 }
-.col-menu-btn:hover { background: var(--panel-hover); color: var(--text); }
+.col-iconbtn:hover { color: var(--accent); background: var(--panel-2); }
 
-/* ── Column context menu ──────────────────────────────── */
-.ctx-menu {
-  position: absolute;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px 0;
-  z-index: 200;
-  min-width: 150px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+.col-menu {
+  position: absolute; top: 38px; right: 8px;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 4px; min-width: 148px; box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  z-index: 10; display: none;
 }
-.ctx-menu button {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: 13px;
-  padding: 7px 14px;
-  cursor: pointer;
-  border-radius: 0;
+.col-menu.open { display: block; }
+.col-menu button {
+  width: 100%; text-align: left; background: transparent; border: none;
+  color: var(--text); font-size: 12px; padding: 6px 10px; border-radius: 4px;
+  cursor: pointer; font-family: inherit;
 }
-.ctx-menu button:hover { background: var(--panel-hover); }
-.ctx-menu button.danger { color: #ff7b72; }
+.col-menu button:hover { background: var(--panel); }
+.col-menu button.danger { color: var(--pink); }
+.col-menu button.danger:hover { background: rgba(255,123,114,.08); }
 
-/* ── Cards container (scrollable) ────────────────────── */
-.col-cards {
-  overflow-y: auto;
-  flex: 1;
-  padding: 6px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.col-body {
+  padding: 8px; display: flex; flex-direction: column; gap: 8px;
+  overflow-y: auto; flex: 1; min-height: 60px;
 }
-.col-cards.drag-over { background: rgba(68,147,248,.07); border-radius: 6px; }
-.add-card-btn {
-  margin: 6px 8px 8px;
-  background: none;
-  border: 1px dashed var(--border);
-  color: var(--muted);
-  font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: left;
-  flex-shrink: 0;
-}
-.add-card-btn:hover { border-color: var(--accent); color: var(--accent); background: none; }
+.col-body::-webkit-scrollbar { width: 6px; }
+.col-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.col-empty { color: var(--muted-2); font-size: 11px; text-align: center; padding: 20px 12px; border: 1px dashed var(--border); border-radius: 6px; }
 
-/* ── Card ─────────────────────────────────────────────── */
+/* ── Card ──────────────────────────────────── */
 .card {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 11px;
-  cursor: grab;
-  user-select: none;
-  transition: border-color .15s, box-shadow .15s;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; cursor: pointer; position: relative; transition: border-color .12s, box-shadow .12s;
 }
-.card:hover { border-color: #444c56; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
-.card.dragging { opacity: .45; }
+.card:hover { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(68,147,248,.3); }
+.card-head { display: flex; align-items: flex-start; gap: 8px; }
 .card-title {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 5px;
-  color: var(--text);
-  line-height: 1.3;
+  flex: 1; font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-.card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 4px;
+.card-company { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.card-salary { margin-top: 8px; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--green); }
+.card-salary.none { color: var(--muted-2); }
+.card-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 3px; }
+.card-tags .tag {
+  display: inline-block; font-size: 10px; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 4px; padding: 1px 6px; color: var(--text); white-space: nowrap;
 }
-.card-company {
-  font-size: 11px;
-  color: var(--muted);
+.card-tags .tag.more { color: var(--accent); border-color: rgba(68,147,248,.3); background: rgba(68,147,248,.06); }
+.card-foot {
+  margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted);
 }
-.card-salary {
-  font-size: 11px;
-  color: #56d364;
-  margin-top: 2px;
-  display: block;
+.src-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 1px 6px 1px 5px; border-radius: 4px;
+  background: var(--panel); border: 1px solid var(--border);
+  font-size: 10px; color: var(--muted); text-transform: lowercase;
 }
+.src-badge .src-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.src-badge.djinni { color: var(--green); border-color: rgba(86,211,100,.4); }
+.src-badge.dou     { color: var(--accent); border-color: rgba(68,147,248,.4); }
+.src-badge.nofluffjobs { color: var(--purple); border-color: rgba(188,140,255,.4); }
+.src-badge.robotaua { color: var(--teal); border-color: rgba(57,197,207,.4); }
+.src-badge.workua  { color: var(--teal); border-color: rgba(57,197,207,.4); }
+.card-foot .spacer { flex: 1; }
+.card-foot .when { font-variant-numeric: tabular-nums; color: var(--muted); }
+.card-foot .move {
+  background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer;
+  width: 22px; height: 22px; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 11px; padding: 0;
+}
+.card-foot .move:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.card-foot .move:disabled { opacity: .3; cursor: not-allowed; }
 
-/* ── Add column button ────────────────────────────────── */
-.add-col-btn {
-  flex: 0 0 220px;
-  align-self: flex-start;
-  background: none;
-  border: 1px dashed var(--border);
-  color: var(--muted);
-  font-size: 13px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  white-space: nowrap;
+/* ── Add-column form ───────────────────────── */
+.add-column-form {
+  width: 280px; flex-shrink: 0;
+  border: 2px dashed var(--border); border-radius: 10px;
+  padding: 16px; background: rgba(22,27,34,.5);
 }
-.add-col-btn:hover { border-color: var(--accent); color: var(--accent); background: none; }
+.add-column-form label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.add-column-form input.txt {
+  width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  padding: 7px 10px; color: var(--text); font-size: 13px; font-family: inherit; margin-bottom: 14px;
+}
+.add-column-form input.txt:focus { outline: none; border-color: var(--accent); }
+.add-column-form input.txt::placeholder { color: var(--muted-2); }
+.color-row-b { display: flex; gap: 8px; margin-bottom: 14px; }
+.color-swatch {
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent;
+  padding: 0; cursor: pointer; position: relative;
+}
+.color-swatch::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--c); }
+.color-swatch.on { border-color: var(--text); }
+.form-actions { display: flex; gap: 8px; }
+.form-actions .btn-f {
+  flex: 1; padding: 7px 10px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  border: 1px solid var(--border); cursor: pointer; font-family: inherit;
+}
+.form-actions .btn-f.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.form-actions .btn-f.primary:hover { opacity: .9; }
+.form-actions .btn-f.secondary { background: var(--panel-2); color: var(--text); }
+.form-actions .btn-f.secondary:hover { border-color: var(--muted); }
 
-/* ── Add column inline form ───────────────────────────── */
-.add-col-form {
-  flex: 0 0 220px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.add-col-form input[type=text] { width: 100%; }
-.color-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--muted);
-}
-.color-row input[type=color] {
-  width: 36px;
-  height: 28px;
-  padding: 2px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--bg);
-  cursor: pointer;
-}
-.btn-row { display: flex; gap: 6px; }
-.btn-row button { flex: 1; font-size: 12px; padding: 6px 0; }
-.btn-row button.ghost {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--muted);
-}
-.btn-row button.ghost:hover { border-color: var(--text); color: var(--text); }
-
-/* ── Modal ────────────────────────────────────────────── */
+/* ── Modal overlay ─────────────────────────── */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.6);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(2px);
+  display: none; align-items: center; justify-content: center; z-index: 100; padding: 24px;
 }
-.modal-box {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  width: 580px;
-  max-width: 96vw;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+.modal-overlay.open { display: flex; }
+.modal {
+  width: 980px; max-width: calc(100vw - 40px); max-height: 92vh;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  position: relative; box-shadow: 0 32px 80px -16px rgba(0,0,0,.6);
+  display: flex; flex-direction: column; overflow: hidden;
 }
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+
+/* ── Modal head ────────────────────────────── */
+.m-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
-.modal-header h3 { margin: 0; flex: 1; font-size: 16px; }
-.modal-header a { font-size: 12px; color: var(--accent); }
+.m-head-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.status-pill-wrap { position: relative; }
+.status-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px;
+  padding: 5px 12px 5px 11px; color: var(--text);
+  font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  cursor: pointer; font-family: inherit;
+}
+.status-pill:hover { border-color: var(--muted); }
+.status-pill .caret { color: var(--muted); font-size: 9px; }
+.status-menu {
+  position: absolute; top: calc(100% + 4px); left: 0;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 4px; min-width: 100%; box-shadow: 0 8px 24px rgba(0,0,0,.4); z-index: 10; display: none;
+}
+.status-menu.open { display: block; }
+.status-menu button {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  background: transparent; border: none; color: var(--text); font-size: 13px;
+  padding: 7px 10px; border-radius: 4px; cursor: pointer; font-family: inherit;
+}
+.status-menu button:hover { background: var(--panel); }
+.link-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 5px 11px; color: var(--muted); font-size: 12px; text-decoration: none;
+  font-family: inherit; cursor: pointer; line-height: 1.4;
+}
+.link-pill:hover { color: var(--accent); border-color: var(--accent); background: rgba(68,147,248,.06); }
 .modal-close {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0 4px;
-  line-height: 1;
+  background: transparent; border: none; color: var(--muted); cursor: pointer;
+  width: 28px; height: 28px; border-radius: 6px;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 18px;
 }
-.modal-close:hover { color: var(--text); }
-.modal-body {
-  overflow-y: auto;
-  padding: 16px 20px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.modal-footer {
-  display: flex;
-  gap: 8px;
-  padding: 12px 20px;
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.modal-footer button { flex: 1; }
-.modal-footer button.danger {
-  background: #da3633;
-  flex: 0 0 auto;
-  padding: 8px 14px;
-}
-.form-row { display: flex; flex-direction: column; gap: 4px; }
-.form-row label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-.form-row input, .form-row select, .form-row textarea {
-  width: 100%;
-  font-size: 13px;
-}
-.form-row textarea { resize: vertical; min-height: 72px; }
-.form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-close:hover { color: var(--text); background: var(--panel-2); }
 
-/* ── Events ───────────────────────────────────────────── */
-.events-list { display: flex; flex-direction: column; gap: 6px; }
-.ev-item {
-  display: flex;
-  gap: 8px;
-  font-size: 12px;
-  align-items: baseline;
-}
-.ev-date { color: var(--muted); white-space: nowrap; flex-shrink: 0; }
-.ev-text { color: var(--text); }
-.ev-add { display: flex; gap: 6px; margin-top: 4px; }
-.ev-add input { flex: 1; font-size: 12px; padding: 5px 8px; }
-.ev-add button { padding: 5px 10px; font-size: 12px; }
+/* ── Modal body (two panes) ────────────────── */
+.m-body { display: grid; grid-template-columns: 1.15fr 1fr; flex: 1; min-height: 0; overflow: hidden; }
+.m-pane { overflow-y: auto; padding: 20px 22px; }
+.m-pane::-webkit-scrollbar { width: 6px; }
+.m-pane::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.m-left { border-right: 1px solid var(--border); }
 
-/* ── CV section ───────────────────────────────────────── */
-.cv-link { font-size: 13px; color: var(--accent); text-decoration: none; }
-.cv-link:hover { text-decoration: underline; }
-.cv-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.cv-actions button { padding: 5px 10px; font-size: 12px; }
+.m-title-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+.m-title-row .col-dot { width: 10px; height: 10px; flex-shrink: 0; margin-top: 7px; }
+.m-title-row .ttl-block { flex: 1; min-width: 0; }
+.m-title-row h3 { margin: 0 0 3px; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+.m-company { color: var(--muted); font-size: 13px; }
+.m-title-row [data-edit] { cursor: text; border-radius: 3px; padding: 0 2px; margin: 0 -2px; }
+.m-title-row [data-edit]:hover { background: var(--panel-2); }
+
+.kv-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; margin-bottom: 16px;
+  padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+}
+.kv { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.kv .k { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.kv .v {
+  font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  cursor: text; border-radius: 3px; padding: 0 2px; margin: 0 -2px; transition: background .12s;
+}
+.kv .v:hover { background: var(--panel); }
+.kv .v.muted { color: var(--muted-2); }
+input.kv-date {
+  background: transparent; border: 1px solid transparent; border-radius: 3px;
+  padding: 0 2px; color: var(--text); font-size: 13px; font-family: inherit;
+  color-scheme: dark; width: 120px;
+}
+input.kv-date:hover, input.kv-date:focus { outline: none; border-color: var(--border); }
+
+/* ── Collapsible section ───────────────────── */
+.m-section { margin-bottom: 14px; }
+.m-section-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  cursor: pointer; user-select: none;
+}
+.m-section-head.static { cursor: default; }
+.m-section-head .sec-caret { color: var(--muted); font-size: 10px; transition: transform .12s; width: 10px; }
+.m-section.collapsed .sec-caret { transform: rotate(-90deg); }
+.m-section-head .sec-ttl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; flex: 1; }
+.m-section-head .sec-cnt { color: var(--muted-2); font-size: 11px; }
+.m-section-head:not(.static):hover .sec-ttl { color: var(--text); }
+.m-section-head .mini-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--muted);
+  border-radius: 4px; width: 20px; height: 20px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 12px; font-family: inherit;
+}
+.m-section-head .mini-btn:hover { color: var(--accent); border-color: var(--accent); }
+.m-section.collapsed .m-section-body { display: none; }
+
+/* ── Tech chips ────────────────────────────── */
+.chip-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px;
+  padding: 3px 4px 3px 8px; color: var(--text);
+}
+.chip-x { cursor: pointer; color: var(--muted-2); font-size: 11px; width: 13px; height: 13px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
+.chip-x:hover { color: var(--pink); background: rgba(255,123,114,.10); }
+.chip-add { background: var(--bg); border: 1px dashed var(--border); border-radius: 4px; padding: 2px 7px; color: var(--text); font-size: 11px; font-family: inherit; width: 110px; }
+.chip-add:focus { outline: none; border-color: var(--accent); border-style: solid; }
+
+/* ── Salary box ────────────────────────────── */
+.salary-box { border: 1px solid var(--border); border-radius: 8px; padding: 14px; background: var(--panel-2); }
+.salary-row { display: grid; gap: 8px; grid-template-columns: 1fr 1fr 90px; }
+.salary-row .ctrl { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 13px; font-family: inherit; width: 100%; }
+.salary-row .ctrl:focus { outline: none; border-color: var(--accent); }
+.salary-box .hint { color: var(--muted); font-size: 11px; margin-top: 8px; line-height: 1.4; }
+
+/* ── Textarea ──────────────────────────────── */
+textarea.m-ta {
+  width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 9px 12px; color: var(--text); font-size: 13px; font-family: inherit;
+  line-height: 1.5; resize: vertical; min-height: 92px;
+}
+textarea.m-ta:focus { outline: none; border-color: var(--accent); }
+
+/* ── Dropzone / file row ───────────────────── */
+.dropzone {
+  border: 2px dashed var(--border); border-radius: 8px; padding: 22px 16px;
+  text-align: center; color: var(--muted); cursor: pointer; transition: border-color .12s, background .12s;
+}
+.dropzone:hover, .dropzone.over { border-color: var(--accent); background: rgba(68,147,248,.04); }
+.dropzone .dz-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+.dropzone .dz-main { font-size: 13px; color: var(--text); }
+.dropzone .dz-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.file-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2);
+}
+.file-row .fname { flex: 1; font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-row .fmeta { color: var(--muted); font-size: 11px; }
+.file-row .file-act { background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer; padding: 3px 8px; border-radius: 4px; font-size: 11px; }
+.file-row .file-act:hover { color: var(--accent); border-color: var(--accent); }
+.file-row .file-act.danger:hover { color: var(--pink); border-color: rgba(255,123,114,.5); }
+
+/* ── Timeline ──────────────────────────────── */
+.timeline { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; position: relative; }
+.timeline::before { content: ""; position: absolute; left: 13px; top: 14px; bottom: 14px; border-left: 1px dashed var(--border); z-index: 0; }
+.tl-event {
+  display: grid; grid-template-columns: 26px 80px 1fr auto auto;
+  align-items: center; gap: 10px; padding: 5px 6px; border-radius: 6px; position: relative; z-index: 1;
+}
+.tl-event:hover { background: var(--panel-2); }
+.tl-icon {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--panel);
+  border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--muted); flex-shrink: 0;
+}
+.tl-event.done .tl-icon { background: rgba(68,147,248,.10); border-color: var(--ec, var(--accent)); color: var(--ec, var(--accent)); }
+.tl-date { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+input.tl-date-input {
+  background: transparent; border: 1px solid transparent; border-radius: 3px;
+  padding: 2px 3px; color: var(--muted); font-size: 11px; font-family: inherit;
+  width: 88px; color-scheme: dark;
+}
+input.tl-date-input:hover, input.tl-date-input:focus { outline: none; border-color: var(--border); color: var(--text); }
+.tl-label { font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-event:not(.done) .tl-label { color: var(--muted); }
+.tl-check {
+  width: 22px; height: 22px; border-radius: 6px; background: transparent; border: 1px solid var(--border);
+  color: var(--muted-2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; padding: 0; font-family: inherit;
+}
+.tl-check.on { background: rgba(86,211,100,.10); border-color: rgba(86,211,100,.5); color: var(--green); }
+.tl-check:hover:not(.on) { color: var(--text); border-color: var(--muted); }
+.tl-remove { opacity: 0; background: transparent; border: none; color: var(--muted-2); cursor: pointer; font-size: 13px; padding: 0 2px; font-family: inherit; }
+.tl-event:hover .tl-remove { opacity: 1; }
+.tl-remove:hover { color: var(--pink); }
+.tl-add { background: transparent; border: 1px dashed var(--border); border-radius: 6px; color: var(--muted); padding: 6px 12px; font-size: 12px; cursor: pointer; margin-top: 6px; font-family: inherit; align-self: flex-start; }
+.tl-add:hover { color: var(--accent); border-color: var(--accent); }
+.tl-form {
+  display: grid; grid-template-columns: 1fr 140px; gap: 6px; margin-top: 8px;
+  padding: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+}
+.tl-form select, .tl-form input { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 5px 8px; color: var(--text); font-size: 12px; font-family: inherit; width: 100%; }
+.tl-form select:focus, .tl-form input:focus { outline: none; border-color: var(--accent); }
+.tl-form .tl-actions { grid-column: 1 / -1; display: flex; gap: 6px; }
+.tl-form .tl-actions button { background: var(--accent); color: #fff; border: 1px solid var(--accent); border-radius: 4px; padding: 5px 14px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.tl-form .tl-actions button.cancel { background: transparent; color: var(--muted); border-color: var(--border); }
+.tl-form .tl-actions button.cancel:hover { color: var(--text); }
+
+/* ── Modal footer ──────────────────────────── */
+.m-foot {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 12px 18px; border-top: 1px solid var(--border); flex-shrink: 0;
+}
+.btn-m { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); cursor: pointer; font-family: inherit; white-space: nowrap; }
+.btn-m.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-m.primary:hover { opacity: .9; }
+.btn-m.ghost-danger { background: transparent; color: var(--muted); }
+.btn-m.ghost-danger:hover { color: var(--pink); border-color: rgba(255,123,114,.5); background: rgba(255,123,114,.06); }
+
+/* ── Empty board ───────────────────────────── */
+.empty-board { text-align: center; padding: 60px 24px; background: var(--panel); border: 1px dashed var(--border); border-radius: 12px; color: var(--muted); }
+.empty-board .icon { font-size: 32px; opacity: .5; margin-bottom: 10px; }
+.empty-board h3 { color: var(--text); font-size: 16px; margin: 0 0 6px; }
+.empty-board p { margin: 0 0 16px; font-size: 13px; }
+
+/* ── Toast ─────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 16px; font-size: 13px; color: var(--text);
+  box-shadow: 0 8px 24px rgba(0,0,0,.4); opacity: 0;
+  transition: opacity .18s, transform .18s; z-index: 200; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(86,211,100,.4); }
+
+@media (max-width: 880px) {
+  .m-body { grid-template-columns: 1fr; }
+  .m-left { border-right: none; border-bottom: 1px solid var(--border); }
+  .salary-row { grid-template-columns: 1fr 1fr; }
+}
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="page-head">
+  <div>
+    <div class="crumbs">Track</div>
+    <h2>My Applications</h2>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi is-accent">
+    <div class="k-label">Tracking</div><div class="k-val" id="kpi-tracking">—</div>
+    <div class="k-delta">total cards on board</div>
+  </div>
+  <div class="kpi">
+    <div class="k-label">Applied</div><div class="k-val" id="kpi-applied">—</div>
+    <div class="k-delta">awaiting response</div>
+  </div>
+  <div class="kpi">
+    <div class="k-label">In progress</div><div class="k-val" id="kpi-progress">—</div>
+    <div class="k-delta">phone screen + interview</div>
+  </div>
+  <div class="kpi">
+    <div class="k-label">Offers</div><div class="k-val" id="kpi-offers">—</div>
+    <div class="k-delta">finish strong</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <button class="ghost-btn accent" id="addColumnBtn">+ Add column</button>
+</div>
+
 <div class="board-wrap">
   <div class="board" id="board"></div>
 </div>
 
-<!-- Column context menu (shared, repositioned by JS) -->
-<div class="ctx-menu" id="ctx-menu" style="display:none">
-  <button id="ctx-rename">Rename</button>
-  <button id="ctx-color">Change color</button>
-  <button class="danger" id="ctx-delete">Delete column</button>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
 </div>
 
-<!-- Card detail modal -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>Card details</h3>
-      <a id="m-job-link" href="#" target="_blank" rel="noreferrer" style="display:none">Open job ↗</a>
-      <button class="modal-close" onclick="closeModal()">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <label>Status / Column</label>
-        <select id="m-column"></select>
-      </div>
-      <div class="form-2col">
-        <div class="form-row">
-          <label>Job title</label>
-          <input type="text" id="m-title">
-        </div>
-        <div class="form-row">
-          <label>Company</label>
-          <input type="text" id="m-company">
-        </div>
-      </div>
-      <div class="form-2col">
-        <div class="form-row">
-          <label>Grade</label>
-          <select id="m-grade">
-            <option value="">—</option>
-            <option>Junior</option><option>Middle</option><option>Senior</option>
-            <option>Lead</option><option>Staff</option><option>Principal</option><option>Intern</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label>Location</label>
-          <input type="text" id="m-location" placeholder="Remote / Kyiv / …">
-        </div>
-      </div>
-      <div class="form-2col">
-        <div class="form-row">
-          <label>Salary min ($)</label>
-          <input type="number" id="m-salary-min" min="0" step="100">
-        </div>
-        <div class="form-row">
-          <label>Salary max ($)</label>
-          <input type="number" id="m-salary-max" min="0" step="100">
-        </div>
-      </div>
-      <div class="form-row">
-        <label>Notes</label>
-        <textarea id="m-notes" placeholder="Anything worth remembering…"></textarea>
-      </div>
-      <div class="form-row">
-        <label>Cover letter</label>
-        <textarea id="m-cover-letter" placeholder="Draft your cover letter…"></textarea>
-      </div>
-      <div class="form-row">
-        <label>CV / Resume</label>
-        <div class="cv-actions" id="m-cv-section"></div>
-      </div>
-      <div class="form-row">
-        <label>Timeline</label>
-        <div id="m-events">
-          <div class="events-list" id="events-list"></div>
-          <div class="ev-add">
-            <input type="text" id="ev-input" placeholder="Add note…">
-            <button onclick="addEvent()">+</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="danger" onclick="deleteActiveCard()">Delete</button>
-      <button onclick="closeModal()">Cancel</button>
-      <button onclick="saveModal()" style="background:var(--accent)">Save</button>
-    </div>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
 'use strict';
-let state = { columns: [], cards: [] };
-let activeCardId = null;
-let ctxColId = null;
-let dragCardId = null;
 
-// ── API helper ──────────────────────────────────────────────────────────────
+/* ── Constants ────────────────────────────────────────────────────────────── */
+const COLOR_PRESETS = [
+  { name:'accent', value:'#4493f8' },
+  { name:'amber',  value:'#e3b341' },
+  { name:'purple', value:'#bc8cff' },
+  { name:'green',  value:'#56d364' },
+  { name:'pink',   value:'#ff7b72' },
+  { name:'muted',  value:'#7d8590' },
+];
+
+const EVENT_TYPES = [
+  { id:'todo',           label:'Todo',           icon:'○', color:'#7d8590' },
+  { id:'apply',          label:'Applied',        icon:'✉', color:'#4493f8' },
+  { id:'hr-response',    label:'HR Response',    icon:'💬', color:'#e3b341' },
+  { id:'hr-interview',   label:'HR Interview',   icon:'📞', color:'#bc8cff' },
+  { id:'test-task',      label:'Test Task',      icon:'📝', color:'#39c5cf' },
+  { id:'tech-interview', label:'Tech Interview', icon:'💻', color:'#39c5cf' },
+  { id:'offer',          label:'Offer',          icon:'✦', color:'#56d364' },
+  { id:'agreement',      label:'Agreement',      icon:'✓', color:'#56d364' },
+  { id:'rejected',       label:'Rejected',       icon:'✗', color:'#ff7b72' },
+  { id:'note',           label:'Note',           icon:'•', color:'#7d8590' },
+];
+const EVENT_BY_ID = Object.fromEntries(EVENT_TYPES.map(e => [e.id, e]));
+
+/* ── State ────────────────────────────────────────────────────────────────── */
+let state = { columns: [], cards: [] };
+let openCardId = null;
+
+/* ── API helper ───────────────────────────────────────────────────────────── */
 async function apiFetch(url, method = 'GET', body = null) {
   const opts = { method };
-  if (body !== null) {
-    opts.headers = { 'Content-Type': 'application/json' };
-    opts.body = JSON.stringify(body);
-  }
+  if (body !== null) { opts.headers = { 'Content-Type': 'application/json' }; opts.body = JSON.stringify(body); }
   const r = await fetch(url, opts);
   if (!r.ok) throw new Error(await r.text());
   if (r.status === 204) return null;
   return r.json();
 }
 
-// ── Init ────────────────────────────────────────────────────────────────────
+/* ── Init ─────────────────────────────────────────────────────────────────── */
 async function initBoard() {
   try {
     const data = await apiFetch('/api/tracking/board');
     data.columns.forEach(c => c.id = String(c.id));
-    data.cards.forEach(c => { c.id = String(c.id); c.columnId = String(c.columnId); });
+    data.cards.forEach(c => { c.id = String(c.id); c.columnId = String(c.columnId); ensureCardDefaults(c); });
     state = data;
     renderAll();
-  } catch (e) {
+  } catch(e) {
     document.getElementById('board').innerHTML =
-      '<p style="color:var(--muted);padding:20px">Failed to load board: ' + escHtml(e.message) + '</p>';
+      `<div class="empty-board"><div class="icon">⚠</div><h3>Failed to load</h3><p>${esc(e.message)}</p></div>`;
   }
 }
 
-// ── Render ──────────────────────────────────────────────────────────────────
-function renderAll() {
+/* ── Defaults ─────────────────────────────────────────────────────────────── */
+function uid() { return Math.random().toString(36).slice(2, 9); }
+
+function ensureCardDefaults(card) {
+  if (!Array.isArray(card.events)) card.events = [];
+  if (!Array.isArray(card.stack))  card.stack  = [];
+  if (card.coverLetter == null)    card.coverLetter = '';
+  if (card.notes == null)          card.notes = '';
+  card.events.sort((a, b) => (a.date || 0) - (b.date || 0));
+}
+
+/* ── Helpers ──────────────────────────────────────────────────────────────── */
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function relTime(ts) {
+  if (!ts) return '—';
+  const d = Math.floor((Date.now() - ts) / 86400000);
+  if (d <= 0) return 'today';
+  if (d === 1) return '1d ago';
+  if (d < 7)  return d + 'd ago';
+  if (d < 30) return Math.floor(d/7) + 'w ago';
+  return Math.floor(d/30) + 'mo ago';
+}
+function fmtDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtFileSize(b) {
+  if (!b) return '';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(2) + ' MB';
+}
+function showToast(msg, kind = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + kind;
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function sortedCols() { return [...state.columns].sort((a,b) => a.position - b.position); }
+
+/* ── KPIs ─────────────────────────────────────────────────────────────────── */
+function renderKPIs() {
+  const cols = sortedCols();
+  const byName = name => cols.find(c => c.name.toLowerCase() === name.toLowerCase());
+  const appliedCol  = byName('Applied');
+  const offerCol    = byName('Offer');
+  const progressIds = cols
+    .filter(c => ['phone screen','interview'].includes(c.name.toLowerCase()))
+    .map(c => c.id);
+
+  document.getElementById('kpi-tracking').textContent = state.cards.length;
+  document.getElementById('kpi-applied').textContent  = appliedCol ? state.cards.filter(c => c.columnId === appliedCol.id).length : '—';
+  document.getElementById('kpi-progress').textContent = state.cards.filter(c => progressIds.includes(c.columnId)).length;
+  document.getElementById('kpi-offers').textContent   = offerCol ? state.cards.filter(c => c.columnId === offerCol.id).length : '—';
+}
+
+/* ── Board render ─────────────────────────────────────────────────────────── */
+function renderAll() { renderKPIs(); renderBoard(); }
+
+function renderBoard() {
   const board = document.getElementById('board');
-  board.innerHTML = '';
-
-  const sorted = [...state.columns].sort((a, b) => a.position - b.position);
-  sorted.forEach(col => board.appendChild(buildColumn(col)));
-
-  // Add-column button
-  const btn = document.createElement('button');
-  btn.className = 'add-col-btn';
-  btn.textContent = '+ Add column';
-  btn.onclick = startAddColumn;
-  board.appendChild(btn);
+  const cols = sortedCols();
+  if (!cols.length) {
+    board.innerHTML = `<div class="empty-board">
+      <div class="icon">📋</div><h3>Your board is empty</h3>
+      <p>Add a column to start tracking applications.</p>
+      <button class="btn-m primary" id="emptyAddCol">+ Add column</button></div>`;
+    document.getElementById('emptyAddCol').onclick = startAddColumn;
+    return;
+  }
+  board.innerHTML = cols.map((col, i) => columnHTML(col, i, cols.length)).join('');
+  attachBoardHandlers();
 }
 
-function buildColumn(col) {
+function columnHTML(col, idx, total) {
   const cards = state.cards.filter(c => c.columnId === col.id);
-  const el = document.createElement('div');
-  el.className = 'col';
-  el.dataset.colId = col.id;
-
-  el.innerHTML = `
-    <div class="col-head" style="border-top-color:${col.color}">
-      <span class="col-name" title="Double-click to rename"
-            ondblclick="startRenameColumn('${col.id}', this)">${escHtml(col.name)}</span>
-      <span class="col-count">${cards.length}</span>
-      <button class="col-menu-btn" onclick="openColMenu(event,'${col.id}')">⋯</button>
-    </div>
-    <div class="col-cards" id="col-cards-${col.id}"
-         ondragover="onDragOver(event)"
-         ondragleave="onDragLeave(event)"
-         ondrop="onDrop(event,'${col.id}')"></div>
-    <button class="add-card-btn" onclick="addCard('${col.id}')">+ Add card</button>
-  `;
-
-  const container = el.querySelector(`#col-cards-${col.id}`);
-  cards.forEach(card => container.appendChild(buildCard(card)));
-  return el;
+  const body = cards.length
+    ? cards.map(c => cardHTML(c, idx, total)).join('')
+    : `<div class="col-empty">No cards yet</div>`;
+  return `
+    <div class="column" data-col="${col.id}">
+      <div class="col-head">
+        <span class="col-dot" style="background:${col.color}"></span>
+        <span class="col-title">${esc(col.name)}</span>
+        <span class="col-count">${cards.length}</span>
+        <button class="col-iconbtn" data-act="add-card" title="Add card">+</button>
+        <button class="col-iconbtn" data-act="col-menu-btn" title="Column menu">···</button>
+        <div class="col-menu">
+          <button data-act="rename-col">Rename</button>
+          <button data-act="delete-col" class="danger">Delete column</button>
+        </div>
+      </div>
+      <div class="col-body">${body}</div>
+    </div>`;
 }
 
-function buildCard(card) {
-  const el = document.createElement('div');
-  el.className = 'card';
-  el.draggable = true;
-  el.dataset.cardId = card.id;
+function cardHTML(card, colIdx, colCount) {
+  const visStack = (card.stack || []).slice(0, 3);
+  const more     = (card.stack || []).length - visStack.length;
+  const tags     = visStack.map(t => `<span class="tag">${esc(t)}</span>`).join('')
+                 + (more > 0 ? `<span class="tag more">+${more}</span>` : '');
+  let salaryHTML;
+  if (card.salaryMin != null) {
+    salaryHTML = `<div class="card-salary">$${Number(card.salaryMin).toLocaleString()} – $${Number(card.salaryMax||card.salaryMin).toLocaleString()}</div>`;
+  } else {
+    salaryHTML = `<div class="card-salary none">Salary undisclosed</div>`;
+  }
+  const when = card.appliedAt ? relTime(card.appliedAt) : relTime(card.createdAt);
+  return `
+    <div class="card" data-card="${card.id}">
+      <div class="card-head"><div class="card-title">${esc(card.title)}</div></div>
+      <div class="card-company">${esc(card.company)}</div>
+      ${salaryHTML}
+      ${tags ? `<div class="card-tags">${tags}</div>` : ''}
+      <div class="card-foot">
+        <span class="src-badge ${esc(card.source||'')}"><span class="src-dot"></span>${esc(card.source||'manual')}</span>
+        <span class="when">${when}</span>
+        <span class="spacer"></span>
+        <button class="move" data-act="move-left"  ${colIdx===0?'disabled':''} title="Move left">‹</button>
+        <button class="move" data-act="move-right" ${colIdx===colCount-1?'disabled':''} title="Move right">›</button>
+      </div>
+    </div>`;
+}
 
-  el.addEventListener('dragstart', e => {
-    dragCardId = card.id;
-    e.dataTransfer.setData('text/plain', card.id);
-    setTimeout(() => el.classList.add('dragging'), 0);
+function attachBoardHandlers() {
+  document.querySelectorAll('.column').forEach(colEl => {
+    const colId = colEl.dataset.col;
+
+    colEl.querySelector('[data-act="col-menu-btn"]').addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.col-menu.open').forEach(m => m !== colEl.querySelector('.col-menu') && m.classList.remove('open'));
+      colEl.querySelector('.col-menu').classList.toggle('open');
+    });
+    colEl.querySelector('[data-act="rename-col"]').addEventListener('click', e => {
+      e.stopPropagation(); colEl.querySelector('.col-menu').classList.remove('open');
+      renameColumn(colId);
+    });
+    colEl.querySelector('[data-act="delete-col"]').addEventListener('click', e => {
+      e.stopPropagation(); colEl.querySelector('.col-menu').classList.remove('open');
+      deleteColumn(colId);
+    });
+    colEl.querySelector('[data-act="add-card"]').addEventListener('click', e => {
+      e.stopPropagation(); addManualCard(colId);
+    });
+
+    colEl.querySelectorAll('.card').forEach(cardEl => {
+      const cardId = cardEl.dataset.card;
+      cardEl.addEventListener('click', e => {
+        if (e.target.closest('.move')) return;
+        openModal(cardId);
+      });
+      cardEl.querySelector('[data-act="move-left"]').addEventListener('click', e => {
+        e.stopPropagation(); moveCard(cardId, -1);
+      });
+      cardEl.querySelector('[data-act="move-right"]').addEventListener('click', e => {
+        e.stopPropagation(); moveCard(cardId, +1);
+      });
+    });
   });
-  el.addEventListener('dragend', () => el.classList.remove('dragging'));
-  el.addEventListener('click', () => openModal(card.id));
-
-  const salary = card.salaryMin
-    ? `<span class="card-salary">$${fmt(card.salaryMin)}${card.salaryMax ? ' – $' + fmt(card.salaryMax) : ''}</span>`
-    : '';
-
-  el.innerHTML = `
-    <div class="card-title">${escHtml(card.title)}</div>
-    <div class="card-meta">
-      ${card.company ? `<span class="card-company">${escHtml(card.company)}</span>` : ''}
-      ${card.source ? `<span class="src-badge ${card.source}">${card.source}</span>` : ''}
-      ${card.grade ? `<span class="grade grade-${card.grade.toLowerCase()}">${card.grade}</span>` : ''}
-    </div>
-    ${salary}
-  `;
-  return el;
 }
 
-// ── Drag & drop ─────────────────────────────────────────────────────────────
-function onDragOver(e) {
-  e.preventDefault();
-  e.currentTarget.classList.add('drag-over');
-}
-function onDragLeave(e) {
-  e.currentTarget.classList.remove('drag-over');
-}
-function onDrop(e, targetColId) {
-  e.preventDefault();
-  e.currentTarget.classList.remove('drag-over');
-  const cardId = e.dataTransfer.getData('text/plain') || dragCardId;
-  if (!cardId) return;
-  const card = state.cards.find(c => c.id === cardId);
-  if (!card || card.columnId === targetColId) return;
-  card.columnId = targetColId;
-  renderAll();
-  apiFetch(`/api/tracking/cards/${cardId}`, 'PATCH', { columnId: targetColId }).catch(console.error);
-}
-
-// ── Add card ────────────────────────────────────────────────────────────────
-async function addCard(colId) {
-  const title = prompt('Job title:');
-  if (!title) return;
-  const company = prompt('Company (leave blank to skip):') || '';
-  try {
-    const card = await apiFetch('/api/tracking/cards', 'POST', { columnId: colId, title, company });
-    card.id = String(card.id);
-    card.columnId = String(card.columnId);
-    state.cards.push(card);
-    renderAll();
-    openModal(card.id);
-  } catch (e) { alert('Error: ' + e.message); }
-}
-
-// ── Column context menu ──────────────────────────────────────────────────────
-function openColMenu(event, colId) {
-  event.stopPropagation();
-  ctxColId = colId;
-  const menu = document.getElementById('ctx-menu');
-  menu.style.display = 'block';
-  const r = event.currentTarget.getBoundingClientRect();
-  menu.style.left = (r.left + window.scrollX) + 'px';
-  menu.style.top  = (r.bottom + window.scrollY + 4) + 'px';
-}
-
-document.getElementById('ctx-rename').onclick = () => {
-  hideColMenu();
-  if (!ctxColId) return;
-  const nameEl = document.querySelector(`[data-col-id="${ctxColId}"] .col-name`);
-  if (nameEl) startRenameColumn(ctxColId, nameEl);
-};
-document.getElementById('ctx-color').onclick = () => {
-  hideColMenu();
-  if (!ctxColId) return;
-  const col = state.columns.find(c => c.id === ctxColId);
-  if (!col) return;
-  const color = prompt('New color (hex):', col.color);
-  if (!color) return;
-  col.color = color;
-  renderAll();
-  apiFetch(`/api/tracking/columns/${ctxColId}`, 'PATCH', { color }).catch(console.error);
-};
-document.getElementById('ctx-delete').onclick = () => {
-  hideColMenu();
-  deleteColumn(ctxColId);
-};
-
-function hideColMenu() {
-  document.getElementById('ctx-menu').style.display = 'none';
-}
-document.addEventListener('click', e => {
-  if (!e.target.closest('#ctx-menu') && !e.target.closest('.col-menu-btn')) hideColMenu();
+document.addEventListener('click', () => {
+  document.querySelectorAll('.col-menu.open, .status-menu.open').forEach(m => m.classList.remove('open'));
 });
 
-// ── Rename column (inline) ───────────────────────────────────────────────────
-function startRenameColumn(colId, nameEl) {
+/* ── Card ops ─────────────────────────────────────────────────────────────── */
+function moveCard(cardId, dir) {
+  const card = state.cards.find(c => c.id === cardId);
+  if (!card) return;
+  const cols = sortedCols();
+  const idx = cols.findIndex(c => c.id === card.columnId);
+  const next = cols[idx + dir];
+  if (!next) return;
+  card.columnId = next.id;
+  renderAll();
+  apiFetch(`/api/tracking/cards/${cardId}`, 'PATCH', { columnId: next.id }).catch(console.error);
+}
+
+function deleteCard(cardId) {
+  state.cards = state.cards.filter(c => c.id !== cardId);
+  renderAll(); showToast('Removed from board');
+  apiFetch(`/api/tracking/cards/${cardId}`, 'DELETE').catch(console.error);
+}
+
+async function addManualCard(colId) {
+  try {
+    const card = await apiFetch('/api/tracking/cards', 'POST', { columnId: colId, title: 'New application', company: '' });
+    card.id = String(card.id); card.columnId = String(card.columnId);
+    ensureCardDefaults(card);
+    state.cards.unshift(card);
+    renderAll(); openModal(card.id);
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+/* ── Column ops ───────────────────────────────────────────────────────────── */
+function renameColumn(colId) {
   const col = state.columns.find(c => c.id === colId);
   if (!col) return;
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'col-name-input';
-  input.value = col.name;
-  nameEl.replaceWith(input);
-  input.focus(); input.select();
-  const commit = () => {
-    const newName = input.value.trim() || col.name;
-    if (newName !== col.name) {
-      col.name = newName;
-      apiFetch(`/api/tracking/columns/${colId}`, 'PATCH', { name: newName }).catch(console.error);
-    }
-    renderAll();
-  };
-  input.onblur = commit;
-  input.onkeydown = e => {
-    if (e.key === 'Enter') input.blur();
-    if (e.key === 'Escape') { input.value = col.name; input.blur(); }
-  };
+  const name = window.prompt('Rename column', col.name);
+  if (name && name.trim() && name.trim() !== col.name) {
+    col.name = name.trim(); renderAll();
+    apiFetch(`/api/tracking/columns/${colId}`, 'PATCH', { name: col.name }).catch(console.error);
+  }
 }
 
 function deleteColumn(colId) {
-  if (!confirm('Delete this column and all its cards?')) return;
+  const col = state.columns.find(c => c.id === colId);
+  if (!col) return;
+  const n = state.cards.filter(c => c.columnId === colId).length;
+  const msg = n ? `Delete "${col.name}" and its ${n} card${n===1?'':'s'}?` : `Delete "${col.name}"?`;
+  if (!window.confirm(msg)) return;
   state.columns = state.columns.filter(c => c.id !== colId);
   state.cards   = state.cards.filter(c => c.columnId !== colId);
   renderAll();
   apiFetch(`/api/tracking/columns/${colId}`, 'DELETE').catch(console.error);
 }
 
-// ── Add column (inline form) ─────────────────────────────────────────────────
 function startAddColumn() {
   const board = document.getElementById('board');
-  const btn   = board.querySelector('.add-col-btn');
-  const form  = document.createElement('div');
-  form.className = 'add-col-form';
-  form.innerHTML = `
-    <input type="text" id="new-col-name" placeholder="Column name">
-    <div class="color-row">
-      <label>Color</label>
-      <input type="color" id="new-col-color" value="#4493f8">
+  if (board.querySelector('.add-column-form')) return;
+  let pickedColor = COLOR_PRESETS[0].value;
+  const wrap = document.createElement('div');
+  wrap.className = 'add-column-form';
+  wrap.innerHTML = `
+    <label>Column name</label>
+    <input class="txt" type="text" maxlength="40" placeholder='e.g. "2nd Round"'>
+    <label>Color</label>
+    <div class="color-row-b">
+      ${COLOR_PRESETS.map((c,i) => `<button class="color-swatch ${i===0?'on':''}" data-c="${c.value}" style="--c:${c.value}" aria-label="${c.name}"></button>`).join('')}
     </div>
-    <div class="btn-row">
-      <button onclick="commitAddColumn()">Add</button>
-      <button class="ghost" onclick="renderAll()">Cancel</button>
-    </div>
-  `;
-  btn.replaceWith(form);
-  document.getElementById('new-col-name').focus();
+    <div class="form-actions">
+      <button class="btn-f primary" data-act="create">Create</button>
+      <button class="btn-f secondary" data-act="cancel">Cancel</button>
+    </div>`;
+  board.appendChild(wrap);
+  wrap.scrollIntoView?.({ behavior:'smooth', inline:'end', block:'nearest' });
+  const inp = wrap.querySelector('input.txt');
+  setTimeout(() => inp.focus(), 50);
+  wrap.querySelectorAll('.color-swatch').forEach(b => b.addEventListener('click', () => {
+    pickedColor = b.dataset.c;
+    wrap.querySelectorAll('.color-swatch').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+  }));
+  wrap.querySelector('[data-act="cancel"]').addEventListener('click', () => wrap.remove());
+  const commit = async () => {
+    const name = inp.value.trim();
+    if (!name) { inp.focus(); inp.style.borderColor = 'var(--pink)'; return; }
+    try {
+      const col = await apiFetch('/api/tracking/columns', 'POST', { name, color: pickedColor });
+      col.id = String(col.id); state.columns.push(col);
+      wrap.remove(); renderAll();
+    } catch(e) { showToast('Error: ' + e.message); }
+  };
+  wrap.querySelector('[data-act="create"]').addEventListener('click', commit);
+  inp.addEventListener('keydown', e => { if (e.key==='Enter') commit(); if (e.key==='Escape') wrap.remove(); });
 }
 
-function commitAddColumn() {
-  const name  = document.getElementById('new-col-name').value.trim();
-  if (!name) { document.getElementById('new-col-name').focus(); return; }
-  const color = document.getElementById('new-col-color').value;
-  apiFetch('/api/tracking/columns', 'POST', { name, color })
-    .then(col => {
-      col.id = String(col.id);
-      state.columns.push(col);
-      renderAll();
-    })
-    .catch(e => alert('Error: ' + e.message));
-}
+document.getElementById('addColumnBtn').addEventListener('click', startAddColumn);
 
-// ── Modal ────────────────────────────────────────────────────────────────────
+/* ── Modal ────────────────────────────────────────────────────────────────── */
+const overlay = document.getElementById('modalOverlay');
+const modal   = document.getElementById('modal');
+
 function openModal(cardId) {
-  activeCardId = cardId;
   const card = state.cards.find(c => c.id === cardId);
   if (!card) return;
-
-  v('m-title').value       = card.title;
-  v('m-company').value     = card.company || '';
-  v('m-notes').value       = card.notes || '';
-  v('m-cover-letter').value = card.coverLetter || '';
-  v('m-salary-min').value  = card.salaryMin || '';
-  v('m-salary-max').value  = card.salaryMax || '';
-  v('m-grade').value       = card.grade || '';
-  v('m-location').value    = card.location || '';
-
-  const link = v('m-job-link');
-  if (card.url) { link.href = card.url; link.style.display = 'inline'; }
-  else link.style.display = 'none';
-
-  // Column selector
-  const sel = v('m-column');
-  sel.innerHTML = [...state.columns]
-    .sort((a, b) => a.position - b.position)
-    .map(c => `<option value="${c.id}" ${c.id === card.columnId ? 'selected' : ''}>${escHtml(c.name)}</option>`)
-    .join('');
-
-  // CV
-  const cvSec = v('m-cv-section');
-  if (card.cv) {
-    cvSec.innerHTML = `<a class="cv-link" href="${card.cv.url}" target="_blank">📎 ${escHtml(card.cv.filename)}</a>
-      <button onclick="triggerCvUpload()">Replace</button>`;
-  } else {
-    cvSec.innerHTML = `<button onclick="triggerCvUpload()">📎 Upload CV</button>`;
-  }
-
-  renderEvents(card);
-  document.getElementById('modal-overlay').style.display = 'flex';
+  openCardId = cardId;
+  renderModal(card);
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
-
 function closeModal() {
-  document.getElementById('modal-overlay').style.display = 'none';
-  activeCardId = null;
+  overlay.classList.remove('open');
+  openCardId = null;
+  document.body.style.overflow = '';
 }
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key==='Escape' && overlay.classList.contains('open')) closeModal(); });
 
-function saveModal() {
-  const card = state.cards.find(c => c.id === activeCardId);
-  if (!card) return;
-  const colId   = v('m-column').value;
-  const updates = {
-    title:       v('m-title').value,
-    company:     v('m-company').value,
-    notes:       v('m-notes').value,
-    coverLetter: v('m-cover-letter').value,
-    grade:       v('m-grade').value,
-    location:    v('m-location').value,
-    salaryMin:   parseInt(v('m-salary-min').value) || null,
-    salaryMax:   parseInt(v('m-salary-max').value) || null,
-    columnId:    colId,
-  };
-  Object.assign(card, updates);
-  card.columnId = colId;
-  renderAll();
-  closeModal();
-  apiFetch(`/api/tracking/cards/${activeCardId}`, 'PATCH', updates).catch(console.error);
-}
+function renderModal(card) {
+  ensureCardDefaults(card);
+  const col      = state.columns.find(c => c.id === card.columnId);
+  const colColor = col?.color || 'var(--muted)';
+  const stack    = card.stack || [];
 
-function deleteActiveCard() {
-  if (!activeCardId || !confirm('Delete this card?')) return;
-  const id = activeCardId;
-  state.cards = state.cards.filter(c => c.id !== id);
-  closeModal();
-  renderAll();
-  apiFetch(`/api/tracking/cards/${id}`, 'DELETE').catch(console.error);
-}
+  const cvHTML = card.cv
+    ? `<div class="file-row">
+         <span style="font-size:14px">📎</span>
+         <div style="flex:1;min-width:0"><div class="fname">${esc(card.cv.name||card.cv.filename)}</div><div class="fmeta">${fmtFileSize(card.cv.size)}</div></div>
+         <a class="file-act" href="${esc(card.cv.url||'')}" target="_blank">Download</a>
+         <button class="file-act danger" data-act="delete-cv">Remove</button>
+       </div>`
+    : `<div class="dropzone" id="dz">
+         <span class="dz-icon">📎</span>
+         <div class="dz-main">Drop CV here or click to upload</div>
+         <div class="dz-sub">.pdf · .doc · .docx · max 5 MB</div>
+       </div>`;
 
-// Close modal on overlay click
-document.getElementById('modal-overlay').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
-});
+  const evHTML = (card.events||[]).map(ev => {
+    const t = EVENT_BY_ID[ev.type] || EVENT_BY_ID.note;
+    const lbl = (ev.label && ev.label.trim()) ? ev.label : t.label;
+    return `<div class="tl-event ${ev.done?'done':''}" data-eid="${ev.id}" style="--ec:${t.color}">
+      <span class="tl-icon">${t.icon}</span>
+      <input class="tl-date-input" type="date" value="${fmtDate(ev.date)}" data-act="ev-date">
+      <span class="tl-label" data-act="ev-label">${esc(lbl)}</span>
+      <button class="tl-check ${ev.done?'on':''}" data-act="ev-toggle">${ev.done?'✓':''}</button>
+      <button class="tl-remove" data-act="ev-remove">×</button>
+    </div>`;
+  }).join('');
 
-// ── Events ───────────────────────────────────────────────────────────────────
-function renderEvents(card) {
-  const list = document.getElementById('events-list');
-  list.innerHTML = (card.events || []).map(ev => `
-    <div class="ev-item">
-      <span class="ev-date">${new Date(ev.ts).toLocaleDateString()}</span>
-      <span class="ev-text">${escHtml(ev.text)}</span>
+  modal.innerHTML = `
+    <div class="m-head">
+      <div class="status-pill-wrap">
+        <button class="status-pill" data-act="status-toggle">
+          <span class="col-dot" style="background:${colColor}"></span>
+          <span>${esc(col?.name||'Unknown')}</span>
+          <span class="caret">▾</span>
+        </button>
+        <div class="status-menu" id="statusMenu">
+          ${sortedCols().map(c=>`<button data-status="${c.id}"><span class="col-dot" style="background:${c.color}"></span>${esc(c.name)}</button>`).join('')}
+        </div>
+      </div>
+      <div class="m-head-right">
+        ${card.url ? `<a class="link-pill" href="${esc(card.url)}" target="_blank" rel="noopener">Vacancy <span>↗</span></a>` : ''}
+        <button class="modal-close" data-act="close">×</button>
+      </div>
     </div>
-  `).join('');
-  v('ev-input').value = '';
+
+    <div class="m-body">
+      <div class="m-pane m-left">
+        <div class="m-title-row">
+          <span class="col-dot" style="background:${colColor}"></span>
+          <div class="ttl-block">
+            <h3><span data-edit="title">${esc(card.title)}</span></h3>
+            <div class="m-company">
+              <span data-edit="company">${esc(card.company)}</span>
+              ${card.source ? ` · <span class="src-badge ${esc(card.source)}"><span class="src-dot"></span>${esc(card.source)}</span>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div class="kv-grid">
+          <div class="kv"><span class="k">Grade</span><span class="v ${card.grade?'':'muted'}" data-edit="grade">${esc(card.grade||'—')}</span></div>
+          <div class="kv"><span class="k">Location</span><span class="v ${card.location?'':'muted'}" data-edit="location">${esc(card.location||'—')}</span></div>
+          <div class="kv"><span class="k">Applied date</span><span class="v"><input class="kv-date" id="appliedAt" type="date" value="${fmtDate(card.appliedAt)}"></span></div>
+          <div class="kv"><span class="k">Source</span><span class="v">${esc(card.source||'manual')}</span></div>
+        </div>
+
+        <div class="m-section" data-sec="salary">
+          <div class="m-section-head" data-act="toggle-sec">
+            <span class="sec-caret">▾</span><span class="sec-ttl">Salary range</span>
+            <span class="sec-cnt">${card.salaryMin!=null ? '$'+Number(card.salaryMin).toLocaleString() : 'undisclosed'}</span>
+          </div>
+          <div class="m-section-body">
+            <div class="salary-box">
+              <div class="salary-row">
+                <input class="ctrl" id="salMin" type="number" min="0" step="100" placeholder="Min" value="${card.salaryMin??''}">
+                <input class="ctrl" id="salMax" type="number" min="0" step="100" placeholder="Max" value="${card.salaryMax??''}">
+                <select class="ctrl" id="salCcy">
+                  <option value="USD" ${(card.salaryCurrency||'USD')==='USD'?'selected':''}>USD</option>
+                  <option value="EUR" ${(card.salaryCurrency||'')==='EUR'?'selected':''}>EUR</option>
+                  <option value="UAH" ${(card.salaryCurrency||'')==='UAH'?'selected':''}>UAH</option>
+                </select>
+              </div>
+              <div class="hint">Default from vacancy; override with your expected range.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="m-section" data-sec="stack">
+          <div class="m-section-head">
+            <span class="sec-caret" data-act="toggle-sec">▾</span>
+            <span class="sec-ttl" data-act="toggle-sec">Tech stack</span>
+            <span class="sec-cnt" data-act="toggle-sec">${stack.length}</span>
+            <button class="mini-btn" data-act="stack-add" title="Add">+</button>
+          </div>
+          <div class="m-section-body">
+            <div class="chip-row" id="chipRow">
+              ${stack.map(t=>`<span class="chip">${esc(t)}<span class="chip-x" data-act="stack-remove" data-tag="${esc(t)}">×</span></span>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="m-section ${card.coverLetter?'':'collapsed'}" data-sec="cover">
+          <div class="m-section-head" data-act="toggle-sec">
+            <span class="sec-caret">▾</span><span class="sec-ttl">Cover letter</span>
+            <span class="sec-cnt">${card.coverLetter ? card.coverLetter.length+' chars' : 'empty'}</span>
+          </div>
+          <div class="m-section-body">
+            <textarea class="m-ta" id="coverLetter" rows="5" placeholder="Tailored cover letter…">${esc(card.coverLetter||'')}</textarea>
+          </div>
+        </div>
+
+        <div class="m-section" data-sec="cv">
+          <div class="m-section-head static"><span class="sec-caret" style="visibility:hidden">▾</span><span class="sec-ttl">CV attached</span></div>
+          <div class="m-section-body">${cvHTML}</div>
+        </div>
+      </div>
+
+      <div class="m-pane m-right">
+        <div class="m-section" data-sec="history">
+          <div class="m-section-head static">
+            <span class="sec-caret" style="visibility:hidden">▾</span>
+            <span class="sec-ttl">History &amp; Events</span>
+            <span class="sec-cnt">${(card.events||[]).length} events</span>
+          </div>
+          <div class="m-section-body">
+            <div class="timeline" id="timeline">${evHTML}</div>
+            <button class="tl-add" id="addEventBtn">+ Add event</button>
+            <div id="addEventForm"></div>
+          </div>
+        </div>
+
+        <div class="m-section" style="margin-top:22px">
+          <div class="m-section-head static"><span class="sec-caret" style="visibility:hidden">▾</span><span class="sec-ttl">Notes</span></div>
+          <div class="m-section-body">
+            <textarea class="m-ta" id="notes" rows="7" placeholder="Recruiter name, prep links, anything…">${esc(card.notes||'')}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="m-foot">
+      <button class="btn-m primary" data-act="save">Save changes</button>
+      <button class="btn-m ghost-danger" data-act="remove">Remove from board</button>
+    </div>`;
+
+  /* Wire up */
+  modal.querySelector('[data-act="close"]').addEventListener('click', closeModal);
+
+  /* Status pill */
+  const sPill = modal.querySelector('[data-act="status-toggle"]');
+  const sMenu = modal.querySelector('#statusMenu');
+  sPill.addEventListener('click', e => { e.stopPropagation(); sMenu.classList.toggle('open'); });
+  sMenu.querySelectorAll('button[data-status]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    card.columnId = b.dataset.status;
+    sMenu.classList.remove('open');
+    renderAll(); renderModal(card);
+  }));
+
+  /* Editable fields */
+  modal.querySelectorAll('[data-edit]').forEach(el => {
+    el.title = 'Click to edit';
+    el.addEventListener('click', () => {
+      const field = el.dataset.edit;
+      const val = window.prompt('Edit ' + field, card[field] || '');
+      if (val != null && val.trim()) { card[field] = val.trim(); renderModal(card); renderBoard(); }
+    });
+  });
+
+  /* Collapsible sections */
+  modal.querySelectorAll('[data-act="toggle-sec"]').forEach(el =>
+    el.addEventListener('click', e => { e.stopPropagation(); el.closest('.m-section').classList.toggle('collapsed'); })
+  );
+
+  /* Tech stack */
+  modal.querySelector('[data-act="stack-add"]').addEventListener('click', e => {
+    e.stopPropagation();
+    const row = modal.querySelector('#chipRow');
+    if (row.querySelector('.chip-add')) return;
+    const inp = document.createElement('input');
+    inp.className = 'chip-add'; inp.type = 'text'; inp.placeholder = 'e.g. Kafka';
+    row.appendChild(inp); inp.focus();
+    const commit = () => {
+      const v = inp.value.trim();
+      if (v && !card.stack.includes(v)) { card.stack.push(v); renderModal(card); renderBoard(); }
+      else inp.remove();
+    };
+    inp.addEventListener('keydown', e => { if (e.key==='Enter') { e.preventDefault(); commit(); } if (e.key==='Escape') inp.remove(); });
+    inp.addEventListener('blur', commit);
+  });
+  modal.querySelectorAll('[data-act="stack-remove"]').forEach(el =>
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      card.stack = card.stack.filter(t => t !== el.dataset.tag);
+      renderModal(card); renderBoard();
+    })
+  );
+
+  /* Timeline */
+  modal.querySelectorAll('.tl-event').forEach(evEl => {
+    const eid = evEl.dataset.eid;
+    const ev  = card.events.find(e => e.id === eid);
+    if (!ev) return;
+    evEl.querySelector('[data-act="ev-toggle"]').addEventListener('click', () => { ev.done = !ev.done; renderModal(card); });
+    evEl.querySelector('[data-act="ev-date"]').addEventListener('change', e => { ev.date = new Date(e.target.value).getTime(); });
+    evEl.querySelector('[data-act="ev-label"]').addEventListener('click', () => {
+      const t = EVENT_BY_ID[ev.type] || EVENT_BY_ID.note;
+      const val = window.prompt('Edit label', ev.label || t.label);
+      if (val != null) { ev.label = val.trim() === t.label ? '' : val.trim(); renderModal(card); }
+    });
+    evEl.querySelector('[data-act="ev-remove"]').addEventListener('click', () => {
+      if (window.confirm('Remove this event?')) { card.events = card.events.filter(e => e.id !== eid); renderModal(card); }
+    });
+  });
+
+  /* Add-event form */
+  modal.querySelector('#addEventBtn').addEventListener('click', () => {
+    const host = modal.querySelector('#addEventForm');
+    if (host.querySelector('.tl-form')) return;
+    host.innerHTML = `
+      <div class="tl-form">
+        <select id="evType">${EVENT_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${esc(t.label)}</option>`).join('')}</select>
+        <input id="evDate" type="date" value="${fmtDate(Date.now())}">
+        <input id="evLabel" type="text" placeholder="Optional custom label" style="grid-column:1/-1">
+        <div class="tl-actions">
+          <button data-act="ev-create">Add</button>
+          <button class="cancel" data-act="ev-cancel">Cancel</button>
+        </div>
+      </div>`;
+    host.querySelector('[data-act="ev-cancel"]').addEventListener('click', () => host.innerHTML = '');
+    host.querySelector('[data-act="ev-create"]').addEventListener('click', () => {
+      const type  = host.querySelector('#evType').value;
+      const dateV = host.querySelector('#evDate').value;
+      const label = host.querySelector('#evLabel').value.trim();
+      card.events.push({ id: uid(), type, label, date: dateV ? new Date(dateV).getTime() : Date.now(), done: false });
+      card.events.sort((a,b) => a.date - b.date);
+      renderModal(card);
+    });
+  });
+
+  /* CV */
+  const dz = modal.querySelector('#dz');
+  if (dz) {
+    dz.addEventListener('click', () => pickCV(card));
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); const f = e.dataTransfer.files?.[0]; if (f) handleCV(card, f); });
+  }
+  const delCv = modal.querySelector('[data-act="delete-cv"]');
+  if (delCv) delCv.addEventListener('click', () => { card.cv = null; renderModal(card); });
+
+  /* Save */
+  modal.querySelector('[data-act="save"]').addEventListener('click', () => {
+    const min = modal.querySelector('#salMin').value;
+    const max = modal.querySelector('#salMax').value;
+    const updates = {
+      title:          card.title,
+      company:        card.company,
+      grade:          card.grade || '',
+      location:       card.location || '',
+      notes:          modal.querySelector('#notes').value,
+      coverLetter:    modal.querySelector('#coverLetter').value,
+      salaryMin:      min === '' ? null : Number(min),
+      salaryMax:      max === '' ? null : Number(max),
+      salaryCurrency: modal.querySelector('#salCcy').value,
+      columnId:       card.columnId,
+      stack:          card.stack,
+      events:         card.events,
+    };
+    const dateVal = modal.querySelector('#appliedAt').value;
+    if (dateVal) updates.appliedAt = new Date(dateVal).getTime();
+    Object.assign(card, updates);
+    renderAll(); closeModal(); showToast('Saved', 'success');
+    apiFetch(`/api/tracking/cards/${card.id}`, 'PATCH', updates).catch(console.error);
+  });
+
+  /* Remove */
+  modal.querySelector('[data-act="remove"]').addEventListener('click', () => {
+    if (window.confirm('Remove this application from board?')) { closeModal(); deleteCard(card.id); }
+  });
 }
 
-function addEvent() {
-  const input = v('ev-input');
-  const text  = input.value.trim();
-  if (!text || !activeCardId) return;
-  const card = state.cards.find(c => c.id === activeCardId);
-  if (!card) return;
-  if (!card.events) card.events = [];
-  card.events.push({ ts: Date.now(), text });
-  renderEvents(card);
-  apiFetch(`/api/tracking/cards/${activeCardId}`, 'PATCH', { events: card.events }).catch(console.error);
-}
-v('ev-input').addEventListener('keydown', e => { if (e.key === 'Enter') addEvent(); });
-
-// ── CV upload ────────────────────────────────────────────────────────────────
-function triggerCvUpload() {
+function pickCV(card) {
   const inp = document.createElement('input');
-  inp.type = 'file';
-  inp.accept = '.pdf,.doc,.docx,.txt';
-  inp.onchange = () => { if (inp.files[0]) doUploadCv(inp.files[0]); };
+  inp.type = 'file'; inp.accept = '.pdf,.doc,.docx';
+  inp.addEventListener('change', () => { if (inp.files?.[0]) handleCV(card, inp.files[0]); });
   inp.click();
 }
 
-async function doUploadCv(file) {
+async function handleCV(card, file) {
+  if (file.size > 5*1024*1024) { showToast('File exceeds 5 MB'); return; }
   const fd = new FormData();
   fd.append('file', file);
-  const r = await fetch(`/api/tracking/cards/${activeCardId}/cv`, { method: 'POST', body: fd });
-  if (!r.ok) { alert('Upload failed'); return; }
-  const data = await r.json();
-  const card = state.cards.find(c => c.id === activeCardId);
-  if (card) card.cv = { filename: data.filename, url: data.url };
-  v('m-cv-section').innerHTML =
-    `<a class="cv-link" href="${data.url}" target="_blank">📎 ${escHtml(data.filename)}</a>
-     <button onclick="triggerCvUpload()">Replace</button>`;
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function v(id) { return document.getElementById(id); }
-function fmt(n) { return Number(n).toLocaleString(); }
-function escHtml(s) {
-  return String(s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  try {
+    const r = await fetch(`/api/tracking/cards/${card.id}/cv`, { method: 'POST', body: fd });
+    if (!r.ok) throw new Error('Upload failed');
+    const data = await r.json();
+    card.cv = { name: data.filename, filename: data.filename, url: data.url };
+    renderModal(card); showToast('CV uploaded', 'success');
+  } catch(e) { showToast('Upload failed: ' + e.message); }
 }
 
 document.addEventListener('DOMContentLoaded', initBoard);
