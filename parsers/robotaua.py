@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 
+import requests
+
 from models.job import Job
 from .base import BaseParser
 
@@ -49,9 +51,11 @@ class RobotauaParser(BaseParser):
                 "experienceIds": [],
                 "languageIds": [],
             }
-            resp = self._post(_API_URL, json=payload, headers=_API_HEADERS)
-            if resp is None:
-                logger.warning("robotaua: request failed page=%d keyword=%r", page, keyword)
+            try:
+                resp = self.session.post(_API_URL, json=payload, headers=_API_HEADERS, timeout=30)
+                resp.raise_for_status()
+            except requests.RequestException as exc:
+                logger.warning("robotaua: request failed page=%d keyword=%r: %s", page, keyword, exc)
                 break
 
             try:
