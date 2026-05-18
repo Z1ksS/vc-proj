@@ -3,793 +3,381 @@
     {
       "name": "Python",
       "sources": {
-        "dou": [
-          "Python"
-        ],
-        "djinni": [
-          "Python"
-        ],
-        "workua": [
-          "python"
-        ],
-        "nofluffjobs": [
-          "Python"
-        ],
-        "robotaua": [
-          "python"
-        ]
+        "dou": ["Python"],
+        "djinni": ["Python"],
+        "workua": ["python"],
+        "nofluffjobs": ["Python"],
+        "robotaua": ["python"]
       }
     },
     {
       "name": "JavaScript",
       "sources": {
-        "dou": [
-          "Front End"
-        ],
-        "djinni": [
-          "JavaScript",
-          "Angular",
-          "React.js",
-          "Svelte",
-          "Vue.js",
-          "Markup"
-        ],
-        "workua": [
-          "javascript"
-        ],
-        "nofluffjobs": [
-          "JavaScript"
-        ],
-        "robotaua": [
-          "javascript"
-        ]
+        "dou": ["Front End"],
+        "djinni": ["JavaScript", "Angular", "React.js", "Svelte", "Vue.js", "Markup"],
+        "workua": ["javascript"],
+        "nofluffjobs": ["JavaScript"],
+        "robotaua": ["javascript"]
       }
     },
     {
       "name": "Full Stack",
       "sources": {
         "dou": null,
-        "djinni": [
-          "Fullstack"
-        ],
-        "workua": [
-          "full-stack"
-        ],
-        "nofluffjobs": [
-          "Full Stack"
-        ],
-        "robotaua": [
-          "full stack"
-        ]
+        "djinni": ["Fullstack"],
+        "workua": ["full-stack"],
+        "nofluffjobs": ["Full Stack"],
+        "robotaua": ["full stack"]
       }
     },
     {
       "name": "Java",
       "sources": {
-        "dou": [
-          "Java"
-        ],
-        "djinni": [
-          "Java"
-        ],
-        "workua": [
-          "java"
-        ],
-        "nofluffjobs": [
-          "Java"
-        ],
-        "robotaua": [
-          "java"
-        ]
+        "dou": ["Java"],
+        "djinni": ["Java"],
+        "workua": ["java"],
+        "nofluffjobs": ["Java"],
+        "robotaua": ["java"]
       }
     },
     {
       "name": ".NET",
       "sources": {
-        "dou": [
-          ".NET"
-        ],
-        "djinni": [
-          ".NET",
-          "Dotnet Web",
-          "Dotnet Mobile",
-          "Dotnet Desktop",
-          "Dotnet Cloud"
-        ],
-        "workua": [
-          "net"
-        ],
-        "nofluffjobs": [
-          ".NET"
-        ],
-        "robotaua": [
-          ".net"
-        ]
+        "dou": [".NET"],
+        "djinni": [".NET", "Dotnet Web", "Dotnet Mobile", "Dotnet Desktop", "Dotnet Cloud"],
+        "workua": ["net"],
+        "nofluffjobs": [".NET"],
+        "robotaua": [".net"]
       }
     },
     {
       "name": "Node.js",
       "sources": {
-        "dou": [
-          "Node.js"
-        ],
-        "djinni": [
-          "Node.js"
-        ],
-        "workua": [
-          "nodejs"
-        ],
-        "nofluffjobs": [
-          "Node.js"
-        ],
-        "robotaua": [
-          "node.js"
-        ]
+        "dou": ["Node.js"],
+        "djinni": ["Node.js"],
+        "workua": ["nodejs"],
+        "nofluffjobs": ["Node.js"],
+        "robotaua": ["node.js"]
       }
     },
     {
       "name": "PHP",
       "sources": {
-        "dou": [
-          "PHP"
-        ],
-        "djinni": [
-          "PHP",
-          "WordPress",
-          "Yii",
-          "Drupal",
-          "Laravel",
-          "Magento",
-          "Symfony"
-        ],
-        "workua": [
-          "php"
-        ],
-        "nofluffjobs": [
-          "PHP"
-        ],
-        "robotaua": [
-          "php"
-        ]
+        "dou": ["PHP"],
+        "djinni": ["PHP", "WordPress", "Yii", "Drupal", "Laravel", "Magento", "Symfony"],
+        "workua": ["php"],
+        "nofluffjobs": ["PHP"],
+        "robotaua": ["php"]
       }
     },
     {
       "name": "iOS",
       "sources": {
-        "dou": [
-          "iOS/macOS"
-        ],
-        "djinni": [
-          "iOS"
-        ],
-        "workua": [
-          "ios"
-        ],
-        "nofluffjobs": [
-          "iOS"
-        ],
-        "robotaua": [
-          "ios"
-        ]
+        "dou": ["iOS/macOS"],
+        "djinni": ["iOS"],
+        "workua": ["ios"],
+        "nofluffjobs": ["iOS"],
+        "robotaua": ["ios"]
       }
     },
     {
       "name": "Android",
       "sources": {
-        "dou": [
-          "Android"
-        ],
-        "djinni": [
-          "Android"
-        ],
-        "workua": [
-          "android"
-        ],
-        "nofluffjobs": [
-          "Android"
-        ],
-        "robotaua": [
-          "android"
-        ]
+        "dou": ["Android"],
+        "djinni": ["Android"],
+        "workua": ["android"],
+        "nofluffjobs": ["Android"],
+        "robotaua": ["android"]
       }
     },
     {
       "name": "React Native",
       "sources": {
-        "dou": [
-          "React Native"
-        ],
-        "djinni": [
-          "React Native"
-        ],
-        "workua": [
-          "react-native"
-        ],
-        "nofluffjobs": [
-          "React Native"
-        ],
-        "robotaua": [
-          "react native"
-        ]
+        "dou": ["React Native"],
+        "djinni": ["React Native"],
+        "workua": ["react-native"],
+        "nofluffjobs": ["React Native"],
+        "robotaua": ["react native"]
       }
     },
     {
       "name": "Flutter",
       "sources": {
-        "dou": [
-          "Flutter"
-        ],
-        "djinni": [
-          "Flutter"
-        ],
-        "workua": [
-          "flutter"
-        ],
-        "nofluffjobs": [
-          "Flutter"
-        ],
-        "robotaua": [
-          "flutter"
-        ]
+        "dou": ["Flutter"],
+        "djinni": ["Flutter"],
+        "workua": ["flutter"],
+        "nofluffjobs": ["Flutter"],
+        "robotaua": ["flutter"]
       }
     },
     {
       "name": "Golang",
       "sources": {
-        "dou": [
-          "Golang"
-        ],
-        "djinni": [
-          "Golang"
-        ],
-        "workua": [
-          "golang"
-        ],
-        "nofluffjobs": [
-          "Golang"
-        ],
-        "robotaua": [
-          "golang"
-        ]
+        "dou": ["Golang"],
+        "djinni": ["Golang"],
+        "workua": ["golang"],
+        "nofluffjobs": ["Golang"],
+        "robotaua": ["golang"]
       }
     },
     {
       "name": "C++",
       "sources": {
-        "dou": [
-          "C++"
-        ],
-        "djinni": [
-          "C++",
-          "C Lang",
-          "CPP"
-        ],
-        "workua": [
-          "c++"
-        ],
-        "nofluffjobs": [
-          "C++"
-        ],
-        "robotaua": [
-          "c++"
-        ]
+        "dou": ["C++"],
+        "djinni": ["C++", "C Lang", "CPP"],
+        "workua": ["c++"],
+        "nofluffjobs": ["C++"],
+        "robotaua": ["c++ developer"]
       }
     },
     {
       "name": "Embedded",
       "sources": {
-        "dou": [
-          "Embedded"
-        ],
-        "djinni": [
-          "Embedded"
-        ],
-        "workua": [
-          "embedded"
-        ],
-        "nofluffjobs": [
-          "Embedded"
-        ],
-        "robotaua": [
-          "embedded"
-        ]
+        "dou": ["Embedded"],
+        "djinni": ["Embedded"],
+        "workua": ["embedded"],
+        "nofluffjobs": ["Embedded"],
+        "robotaua": ["embedded"]
       }
     },
     {
       "name": "Ruby",
       "sources": {
-        "dou": [
-          "Ruby"
-        ],
-        "djinni": [
-          "Ruby"
-        ],
-        "workua": [
-          "ruby"
-        ],
-        "nofluffjobs": [
-          "Ruby"
-        ],
-        "robotaua": [
-          "ruby"
-        ]
+        "dou": ["Ruby"],
+        "djinni": ["Ruby"],
+        "workua": ["ruby"],
+        "nofluffjobs": ["Ruby"],
+        "robotaua": ["ruby"]
       }
     },
     {
       "name": "Scala",
       "sources": {
-        "dou": [
-          "Scala"
-        ],
-        "djinni": [
-          "Scala"
-        ],
-        "workua": [
-          "scala"
-        ],
-        "nofluffjobs": [
-          "Scala"
-        ],
-        "robotaua": [
-          "scala"
-        ]
+        "dou": ["Scala"],
+        "djinni": ["Scala"],
+        "workua": ["scala"],
+        "nofluffjobs": ["Scala"],
+        "robotaua": ["scala"]
       }
     },
     {
       "name": "Rust",
       "sources": {
-        "dou": [
-          "Rust"
-        ],
-        "djinni": [
-          "Rust"
-        ],
-        "workua": [
-          "rust"
-        ],
-        "nofluffjobs": [
-          "Rust"
-        ],
-        "robotaua": [
-          "rust"
-        ]
+        "dou": ["Rust"],
+        "djinni": ["Rust"],
+        "workua": ["rust"],
+        "nofluffjobs": ["Rust"],
+        "robotaua": ["rust"]
       }
     },
     {
       "name": "Kotlin",
       "sources": {
         "dou": null,
-        "djinni": [
-          "Kotlin"
-        ],
-        "workua": [
-          "kotlin"
-        ],
-        "nofluffjobs": [
-          "Kotlin"
-        ],
-        "robotaua": [
-          "kotlin"
-        ]
+        "djinni": ["Kotlin"],
+        "workua": ["kotlin"],
+        "nofluffjobs": ["Kotlin"],
+        "robotaua": ["kotlin"]
       }
     },
     {
       "name": "Elixir/Erlang",
       "sources": {
-        "dou": [
-          "Erlang"
-        ],
-        "djinni": [
-          "Elixir"
-        ],
-        "workua": [
-          "elixir"
-        ],
-        "nofluffjobs": [
-          "Elixir"
-        ],
-        "robotaua": [
-          "elixir"
-        ]
+        "dou": ["Erlang"],
+        "djinni": ["Elixir"],
+        "workua": ["elixir"],
+        "nofluffjobs": ["Elixir"],
+        "robotaua": ["elixir"]
       }
     },
     {
       "name": "QA",
       "sources": {
-        "dou": [
-          "QA"
-        ],
-        "djinni": [
-          "QA",
-          "QA Automation",
-          "QA Hardware / Embedded"
-        ],
-        "workua": [
-          "qa"
-        ],
-        "nofluffjobs": [
-          "QA"
-        ],
-        "robotaua": [
-          "qa"
-        ]
+        "dou": ["QA"],
+        "djinni": ["QA", "QA Automation", "QA Hardware / Embedded"],
+        "workua": ["qa"],
+        "nofluffjobs": ["QA"],
+        "robotaua": ["qa engineer"]
       }
     },
     {
       "name": "DevOps",
       "sources": {
-        "dou": [
-          "DevOps"
-        ],
-        "djinni": [
-          "DevOps"
-        ],
-        "workua": [
-          "devops"
-        ],
-        "nofluffjobs": [
-          "DevOps"
-        ],
-        "robotaua": [
-          "devops"
-        ]
+        "dou": ["DevOps"],
+        "djinni": ["DevOps"],
+        "workua": ["devops"],
+        "nofluffjobs": ["DevOps"],
+        "robotaua": ["devops"]
       }
     },
     {
       "name": "Security",
       "sources": {
-        "dou": [
-          "Security"
-        ],
-        "djinni": [
-          "Security",
-          "Information Security",
-          "Penetration Tester",
-          "Security Analyst"
-        ],
-        "workua": [
-          "security"
-        ],
-        "nofluffjobs": [
-          "Security"
-        ],
-        "robotaua": [
-          "security"
-        ]
+        "dou": ["Security"],
+        "djinni": ["Security", "Information Security", "Penetration Tester", "Security Analyst"],
+        "workua": ["security"],
+        "nofluffjobs": ["Security"],
+        "robotaua": ["cybersecurity", "information security"]
       }
     },
     {
       "name": "SysAdmin",
       "sources": {
-        "dou": [
-          "SysAdmin"
-        ],
-        "djinni": [
-          "Sysadmin"
-        ],
-        "workua": [
-          "sysadmin"
-        ],
-        "nofluffjobs": [
-          "Sysadmin"
-        ],
-        "robotaua": [
-          "sysadmin"
-        ]
+        "dou": ["SysAdmin"],
+        "djinni": ["Sysadmin"],
+        "workua": ["sysadmin"],
+        "nofluffjobs": ["Sysadmin"],
+        "robotaua": ["sysadmin"]
       }
     },
     {
       "name": "Data Science",
       "sources": {
-        "dou": [
-          "Data Science"
-        ],
-        "djinni": [
-          "Data Science"
-        ],
-        "workua": [
-          "data-science"
-        ],
-        "nofluffjobs": [
-          "Data Science"
-        ],
-        "robotaua": [
-          "data science"
-        ]
+        "dou": ["Data Science"],
+        "djinni": ["Data Science"],
+        "workua": ["data-science"],
+        "nofluffjobs": ["Data Science"],
+        "robotaua": ["data science"]
       }
     },
     {
       "name": "AI/ML",
       "sources": {
-        "dou": [
-          "AI/ML"
-        ],
-        "djinni": [
-          "ML AI"
-        ],
-        "workua": [
-          "machine-learning",
-          "AI",
-          "AI / ML"
-        ],
-        "nofluffjobs": [
-          "Machine Learning",
-          "AI",
-          "AI / ML"
-        ],
-        "robotaua": [
-          "machine learning"
-        ]
+        "dou": ["AI/ML"],
+        "djinni": ["ML AI"],
+        "workua": ["machine-learning", "AI", "AI / ML"],
+        "nofluffjobs": ["Machine Learning", "AI", "AI / ML"],
+        "robotaua": ["machine learning"]
       }
     },
     {
       "name": "Data Engineering",
       "sources": {
-        "dou": [
-          "Data Engineer"
-        ],
-        "djinni": [
-          "Data Engineer"
-        ],
-        "workua": [
-          "data-engineer"
-        ],
-        "nofluffjobs": [
-          "Data Engineering"
-        ],
-        "robotaua": [
-          "data engineer"
-        ]
+        "dou": ["Data Engineer"],
+        "djinni": ["Data Engineer"],
+        "workua": ["data-engineer"],
+        "nofluffjobs": ["Data Engineering"],
+        "robotaua": ["data engineer"]
       }
     },
     {
       "name": "DBA",
       "sources": {
-        "dou": [
-          "DBA"
-        ],
-        "djinni": [
-          "SQL"
-        ],
-        "workua": [
-          "dba"
-        ],
-        "nofluffjobs": [
-          "DBA"
-        ],
-        "robotaua": [
-          "dba"
-        ]
+        "dou": ["DBA"],
+        "djinni": ["SQL"],
+        "workua": ["dba"],
+        "nofluffjobs": ["DBA"],
+        "robotaua": ["dba"]
       }
     },
     {
       "name": "Big Data",
       "sources": {
-        "dou": [
-          "Big Data"
-        ],
+        "dou": ["Big Data"],
         "djinni": null,
-        "workua": [
-          "big-data"
-        ],
-        "nofluffjobs": [
-          "Big Data"
-        ],
-        "robotaua": [
-          "big data"
-        ]
+        "workua": ["big-data"],
+        "nofluffjobs": ["Big Data"],
+        "robotaua": ["big data"]
       }
     },
     {
       "name": "Blockchain",
       "sources": {
-        "dou": [
-          "Blockchain"
-        ],
+        "dou": ["Blockchain"],
         "djinni": null,
-        "workua": [
-          "blockchain"
-        ],
-        "nofluffjobs": [
-          "Blockchain"
-        ],
-        "robotaua": [
-          "blockchain"
-        ]
+        "workua": ["blockchain"],
+        "nofluffjobs": ["Blockchain"],
+        "robotaua": ["blockchain"]
       }
     },
     {
       "name": "Gamedev",
       "sources": {
-        "dou": [
-          "Unity",
-          "Unreal Engine"
-        ],
-        "djinni": [
-          "Unity",
-          "Game Design",
-          "Game Developer",
-          "Unity Developer",
-          "Unreal Developer",
-          "Level Design"
-        ],
-        "workua": [
-          "gamedev"
-        ],
-        "nofluffjobs": [
-          "Gamedev"
-        ],
-        "robotaua": [
-          "gamedev"
-        ]
+        "dou": ["Unity", "Unreal Engine"],
+        "djinni": ["Unity", "Game Design", "Game Developer", "Unity Developer", "Unreal Developer", "Level Design"],
+        "workua": ["gamedev"],
+        "nofluffjobs": ["Gamedev"],
+        "robotaua": ["gamedev"]
       }
     },
     {
       "name": "Hardware",
       "sources": {
-        "dou": [
-          "Hardware"
-        ],
-        "djinni": [
-          "Hardware",
-          "ASIC / Chip Design",
-          "Firmware Engineer",
-          "FPGA Engineer",
-          "Hardware Engineer",
-          "RF Engineer",
-          "Robotics Engineer"
-        ],
-        "workua": [
-          "hardware"
-        ],
-        "nofluffjobs": [
-          "Hardware"
-        ],
-        "robotaua": [
-          "hardware"
-        ]
+        "dou": ["Hardware"],
+        "djinni": ["Hardware", "ASIC / Chip Design", "Firmware Engineer", "FPGA Engineer", "Hardware Engineer", "RF Engineer", "Robotics Engineer"],
+        "workua": ["hardware"],
+        "nofluffjobs": ["Hardware"],
+        "robotaua": ["hardware engineer"]
       }
     },
     {
       "name": "No Code",
       "sources": {
-        "dou": [
-          "No-code"
-        ],
-        "djinni": [
-          "No Code"
-        ],
-        "workua": [
-          "no-code"
-        ],
-        "nofluffjobs": [
-          "No Code"
-        ],
-        "robotaua": [
-          "no-code"
-        ]
+        "dou": ["No-code"],
+        "djinni": ["No Code"],
+        "workua": ["no-code"],
+        "nofluffjobs": ["No Code"],
+        "robotaua": ["no-code"]
       }
     },
     {
       "name": "Project Management",
       "sources": {
-        "dou": [
-          "Project Manager"
-        ],
-        "djinni": [
-          "Project Manager"
-        ],
-        "workua": [
-          "project-manager"
-        ],
-        "nofluffjobs": [
-          "Project Manager"
-        ],
-        "robotaua": [
-          "project manager"
-        ]
+        "dou": ["Project Manager"],
+        "djinni": ["Project Manager"],
+        "workua": ["project-manager"],
+        "nofluffjobs": ["Project Manager"],
+        "robotaua": ["it project manager"]
       }
     },
     {
       "name": "Product Management",
       "sources": {
-        "dou": [
-          "Product Manager"
-        ],
-        "djinni": [
-          "Product Manager"
-        ],
-        "workua": [
-          "product-manager"
-        ],
-        "nofluffjobs": [
-          "Product Manager"
-        ],
-        "robotaua": [
-          "product manager"
-        ]
+        "dou": ["Product Manager"],
+        "djinni": ["Product Manager"],
+        "workua": ["product-manager"],
+        "nofluffjobs": ["Product Manager"],
+        "robotaua": ["it product manager", "product owner"]
       }
     },
     {
       "name": "Engineering Manager",
       "sources": {
-        "dou": [
-          "Engineering Manager"
-        ],
-        "djinni": [
-          "Engineering Manager"
-        ],
-        "workua": [
-          "engineering-manager"
-        ],
-        "nofluffjobs": [
-          "Engineering Manager"
-        ],
-        "robotaua": [
-          "engineering manager"
-        ]
+        "dou": ["Engineering Manager"],
+        "djinni": ["Engineering Manager"],
+        "workua": ["engineering-manager"],
+        "nofluffjobs": ["Engineering Manager"],
+        "robotaua": ["engineering manager"]
       }
     },
     {
       "name": "Architect",
       "sources": {
-        "dou": [
-          "Architect"
-        ],
-        "djinni": [
-          "Architect"
-        ],
-        "workua": [
-          "architect"
-        ],
-        "nofluffjobs": [
-          "Architect"
-        ],
-        "robotaua": [
-          "architect"
-        ]
+        "dou": ["Architect"],
+        "djinni": ["Architect"],
+        "workua": ["architect"],
+        "nofluffjobs": ["Architect"],
+        "robotaua": ["software architect"]
       }
     },
     {
       "name": "Salesforce",
       "sources": {
-        "dou": [
-          "Salesforce"
-        ],
-        "djinni": [
-          "Salesforce"
-        ],
-        "workua": [
-          "salesforce"
-        ],
-        "nofluffjobs": [
-          "Salesforce"
-        ],
-        "robotaua": [
-          "salesforce"
-        ]
+        "dou": ["Salesforce"],
+        "djinni": ["Salesforce"],
+        "workua": ["salesforce"],
+        "nofluffjobs": ["Salesforce"],
+        "robotaua": ["salesforce"]
       }
     },
     {
       "name": "Support",
       "sources": {
-        "dou": [
-          "Support"
-        ],
-        "djinni": [
-          "Support"
-        ],
-        "workua": [
-          "support",
-          "NOC",
-          "Technical Support"
-        ],
-        "nofluffjobs": [
-          "Support"
-        ],
-        "robotaua": [
-          "support"
-        ]
+        "dou": ["Support"],
+        "djinni": ["Support"],
+        "workua": ["support", "NOC", "Technical Support"],
+        "nofluffjobs": ["Support"],
+        "robotaua": ["technical support", "NOC"]
       }
     }
   ]
