@@ -489,6 +489,24 @@ const EVENT_TYPES = [
 ];
 const EVENT_BY_ID = Object.fromEntries(EVENT_TYPES.map(e => [e.id, e]));
 
+const COL_EVENT_MAP = {
+  'applied':        'apply',
+  'phone screen':   'hr-interview',
+  'hr screen':      'hr-interview',
+  'interview':      'tech-interview',
+  'tech interview': 'tech-interview',
+  'test task':      'test-task',
+  'offer':          'offer',
+  'rejected':       'rejected',
+  'agreement':      'agreement',
+};
+
+function autoAddMoveEvent(card, toColName) {
+  const type = COL_EVENT_MAP[toColName.toLowerCase()] || 'note';
+  card.events.push({ id: uid(), type, label: toColName, date: Date.now(), done: true, auto: true });
+  card.events.sort((a, b) => a.date - b.date);
+}
+
 /* ── State ────────────────────────────────────────────────────────────────── */
 let state = { columns: [], cards: [] };
 let openCardId = null;
@@ -694,8 +712,9 @@ function moveCard(cardId, dir) {
   const next = cols[idx + dir];
   if (!next) return;
   card.columnId = next.id;
+  autoAddMoveEvent(card, next.name);
   renderAll();
-  apiFetch(`/api/tracking/cards/${cardId}`, 'PATCH', { columnId: next.id }).catch(console.error);
+  apiFetch(`/api/tracking/cards/${cardId}`, 'PATCH', { columnId: next.id, events: card.events }).catch(console.error);
 }
 
 function deleteCard(cardId) {
@@ -821,10 +840,11 @@ function renderModal(card) {
   const evHTML = (card.events||[]).map(ev => {
     const t = EVENT_BY_ID[ev.type] || EVENT_BY_ID.note;
     const lbl = (ev.label && ev.label.trim()) ? ev.label : t.label;
+    const autoTag = ev.auto ? `<span style="font-size:9px;color:var(--muted-2);margin-left:2px" title="Auto-tracked">auto</span>` : '';
     return `<div class="tl-event ${ev.done?'done':''}" data-eid="${ev.id}" style="--ec:${t.color}">
       <span class="tl-icon">${t.icon}</span>
       <input class="tl-date-input" type="date" value="${fmtDate(ev.date)}" data-act="ev-date">
-      <span class="tl-label" data-act="ev-label">${esc(lbl)}</span>
+      <span class="tl-label" data-act="ev-label">${esc(lbl)}${autoTag}</span>
       <button class="tl-check ${ev.done?'on':''}" data-act="ev-toggle">${ev.done?'✓':''}</button>
       <button class="tl-remove" data-act="ev-remove">×</button>
     </div>`;
@@ -956,7 +976,13 @@ function renderModal(card) {
   sPill.addEventListener('click', e => { e.stopPropagation(); sMenu.classList.toggle('open'); });
   sMenu.querySelectorAll('button[data-status]').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
-    card.columnId = b.dataset.status;
+    const newColId = b.dataset.status;
+    if (newColId !== card.columnId) {
+      const newCol = state.columns.find(c => c.id === newColId);
+      if (newCol) autoAddMoveEvent(card, newCol.name);
+      card.columnId = newColId;
+      apiFetch(`/api/tracking/cards/${card.id}`, 'PATCH', { columnId: newColId, events: card.events }).catch(console.error);
+    }
     sMenu.classList.remove('open');
     renderAll(); renderModal(card);
   }));
