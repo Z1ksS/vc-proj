@@ -110,6 +110,7 @@
 .card {
   background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
   padding: 12px; cursor: pointer; position: relative; transition: border-color .12s, box-shadow .12s;
+  user-select: none;
 }
 .card:hover { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(68,147,248,.3); }
 .card-head { display: flex; align-items: flex-start; gap: 8px; }
@@ -359,6 +360,7 @@ input.tl-date-input {
   width: 88px; color-scheme: dark;
 }
 input.tl-date-input:hover, input.tl-date-input:focus { outline: none; border-color: var(--border); color: var(--text); }
+input.tl-date-input::-webkit-calendar-picker-indicator { opacity: 0; width: 0; padding: 0; margin: 0; }
 .tl-label { font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tl-event:not(.done) .tl-label { color: var(--muted); }
 .tl-check {
@@ -863,7 +865,7 @@ function renderModal(card) {
         </div>
       </div>
       <div class="m-head-right">
-        ${card.url ? `<a class="link-pill" href="${esc(card.url)}" target="_blank" rel="noopener">Vacancy <span>↗</span></a>` : ''}
+        ${card.jobId ? `<a class="link-pill" href="/jobs/${card.jobId}">Vacancy</a>` : card.url ? `<a class="link-pill" href="${esc(card.url)}" target="_blank" rel="noopener">Vacancy <span>↗</span></a>` : ''}
         <button class="modal-close" data-act="close">×</button>
       </div>
     </div>

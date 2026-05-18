@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.db import get_db
-from app.models import JobRecord, TrackingCard, TrackingColumn
+from app.models import JobRecord, Technology, TrackingCard, TrackingColumn, VacancyTechnology
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -281,6 +281,14 @@ async def track_from_job(request: Request, db: Session = Depends(get_db)) -> HTM
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
+    tech_names = [
+        name for (name,) in db.execute(
+            select(Technology.name)
+            .join(VacancyTechnology, VacancyTechnology.tech_id == Technology.id)
+            .where(VacancyTechnology.vacancy_id == job_id)
+            .order_by(Technology.name)
+        ).fetchall()
+    ]
     db.add(TrackingCard(
         user_id=user["id"],
         column_id=col.id,
@@ -293,6 +301,7 @@ async def track_from_job(request: Request, db: Session = Depends(get_db)) -> HTM
         salary_min=job.salary_min,
         salary_max=job.salary_max,
         salary_currency=job.salary_currency,
+        stack_json=json.dumps(tech_names) if tech_names else None,
     ))
     db.commit()
     return HTMLResponse('<a class="tracked-pill" href="/tracking"><span class="chk">✓</span> Tracked</a>')
