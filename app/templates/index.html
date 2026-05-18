@@ -130,17 +130,6 @@
   .page-btns button:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
   .page-btns button[disabled] { opacity: .4; cursor: not-allowed; }
 
-  /* Ingest */
-  .ingest-section { margin-top: 14px; }
-  .ingest-toggle { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: inherit; }
-  .ingest-toggle:hover { color: var(--text); border-color: var(--muted); }
-  .ingest-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 8px; display: none; }
-  .ingest-box.open { display: block; }
-  .ingest-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .ingest-form input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: #0d1117; color: var(--text); font-size: 13px; font-family: inherit; }
-  .ingest-form button { padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); color: var(--text); font-size: 13px; cursor: pointer; font-family: inherit; }
-  .ingest-form button:hover { border-color: var(--accent); color: var(--accent); }
-
   @media (max-width: 960px) {
     .vac-layout { grid-template-columns: 1fr; }
     .facets { position: static; }
@@ -304,18 +293,6 @@
 
     <button type="submit" style="display:none"></button>
   </form>
-
-  <div class="ingest-section">
-    <button class="ingest-toggle" onclick="this.nextElementSibling.classList.toggle('open')">&#9881; Run ingest</button>
-    <div class="ingest-box">
-      <form class="ingest-form" hx-post="/ingest" hx-target="#ingest-result" hx-swap="innerHTML">
-        <label for="kw" style="color:var(--muted);font-size:12px">Keywords:</label>
-        <input id="kw" name="keywords" type="text" value="DevOps" style="width:220px">
-        <button type="submit">Run</button>
-      </form>
-      <div id="ingest-result" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
-    </div>
-  </div>
 </div>
 
 <script>

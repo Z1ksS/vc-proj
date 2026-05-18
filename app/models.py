@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -74,3 +74,57 @@ class VacancyTechnology(Base):
 
     vacancy_id: Mapped[int] = mapped_column(ForeignKey("jobs.id"), primary_key=True)
     tech_id: Mapped[int] = mapped_column(ForeignKey("technologies.id"), primary_key=True)
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    google_id: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
+    email: Mapped[str] = mapped_column(String(256), nullable=False)
+    name: Mapped[str] = mapped_column(String(256), nullable=False)
+    avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class TrackingColumn(Base):
+    __tablename__ = "tracking_columns"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    color: Mapped[str] = mapped_column(String(16), nullable=False, default="#4493f8")
+
+
+class TrackingCard(Base):
+    __tablename__ = "tracking_cards"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    column_id: Mapped[int] = mapped_column(ForeignKey("tracking_columns.id"), nullable=False, index=True)
+    job_id: Mapped[int | None] = mapped_column(ForeignKey("jobs.id"), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    company: Mapped[str] = mapped_column(String(256), nullable=False, default="")
+    source: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    stack_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    salary_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    salary_max: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    salary_currency: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cover_letter: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cv_filename: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    cv_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    grade: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    events_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )

@@ -12,14 +12,16 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_user
 from app.db import get_db
 from app.ingest import run_ingestion
-from app.models import JobRecord, Technology, VacancyTechnology
+from app.models import JobRecord, Technology, TrackingCard, VacancyTechnology
 
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 templates.env.filters["urlquote"] = lambda s: quote(str(s), safe="")
+templates.env.globals["current_user_fn"] = get_current_user
 
 
 def _reltime(dt) -> str:
@@ -188,6 +190,14 @@ def index(
     ).scalars().all()
     total = _count_jobs(db, q, source, tech, grade, company, sal_min, sal_max, include_closed)
     sal_hist = salary_histogram(db)
+    current_user = get_current_user(request)
+    tracked_job_ids: set[int] = set()
+    if current_user:
+        tracked_job_ids = set(db.execute(
+            select(TrackingCard.job_id)
+            .where(TrackingCard.user_id == current_user["id"])
+            .where(TrackingCard.job_id.isnot(None))
+        ).scalars().all())
     return templates.TemplateResponse(
         request,
         "index.html",
@@ -199,6 +209,8 @@ def index(
             "sal_hist_json": _json.dumps(sal_hist),
             "sort": sort,
             "include_closed": include_closed,
+            "current_user": current_user,
+            "tracked_job_ids": tracked_job_ids,
             **_pagination_ctx(
                 total, page,
                 q=q or "", source=source or "", tech=tech or "",
@@ -229,12 +241,22 @@ def partial_jobs(
         _query_jobs(q, source, tech, grade, company, sal_min, sal_max, sort, page, include_closed)
     ).scalars().all()
     total = _count_jobs(db, q, source, tech, grade, company, sal_min, sal_max, include_closed)
+    current_user = get_current_user(request)
+    tracked_job_ids: set[int] = set()
+    if current_user:
+        tracked_job_ids = set(db.execute(
+            select(TrackingCard.job_id)
+            .where(TrackingCard.user_id == current_user["id"])
+            .where(TrackingCard.job_id.isnot(None))
+        ).scalars().all())
     return templates.TemplateResponse(
         request,
         "partials/jobs_table.html",
         {
             "jobs": jobs,
             "tech_map": _load_tech_map(db, jobs),
+            "current_user": current_user,
+            "tracked_job_ids": tracked_job_ids,
             **_pagination_ctx(
                 total, page,
                 q=q or "", source=source or "", tech=tech or "",

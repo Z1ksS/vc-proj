@@ -1,0 +1,788 @@
+{% extends "base.html" %}
+{% block title %}Tracker — Job VC{% endblock %}
+
+{% block head %}
+<style>
+/* ── Board layout ─────────────────────────────────────── */
+.board-wrap {
+  overflow-x: auto;
+  padding-bottom: 24px;
+  margin-top: 16px;
+}
+.board {
+  display: flex;
+  gap: 14px;
+  padding: 4px 2px 12px;
+  align-items: flex-start;
+  min-height: 60vh;
+}
+
+/* ── Column ───────────────────────────────────────────── */
+.col {
+  flex: 0 0 260px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 160px);
+}
+.col-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px 8px;
+  border-top: 3px solid transparent;
+  border-radius: 10px 10px 0 0;
+  flex-shrink: 0;
+}
+.col-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.col-name:hover { color: var(--accent); }
+.col-name-input {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 4px;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--text);
+  outline: none;
+}
+.col-count {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 1px 7px;
+  flex-shrink: 0;
+}
+.col-menu-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+.col-menu-btn:hover { background: var(--panel-hover); color: var(--text); }
+
+/* ── Column context menu ──────────────────────────────── */
+.ctx-menu {
+  position: absolute;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 0;
+  z-index: 200;
+  min-width: 150px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+}
+.ctx-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 13px;
+  padding: 7px 14px;
+  cursor: pointer;
+  border-radius: 0;
+}
+.ctx-menu button:hover { background: var(--panel-hover); }
+.ctx-menu button.danger { color: #ff7b72; }
+
+/* ── Cards container (scrollable) ────────────────────── */
+.col-cards {
+  overflow-y: auto;
+  flex: 1;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.col-cards.drag-over { background: rgba(68,147,248,.07); border-radius: 6px; }
+.add-card-btn {
+  margin: 6px 8px 8px;
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  flex-shrink: 0;
+}
+.add-card-btn:hover { border-color: var(--accent); color: var(--accent); background: none; }
+
+/* ── Card ─────────────────────────────────────────────── */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 11px;
+  cursor: grab;
+  user-select: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.card:hover { border-color: #444c56; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+.card.dragging { opacity: .45; }
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text);
+  line-height: 1.3;
+}
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.card-company {
+  font-size: 11px;
+  color: var(--muted);
+}
+.card-salary {
+  font-size: 11px;
+  color: #56d364;
+  margin-top: 2px;
+  display: block;
+}
+
+/* ── Add column button ────────────────────────────────── */
+.add-col-btn {
+  flex: 0 0 220px;
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.add-col-btn:hover { border-color: var(--accent); color: var(--accent); background: none; }
+
+/* ── Add column inline form ───────────────────────────── */
+.add-col-form {
+  flex: 0 0 220px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.add-col-form input[type=text] { width: 100%; }
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.color-row input[type=color] {
+  width: 36px;
+  height: 28px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+}
+.btn-row { display: flex; gap: 6px; }
+.btn-row button { flex: 1; font-size: 12px; padding: 6px 0; }
+.btn-row button.ghost {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.btn-row button.ghost:hover { border-color: var(--text); color: var(--text); }
+
+/* ── Modal ────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 580px;
+  max-width: 96vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-header h3 { margin: 0; flex: 1; font-size: 16px; }
+.modal-header a { font-size: 12px; color: var(--accent); }
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--text); }
+.modal-body {
+  overflow-y: auto;
+  padding: 16px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-footer button { flex: 1; }
+.modal-footer button.danger {
+  background: #da3633;
+  flex: 0 0 auto;
+  padding: 8px 14px;
+}
+.form-row { display: flex; flex-direction: column; gap: 4px; }
+.form-row label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.form-row input, .form-row select, .form-row textarea {
+  width: 100%;
+  font-size: 13px;
+}
+.form-row textarea { resize: vertical; min-height: 72px; }
+.form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ── Events ───────────────────────────────────────────── */
+.events-list { display: flex; flex-direction: column; gap: 6px; }
+.ev-item {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  align-items: baseline;
+}
+.ev-date { color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+.ev-text { color: var(--text); }
+.ev-add { display: flex; gap: 6px; margin-top: 4px; }
+.ev-add input { flex: 1; font-size: 12px; padding: 5px 8px; }
+.ev-add button { padding: 5px 10px; font-size: 12px; }
+
+/* ── CV section ───────────────────────────────────────── */
+.cv-link { font-size: 13px; color: var(--accent); text-decoration: none; }
+.cv-link:hover { text-decoration: underline; }
+.cv-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cv-actions button { padding: 5px 10px; font-size: 12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
+
+<!-- Column context menu (shared, repositioned by JS) -->
+<div class="ctx-menu" id="ctx-menu" style="display:none">
+  <button id="ctx-rename">Rename</button>
+  <button id="ctx-color">Change color</button>
+  <button class="danger" id="ctx-delete">Delete column</button>
+</div>
+
+<!-- Card detail modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Card details</h3>
+      <a id="m-job-link" href="#" target="_blank" rel="noreferrer" style="display:none">Open job ↗</a>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Status / Column</label>
+        <select id="m-column"></select>
+      </div>
+      <div class="form-2col">
+        <div class="form-row">
+          <label>Job title</label>
+          <input type="text" id="m-title">
+        </div>
+        <div class="form-row">
+          <label>Company</label>
+          <input type="text" id="m-company">
+        </div>
+      </div>
+      <div class="form-2col">
+        <div class="form-row">
+          <label>Grade</label>
+          <select id="m-grade">
+            <option value="">—</option>
+            <option>Junior</option><option>Middle</option><option>Senior</option>
+            <option>Lead</option><option>Staff</option><option>Principal</option><option>Intern</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Location</label>
+          <input type="text" id="m-location" placeholder="Remote / Kyiv / …">
+        </div>
+      </div>
+      <div class="form-2col">
+        <div class="form-row">
+          <label>Salary min ($)</label>
+          <input type="number" id="m-salary-min" min="0" step="100">
+        </div>
+        <div class="form-row">
+          <label>Salary max ($)</label>
+          <input type="number" id="m-salary-max" min="0" step="100">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Notes</label>
+        <textarea id="m-notes" placeholder="Anything worth remembering…"></textarea>
+      </div>
+      <div class="form-row">
+        <label>Cover letter</label>
+        <textarea id="m-cover-letter" placeholder="Draft your cover letter…"></textarea>
+      </div>
+      <div class="form-row">
+        <label>CV / Resume</label>
+        <div class="cv-actions" id="m-cv-section"></div>
+      </div>
+      <div class="form-row">
+        <label>Timeline</label>
+        <div id="m-events">
+          <div class="events-list" id="events-list"></div>
+          <div class="ev-add">
+            <input type="text" id="ev-input" placeholder="Add note…">
+            <button onclick="addEvent()">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="danger" onclick="deleteActiveCard()">Delete</button>
+      <button onclick="closeModal()">Cancel</button>
+      <button onclick="saveModal()" style="background:var(--accent)">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+let state = { columns: [], cards: [] };
+let activeCardId = null;
+let ctxColId = null;
+let dragCardId = null;
+
+// ── API helper ──────────────────────────────────────────────────────────────
+async function apiFetch(url, method = 'GET', body = null) {
+  const opts = { method };
+  if (body !== null) {
+    opts.headers = { 'Content-Type': 'application/json' };
+    opts.body = JSON.stringify(body);
+  }
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(await r.text());
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+async function initBoard() {
+  try {
+    const data = await apiFetch('/api/tracking/board');
+    data.columns.forEach(c => c.id = String(c.id));
+    data.cards.forEach(c => { c.id = String(c.id); c.columnId = String(c.columnId); });
+    state = data;
+    renderAll();
+  } catch (e) {
+    document.getElementById('board').innerHTML =
+      '<p style="color:var(--muted);padding:20px">Failed to load board: ' + escHtml(e.message) + '</p>';
+  }
+}
+
+// ── Render ──────────────────────────────────────────────────────────────────
+function renderAll() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  const sorted = [...state.columns].sort((a, b) => a.position - b.position);
+  sorted.forEach(col => board.appendChild(buildColumn(col)));
+
+  // Add-column button
+  const btn = document.createElement('button');
+  btn.className = 'add-col-btn';
+  btn.textContent = '+ Add column';
+  btn.onclick = startAddColumn;
+  board.appendChild(btn);
+}
+
+function buildColumn(col) {
+  const cards = state.cards.filter(c => c.columnId === col.id);
+  const el = document.createElement('div');
+  el.className = 'col';
+  el.dataset.colId = col.id;
+
+  el.innerHTML = `
+    <div class="col-head" style="border-top-color:${col.color}">
+      <span class="col-name" title="Double-click to rename"
+            ondblclick="startRenameColumn('${col.id}', this)">${escHtml(col.name)}</span>
+      <span class="col-count">${cards.length}</span>
+      <button class="col-menu-btn" onclick="openColMenu(event,'${col.id}')">⋯</button>
+    </div>
+    <div class="col-cards" id="col-cards-${col.id}"
+         ondragover="onDragOver(event)"
+         ondragleave="onDragLeave(event)"
+         ondrop="onDrop(event,'${col.id}')"></div>
+    <button class="add-card-btn" onclick="addCard('${col.id}')">+ Add card</button>
+  `;
+
+  const container = el.querySelector(`#col-cards-${col.id}`);
+  cards.forEach(card => container.appendChild(buildCard(card)));
+  return el;
+}
+
+function buildCard(card) {
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.draggable = true;
+  el.dataset.cardId = card.id;
+
+  el.addEventListener('dragstart', e => {
+    dragCardId = card.id;
+    e.dataTransfer.setData('text/plain', card.id);
+    setTimeout(() => el.classList.add('dragging'), 0);
+  });
+  el.addEventListener('dragend', () => el.classList.remove('dragging'));
+  el.addEventListener('click', () => openModal(card.id));
+
+  const salary = card.salaryMin
+    ? `<span class="card-salary">$${fmt(card.salaryMin)}${card.salaryMax ? ' – $' + fmt(card.salaryMax) : ''}</span>`
+    : '';
+
+  el.innerHTML = `
+    <div class="card-title">${escHtml(card.title)}</div>
+    <div class="card-meta">
+      ${card.company ? `<span class="card-company">${escHtml(card.company)}</span>` : ''}
+      ${card.source ? `<span class="src-badge ${card.source}">${card.source}</span>` : ''}
+      ${card.grade ? `<span class="grade grade-${card.grade.toLowerCase()}">${card.grade}</span>` : ''}
+    </div>
+    ${salary}
+  `;
+  return el;
+}
+
+// ── Drag & drop ─────────────────────────────────────────────────────────────
+function onDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function onDrop(e, targetColId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const cardId = e.dataTransfer.getData('text/plain') || dragCardId;
+  if (!cardId) return;
+  const card = state.cards.find(c => c.id === cardId);
+  if (!card || card.columnId === targetColId) return;
+  card.columnId = targetColId;
+  renderAll();
+  apiFetch(`/api/tracking/cards/${cardId}`, 'PATCH', { columnId: targetColId }).catch(console.error);
+}
+
+// ── Add card ────────────────────────────────────────────────────────────────
+async function addCard(colId) {
+  const title = prompt('Job title:');
+  if (!title) return;
+  const company = prompt('Company (leave blank to skip):') || '';
+  try {
+    const card = await apiFetch('/api/tracking/cards', 'POST', { columnId: colId, title, company });
+    card.id = String(card.id);
+    card.columnId = String(card.columnId);
+    state.cards.push(card);
+    renderAll();
+    openModal(card.id);
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ── Column context menu ──────────────────────────────────────────────────────
+function openColMenu(event, colId) {
+  event.stopPropagation();
+  ctxColId = colId;
+  const menu = document.getElementById('ctx-menu');
+  menu.style.display = 'block';
+  const r = event.currentTarget.getBoundingClientRect();
+  menu.style.left = (r.left + window.scrollX) + 'px';
+  menu.style.top  = (r.bottom + window.scrollY + 4) + 'px';
+}
+
+document.getElementById('ctx-rename').onclick = () => {
+  hideColMenu();
+  if (!ctxColId) return;
+  const nameEl = document.querySelector(`[data-col-id="${ctxColId}"] .col-name`);
+  if (nameEl) startRenameColumn(ctxColId, nameEl);
+};
+document.getElementById('ctx-color').onclick = () => {
+  hideColMenu();
+  if (!ctxColId) return;
+  const col = state.columns.find(c => c.id === ctxColId);
+  if (!col) return;
+  const color = prompt('New color (hex):', col.color);
+  if (!color) return;
+  col.color = color;
+  renderAll();
+  apiFetch(`/api/tracking/columns/${ctxColId}`, 'PATCH', { color }).catch(console.error);
+};
+document.getElementById('ctx-delete').onclick = () => {
+  hideColMenu();
+  deleteColumn(ctxColId);
+};
+
+function hideColMenu() {
+  document.getElementById('ctx-menu').style.display = 'none';
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ctx-menu') && !e.target.closest('.col-menu-btn')) hideColMenu();
+});
+
+// ── Rename column (inline) ───────────────────────────────────────────────────
+function startRenameColumn(colId, nameEl) {
+  const col = state.columns.find(c => c.id === colId);
+  if (!col) return;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'col-name-input';
+  input.value = col.name;
+  nameEl.replaceWith(input);
+  input.focus(); input.select();
+  const commit = () => {
+    const newName = input.value.trim() || col.name;
+    if (newName !== col.name) {
+      col.name = newName;
+      apiFetch(`/api/tracking/columns/${colId}`, 'PATCH', { name: newName }).catch(console.error);
+    }
+    renderAll();
+  };
+  input.onblur = commit;
+  input.onkeydown = e => {
+    if (e.key === 'Enter') input.blur();
+    if (e.key === 'Escape') { input.value = col.name; input.blur(); }
+  };
+}
+
+function deleteColumn(colId) {
+  if (!confirm('Delete this column and all its cards?')) return;
+  state.columns = state.columns.filter(c => c.id !== colId);
+  state.cards   = state.cards.filter(c => c.columnId !== colId);
+  renderAll();
+  apiFetch(`/api/tracking/columns/${colId}`, 'DELETE').catch(console.error);
+}
+
+// ── Add column (inline form) ─────────────────────────────────────────────────
+function startAddColumn() {
+  const board = document.getElementById('board');
+  const btn   = board.querySelector('.add-col-btn');
+  const form  = document.createElement('div');
+  form.className = 'add-col-form';
+  form.innerHTML = `
+    <input type="text" id="new-col-name" placeholder="Column name">
+    <div class="color-row">
+      <label>Color</label>
+      <input type="color" id="new-col-color" value="#4493f8">
+    </div>
+    <div class="btn-row">
+      <button onclick="commitAddColumn()">Add</button>
+      <button class="ghost" onclick="renderAll()">Cancel</button>
+    </div>
+  `;
+  btn.replaceWith(form);
+  document.getElementById('new-col-name').focus();
+}
+
+function commitAddColumn() {
+  const name  = document.getElementById('new-col-name').value.trim();
+  if (!name) { document.getElementById('new-col-name').focus(); return; }
+  const color = document.getElementById('new-col-color').value;
+  apiFetch('/api/tracking/columns', 'POST', { name, color })
+    .then(col => {
+      col.id = String(col.id);
+      state.columns.push(col);
+      renderAll();
+    })
+    .catch(e => alert('Error: ' + e.message));
+}
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+function openModal(cardId) {
+  activeCardId = cardId;
+  const card = state.cards.find(c => c.id === cardId);
+  if (!card) return;
+
+  v('m-title').value       = card.title;
+  v('m-company').value     = card.company || '';
+  v('m-notes').value       = card.notes || '';
+  v('m-cover-letter').value = card.coverLetter || '';
+  v('m-salary-min').value  = card.salaryMin || '';
+  v('m-salary-max').value  = card.salaryMax || '';
+  v('m-grade').value       = card.grade || '';
+  v('m-location').value    = card.location || '';
+
+  const link = v('m-job-link');
+  if (card.url) { link.href = card.url; link.style.display = 'inline'; }
+  else link.style.display = 'none';
+
+  // Column selector
+  const sel = v('m-column');
+  sel.innerHTML = [...state.columns]
+    .sort((a, b) => a.position - b.position)
+    .map(c => `<option value="${c.id}" ${c.id === card.columnId ? 'selected' : ''}>${escHtml(c.name)}</option>`)
+    .join('');
+
+  // CV
+  const cvSec = v('m-cv-section');
+  if (card.cv) {
+    cvSec.innerHTML = `<a class="cv-link" href="${card.cv.url}" target="_blank">📎 ${escHtml(card.cv.filename)}</a>
+      <button onclick="triggerCvUpload()">Replace</button>`;
+  } else {
+    cvSec.innerHTML = `<button onclick="triggerCvUpload()">📎 Upload CV</button>`;
+  }
+
+  renderEvents(card);
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+  activeCardId = null;
+}
+
+function saveModal() {
+  const card = state.cards.find(c => c.id === activeCardId);
+  if (!card) return;
+  const colId   = v('m-column').value;
+  const updates = {
+    title:       v('m-title').value,
+    company:     v('m-company').value,
+    notes:       v('m-notes').value,
+    coverLetter: v('m-cover-letter').value,
+    grade:       v('m-grade').value,
+    location:    v('m-location').value,
+    salaryMin:   parseInt(v('m-salary-min').value) || null,
+    salaryMax:   parseInt(v('m-salary-max').value) || null,
+    columnId:    colId,
+  };
+  Object.assign(card, updates);
+  card.columnId = colId;
+  renderAll();
+  closeModal();
+  apiFetch(`/api/tracking/cards/${activeCardId}`, 'PATCH', updates).catch(console.error);
+}
+
+function deleteActiveCard() {
+  if (!activeCardId || !confirm('Delete this card?')) return;
+  const id = activeCardId;
+  state.cards = state.cards.filter(c => c.id !== id);
+  closeModal();
+  renderAll();
+  apiFetch(`/api/tracking/cards/${id}`, 'DELETE').catch(console.error);
+}
+
+// Close modal on overlay click
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ── Events ───────────────────────────────────────────────────────────────────
+function renderEvents(card) {
+  const list = document.getElementById('events-list');
+  list.innerHTML = (card.events || []).map(ev => `
+    <div class="ev-item">
+      <span class="ev-date">${new Date(ev.ts).toLocaleDateString()}</span>
+      <span class="ev-text">${escHtml(ev.text)}</span>
+    </div>
+  `).join('');
+  v('ev-input').value = '';
+}
+
+function addEvent() {
+  const input = v('ev-input');
+  const text  = input.value.trim();
+  if (!text || !activeCardId) return;
+  const card = state.cards.find(c => c.id === activeCardId);
+  if (!card) return;
+  if (!card.events) card.events = [];
+  card.events.push({ ts: Date.now(), text });
+  renderEvents(card);
+  apiFetch(`/api/tracking/cards/${activeCardId}`, 'PATCH', { events: card.events }).catch(console.error);
+}
+v('ev-input').addEventListener('keydown', e => { if (e.key === 'Enter') addEvent(); });
+
+// ── CV upload ────────────────────────────────────────────────────────────────
+function triggerCvUpload() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.pdf,.doc,.docx,.txt';
+  inp.onchange = () => { if (inp.files[0]) doUploadCv(inp.files[0]); };
+  inp.click();
+}
+
+async function doUploadCv(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  const r = await fetch(`/api/tracking/cards/${activeCardId}/cv`, { method: 'POST', body: fd });
+  if (!r.ok) { alert('Upload failed'); return; }
+  const data = await r.json();
+  const card = state.cards.find(c => c.id === activeCardId);
+  if (card) card.cv = { filename: data.filename, url: data.url };
+  v('m-cv-section').innerHTML =
+    `<a class="cv-link" href="${data.url}" target="_blank">📎 ${escHtml(data.filename)}</a>
+     <button onclick="triggerCvUpload()">Replace</button>`;
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function v(id) { return document.getElementById(id); }
+function fmt(n) { return Number(n).toLocaleString(); }
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+document.addEventListener('DOMContentLoaded', initBoard);
+</script>
+{% endblock %}

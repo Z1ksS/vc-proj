@@ -1,18 +1,24 @@
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import select
+from starlette.middleware.sessions import SessionMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
+from app.auth import router as auth_router
 from app.db import SessionLocal, engine
 from app.ingest import run_ingestion
 from app.models import Base, JobRecord
 from app.web.routes import router as web_router
+from app.web.tracking import router as tracking_router
 
 logger = logging.getLogger("job_vc.scheduler")
 
@@ -52,8 +58,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Job VC", version="0.1.0", lifespan=lifespan)
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=os.getenv("SECRET_KEY", "change-me-in-production"),
+    )
+    Path("uploads/cv").mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
     app.mount("/static", StaticFiles(directory="app/static"), name="static")
+    app.include_router(auth_router)
+    app.include_router(tracking_router)
     app.include_router(web_router)
 
     @app.get("/api/health")

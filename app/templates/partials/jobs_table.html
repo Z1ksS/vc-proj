@@ -8,6 +8,7 @@
       <th>Technologies</th>
       <th class="col-salary">Salary</th>
       <th class="col-when">Posted</th>
+      <th class="col-track">Track</th>
     </tr>
   </thead>
   <tbody>
@@ -45,9 +46,24 @@
         {% endif %}
       </td>
       <td><span class="when">{{ job.created_at | reltime }}</span></td>
+      <td>
+        {% if current_user %}
+          {% if job.id in tracked_job_ids %}
+            <a class="tracked-pill" href="/tracking"><span class="chk">✓</span> Tracked</a>
+          {% else %}
+            <button class="track-btn"
+                    hx-post="/api/tracking/track-from-job"
+                    hx-vals='{"job_id": {{ job.id }}}'
+                    hx-target="this"
+                    hx-swap="outerHTML">+ Track</button>
+          {% endif %}
+        {% else %}
+          <button class="track-btn" disabled title="Sign in to track">+ Track</button>
+        {% endif %}
+      </td>
     </tr>
     {% else %}
-    <tr class="empty-row"><td colspan="7">No vacancies found.</td></tr>
+    <tr class="empty-row"><td colspan="8">No vacancies found.</td></tr>
     {% endfor %}
   </tbody>
 </table>

@@ -124,7 +124,85 @@ tr:hover td { background: var(--panel-hover); }
 }
 .nav a:hover { color: var(--text); }
 
-.header { margin-bottom: 4px; }
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.header h1 { flex-shrink: 0; }
+
+/* User bar (top-right) */
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.avatar-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.user-name { font-size: 13px; color: var(--muted); }
+.signout-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.signout-btn:hover { border-color: #ff7b72; color: #ff7b72; background: none; }
+.signin-btn {
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 4px 12px;
+}
+.signin-btn:hover { background: rgba(68,147,248,.1); }
+
+/* Track button / pill */
+.track-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.track-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: none; }
+.track-btn:disabled { opacity: .45; cursor: default; }
+.tracked-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #56d364;
+  background: #0f2c14;
+  border: 1px solid #2e5c3a;
+  border-radius: 5px;
+  padding: 3px 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.tracked-pill:hover { background: #143320; }
+.chk { font-size: 10px; }
 
 /* Grade badges */
 .grade {
