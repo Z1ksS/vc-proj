@@ -42,13 +42,19 @@ _HEADER_RE = re.compile(
             | what\s+we(?:'re|\s+are)?\s+looking\s+for
             | what\s+we\s+need
             | what\s+you(?:'ll)?\s+(?:need|bring|have)
-            | your\s+(?:experience|skills?|background|requirements?)
+            | your\s+(?:experience|skills?|background|requirements?|expertise)
             | our\s+requirements?
+            | will\s+(?:definitely\s+)?be\s+a\s+plus
+            | about\s+you
             # Ukrainian
             | вимоги
             | обов'язки
             | що\s+для\s+цього\s+потрібно
             | що\s+потрібно(?!\s+робити|\s+буде|\s+зробити)
+            | що\s+для\s+нас\s+важливо
+            | що\s+ми\s+очікуємо(?:\s+від\s+тебе)?
+            | наші\s+очікування
+            | кого\s+ми\s+шукаємо
             | основні\s+вимоги
             | технічні\s+вимоги
             | буде\s+перевагою
@@ -82,6 +88,9 @@ _REQ_HEADER_RE = re.compile(
         | what\s+we(?:'re|\s+are)?\s+looking\s+for
         | what\s+we\s+need
         | what\s+you(?:'ll)?\s+(?:need|bring|have)
+        | will\s+(?:definitely\s+)?be\s+a\s+plus
+        | your\s+expertise
+        | about\s+you
         # Ukrainian
         | вимоги(?:\s+до\s+кандидат[аи])?
         | твій\s+досвід(?:\s+та\s+навички)?
@@ -92,6 +101,10 @@ _REQ_HEADER_RE = re.compile(
         | що\s+ми\s+шукаємо
         | що\s+для\s+цього\s+потрібно
         | що\s+потрібно(?!\s+робити|\s+буде|\s+зробити)
+        | що\s+для\s+нас\s+важливо
+        | що\s+ми\s+очікуємо(?:\s+від\s+тебе)?
+        | наші\s+очікування
+        | кого\s+ми\s+шукаємо
         | основні\s+вимоги
         | технічні\s+вимоги
     )
@@ -100,11 +113,22 @@ _REQ_HEADER_RE = re.compile(
 )
 
 
+def _normalize(text: str) -> str:
+    """Replace smart quotes/apostrophes with ASCII equivalents."""
+    return (
+        text
+        .replace("\u2018", "'").replace("\u2019", "'")
+        .replace("\u02bc", "'").replace("`", "'")
+        .replace("\u201c", '"').replace("\u201d", '"')
+    )
+
+
 def _split_sections(text: str) -> list[tuple[str, str]]:
     """Split job description into [(header, body)] pairs.
 
     The first element may have an empty header (preamble before the first header).
     """
+    text = _normalize(text)
     matches = list(_HEADER_RE.finditer(text))
     if not matches:
         return [("", text)]
