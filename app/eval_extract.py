@@ -23,7 +23,7 @@ import anthropic
 from sqlalchemy import text
 
 from app.db import engine
-from app.services.tech_extract import extract_technologies
+from app.services.tech_extract import extract_requirements_section, extract_technologies
 
 _TECHNICAL_TITLE_KEYWORDS = [
     "engineer", "developer", "dev", "qa", "devops", "architect",
@@ -77,10 +77,13 @@ def _sample_vacancies(n_with_tech: int, n_zero_tech: int) -> list[dict]:
     return rows
 
 
-def _sample_zero_only(n: int) -> list[dict]:
-    """Sample only zero-tech vacancies with technical-sounding titles."""
+def _sample_zero_only(n: int, fallback_only: bool = False) -> list[dict]:
+    """Sample zero-tech vacancies with technical-sounding titles.
+
+    fallback_only=True: restrict to vacancies where no req section was detected
+    (extract_requirements_section returns None), i.e. the 19% fallback group.
+    """
     with engine.connect() as conn:
-        # Pull all zero-tech vacancies to filter by title
         candidates = conn.execute(text("""
             SELECT j.id, j.title, j.source, j.description
             FROM jobs j
@@ -91,9 +94,17 @@ def _sample_zero_only(n: int) -> list[dict]:
         """)).fetchall()
 
     technical = [r for r in candidates if _is_technical(r.title)]
-    sample = technical[:n]
-    print(f"  Technical zero-tech pool: {len(technical)} | sampling {len(sample)}")
 
+    if fallback_only:
+        technical = [
+            r for r in technical
+            if extract_requirements_section(r.description or "") is None
+        ]
+        print(f"  Technical zero-tech fallback pool: {len(technical)} | sampling {min(n, len(technical))}")
+    else:
+        print(f"  Technical zero-tech pool: {len(technical)} | sampling {min(n, len(technical))}")
+
+    sample = technical[:n]
     return [
         {
             "id": r.id,
@@ -149,6 +160,7 @@ def run_evaluation(
     n_zero_tech: int = 50,
     zero_only: bool = False,
     zero_only_n: int = 100,
+    fallback_only: bool = False,
     output_path: str | None = None,
 ) -> dict:
     api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -158,7 +170,11 @@ def run_evaluation(
 
     client = anthropic.Anthropic(api_key=api_key)
 
-    if zero_only:
+    if fallback_only:
+        vacancies = _sample_zero_only(zero_only_n, fallback_only=True)
+        total = len(vacancies)
+        print(f"Fallback-only mode: {total} technical zero-tech vacancies without detected req section")
+    elif zero_only:
         vacancies = _sample_zero_only(zero_only_n)
         total = len(vacancies)
         print(f"Zero-only mode: {total} technical zero-tech vacancies")
@@ -219,13 +235,15 @@ def _print_report(summary: dict) -> None:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="LLM evaluation of regex tech extraction")
     p.add_argument("--with-tech", type=int, default=100, metavar="N",
-                   help="Vacancies with ≥1 tech to sample (default: 100)")
+                   help="Vacancies with 1+ tech to sample (default: 100)")
     p.add_argument("--zero-tech", type=int, default=50, metavar="N",
                    help="Zero-tech technical vacancies to sample (default: 50)")
     p.add_argument("--zero-only", action="store_true",
                    help="Sample only from zero-tech vacancies with technical titles")
+    p.add_argument("--fallback-only", action="store_true",
+                   help="Sample only zero-tech vacancies where no req section was detected (the 19%% fallback group)")
     p.add_argument("-n", type=int, default=100, metavar="N",
-                   help="Sample size for --zero-only mode (default: 100)")
+                   help="Sample size for --zero-only / --fallback-only mode (default: 100)")
     p.add_argument("--output", default=None, metavar="FILE",
                    help="Save full JSON results to this file")
     return p
@@ -238,6 +256,7 @@ def main() -> None:
         n_zero_tech=args.zero_tech,
         zero_only=args.zero_only,
         zero_only_n=args.n,
+        fallback_only=args.fallback_only,
         output_path=args.output,
     )
     _print_report(summary)
