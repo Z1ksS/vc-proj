@@ -1,10 +1,11 @@
 # Job VC
 
-Internal tool for ingesting IT vacancies from Ukrainian job boards, normalizing and deduplicating them, and browsing results in a FastAPI + HTMX UI. Core goal: collect full vacancy descriptions for tech stack analysis.
+Internal tool for ingesting IT vacancies from Ukrainian job boards, normalizing and deduplicating them, and browsing results in a FastAPI + HTMX UI. Includes a personal Kanban board for tracking job applications.
 
 ## Stack
 - FastAPI + Jinja2 + HTMX
 - SQLAlchemy 2.x + PostgreSQL
+- Google OAuth 2.0 (manual, via `requests`) + itsdangerous session cookies
 - Parsers: Djinni, DOU, work.ua, NoFluffJobs
 
 ## Quick Start
@@ -13,7 +14,7 @@ Internal tool for ingesting IT vacancies from Ukrainian job boards, normalizing 
 pip install -r requirements.txt
 ```
 
-Copy `.env.example` to `.env` and fill in `DATABASE_URL` + `ANTHROPIC_API_KEY`.
+Copy `.env.example` to `.env` and fill in the required variables (see below).
 
 Run web app:
 ```bash
@@ -107,6 +108,9 @@ On the production server this is handled by systemd cron jobs (see `/etc/cron.d/
 | Variable | Default | Description |
 |---|---|---|
 | `DATABASE_URL` | `sqlite:///./jobs.db` | DB connection string (PostgreSQL in production) |
+| `SECRET_KEY` | `change-me-in-production` | Session cookie signing key — set a strong random value in production |
+| `GOOGLE_CLIENT_ID` | — | Google OAuth 2.0 client ID (from Google Cloud Console) |
+| `GOOGLE_CLIENT_SECRET` | — | Google OAuth 2.0 client secret |
 | `ENABLE_SOURCES` | `djinni,dou,nofluffjobs,workua` | Active parsers |
 | `INGEST_LOG_PATH` | `logs/ingest.log` | Ingest log file |
 | `ENRICH_LOG_PATH` | `logs/enrich.log` | Enrich log file |
@@ -114,6 +118,15 @@ On the production server this is handled by systemd cron jobs (see `/etc/cron.d/
 | `CLOSE_AFTER_DAYS` | `3` | Days before unseen vacancy is marked closed |
 | `EXTRACT_LOG_PATH` | `logs/extract.log` | Extract log file |
 | `ANTHROPIC_API_KEY` | — | API key for Phase 4b eval (`app.eval_extract`) |
+
+### Google OAuth setup
+1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable the **Google+ API** (or People API)
+3. Create OAuth 2.0 credentials → Web application
+4. Add `https://<your-domain>/auth/callback` as an authorized redirect URI
+5. Copy Client ID + Secret to `.env`
+
+> Google OAuth requires HTTPS. For local dev you can use `http://localhost:8000` as a redirect URI — add it explicitly in the console.
 
 ## Tests
 
@@ -130,7 +143,9 @@ pytest -q
 | `/companies` | Companies leaderboard (2-column layout) — sparklines, tech bars, drilldown panel, sort + search |
 | `/companies/{name}` | Company detail — KPI strip, tech stack, Active / History tabs |
 | `/technologies` | Technologies ranked by vacancy count — top 30 bars, by-role breakdown (10 roles), heatmap |
-| `/analytics` | Market analytics — 5 KPI cards, weekly trend chart, co-occurrence with lift, **Roles tab** (category bars + top-60 real job titles) |
+| `/analytics` | Market analytics — 5 KPI cards, weekly trend chart, co-occurrence with lift, Roles tab |
+| `/tracking` | Personal Kanban board — track job applications with columns, cards, timeline events, CV upload |
+| `/auth/login` | Google OAuth sign-in page |
 
 ## Project Phases
 
@@ -144,5 +159,5 @@ pytest -q
 - [x] **Phase 5b** — Weekly trend chart on analytics; sparklines on companies page; "Show closed" toggle
 - [x] **Phase 5c** — Analytics UI: 5-card KPI strip, grade/source charts, weekly trend chart, tech co-occurrence with lift score
 - [x] **Phase 6a** — PostgreSQL migration
-- [ ] **Phase 6b** — robota.ua parser
 - [x] **Phase 7** — Role classification: 10 broad categories + "Top job titles" data-driven view on `/analytics`
+- [x] **Phase 8** — Application tracking: Google OAuth, multi-user Kanban board, timeline events, CV upload

@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import sys
+from collections import Counter
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -18,7 +19,12 @@ else:
 
 from app.db import SessionLocal
 from app.models import JobRecord, Technology, VacancyTechnology
-from app.services.tech_extract import extract_technologies
+from app.services.tech_extract import (
+    _REQ_HEADER_RE,
+    _split_sections,
+    extract_requirements_section,
+    extract_technologies,
+)
 
 LOG_PATH = os.getenv("EXTRACT_LOG_PATH", "logs/extract.log")
 LOGGER_NAME = "job_vc.extract"
@@ -87,7 +93,8 @@ def run_extraction(reprocess: bool = False) -> dict[str, int]:
                     delete(VacancyTechnology).where(VacancyTechnology.vacancy_id == job_id)
                 )
 
-            text = f"{title} {description or ''}"
+            req_text = extract_requirements_section(description or "")
+            text = f"{title} {req_text if req_text is not None else (description or '')}"
             techs = extract_technologies(text)
 
             for tech_name in techs:
@@ -116,6 +123,77 @@ def run_extraction(reprocess: bool = False) -> dict[str, int]:
     return stats
 
 
+def run_stats() -> None:
+    """Dry-run: report section detection coverage across all vacancies with descriptions."""
+    with SessionLocal() as db:
+        rows = db.execute(
+            select(JobRecord.id, JobRecord.title, JobRecord.description, JobRecord.source)
+            .where(JobRecord.description.isnot(None))
+        ).fetchall()
+
+    total = len(rows)
+    if not total:
+        print("No vacancies with descriptions found.")
+        return
+
+    section_found = 0
+    header_counter: Counter[str] = Counter()
+    source_total: Counter[str] = Counter()
+    source_found: Counter[str] = Counter()
+    techs_with_section: list[int] = []
+    techs_fallback: list[int] = []
+
+    for _id, title, description, source in rows:
+        source_total[source] += 1
+        desc = description or ""
+        sections = _split_sections(desc)
+        matched = [h for h, body in sections if body and _REQ_HEADER_RE.search(h)]
+
+        if matched:
+            section_found += 1
+            source_found[source] += 1
+            for h in matched:
+                header_counter[h.lower().strip()] += 1
+            req_text = "\n".join(
+                body for h, body in sections if body and _REQ_HEADER_RE.search(h)
+            )
+            n = len(extract_technologies(f"{title} {req_text}"))
+            techs_with_section.append(n)
+        else:
+            n = len(extract_technologies(f"{title} {desc}"))
+            techs_fallback.append(n)
+
+    fallback = total - section_found
+    avg_s = sum(techs_with_section) / len(techs_with_section) if techs_with_section else 0.0
+    avg_f = sum(techs_fallback) / len(techs_fallback) if techs_fallback else 0.0
+
+    w = 62
+    print("=" * w)
+    print("  SECTION EXTRACTION COVERAGE REPORT")
+    print("=" * w)
+    print(f"  Total vacancies with description : {total}")
+    print(f"  Section found                    : {section_found:5d}  ({section_found / total * 100:.1f}%)")
+    print(f"  Fallback (full text)             : {fallback:5d}  ({fallback / total * 100:.1f}%)")
+    print()
+    print(f"  Avg techs — section found        : {avg_s:.1f}")
+    print(f"  Avg techs — fallback             : {avg_f:.1f}")
+    print()
+
+    print("  Top matched headers (by frequency):")
+    for header, count in header_counter.most_common(20):
+        bar = "█" * min(count // max(total // 200, 1), 30)
+        print(f"    {count:5d}  {header[:45]:<45}  {bar}")
+    print()
+
+    print("  Fallback rate by source:")
+    for src in sorted(source_total):
+        t = source_total[src]
+        f = t - source_found[src]
+        pct = f / t * 100 if t else 0.0
+        print(f"    {src:<18}  {f:4d}/{t:<5d}  ({pct:.1f}% fallback)")
+    print("=" * w)
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Extract tech stack from vacancy descriptions using regex dictionary")
     p.add_argument(
@@ -124,11 +202,20 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         help="Reprocess all vacancies, replacing existing tech entries (use after updating tech_terms.json)",
     )
+    p.add_argument(
+        "--stats",
+        action="store_true",
+        default=False,
+        help="Dry-run: show section detection coverage stats without writing to DB",
+    )
     return p
 
 
 def main() -> None:
     args = build_parser().parse_args()
+    if args.stats:
+        run_stats()
+        return
     stats = run_extraction(reprocess=args.reprocess_all)
     print("Extraction completed.")
     for key, value in stats.items():

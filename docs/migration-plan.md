@@ -1,6 +1,6 @@
 # Migration Plan — job-vc
 
-**Date:** 2026-05-06 (last updated: 2026-05-17 — role classification done)
+**Date:** 2026-05-06 (last updated: 2026-05-19 — application tracking done)
 
 ---
 
@@ -18,8 +18,9 @@
 | Phase 5b — Trend analytics | **DONE** | Weekly trend chart on /analytics; sparklines on companies page; "Show closed" toggle on main page. |
 | Phase 5c — Analytics UI | **DONE** | /analytics: 5-card KPI strip with sparkline, grade/source dist, weekly chart, co-occurrence with lift column. |
 | Phase 6a — PostgreSQL migration | **DONE** | Production DB migrated from SQLite to PostgreSQL. |
-| Phase 6b — robota.ua parser | pending | — |
+| Phase 6b — robota.ua parser | **dropped** | Data collected and then removed; source blocked/unreliable. Not worth maintaining. |
 | Phase 7 — Role classification | **DONE** | 10 broad categories + `top_job_titles()` real-title view on /analytics Roles tab. |
+| Phase 8 — Application tracking | **DONE** | Google OAuth, multi-user Kanban board at /tracking, timeline events, CV upload. |
 
 ---
 
@@ -174,15 +175,46 @@
 
 ---
 
-## Upcoming Phases
+### Phase 8 — Application Tracking ✅
 
-### Phase 6b — robota.ua Parser
+**Multi-user Kanban board for tracking job applications.**
 
-1. Manual investigation first: DevTools, check for Cloudflare, login walls, JS rendering, XHR pagination.
-2. Implement `parsers/robotaua.py` following `BaseParser` interface.
-3. Likely: `requests` + BeautifulSoup; XHR endpoint if needed.
+**Auth (`app/auth.py`):**
+- Google OAuth 2.0 implemented manually using `requests` (no authlib/httpx).
+- State-based CSRF protection on the OAuth redirect.
+- `GET /auth/login` → redirect to Google; `GET /auth/callback` → exchange code, upsert `User`, store session.
+- `POST /auth/logout` — clears session.
+- `get_current_user(request)` — reads from `SessionMiddleware` cookie; returns `dict | None`.
+- First login creates 5 default columns: Applied, Phone Screen, Interview, Offer, Rejected.
+- `itsdangerous` session via Starlette `SessionMiddleware`; `ProxyHeadersMiddleware` ensures correct `https://` redirect URIs behind nginx.
 
-**Risk:** anti-bot is the main unknown. Start with polite crawling. Avoid Playwright unless confirmed necessary.
+**New DB tables (Alembic migration `0004_add_tracking.py`):**
+- `users` — id, google_id (unique), email, name, avatar_url, created_at
+- `tracking_columns` — id, user_id FK, name, position, color (#hex)
+- `tracking_cards` — id, user_id FK, column_id FK, job_id FK (nullable), title, company, source, url, stack_json, salary_min/max/currency, notes, cover_letter, cv_filename, cv_path, applied_at, grade, location, events_json, created_at, updated_at
+
+**Board (`app/web/tracking.py`, `app/templates/board.html`):**
+- `GET /tracking` — Kanban board page; redirects to `/auth/login` if not authenticated.
+- `GET /api/tracking/board` — returns `{columns, cards}` for the current user.
+- `POST/PATCH/DELETE /api/tracking/cards/{id}` — full CRUD; field map handles camelCase ↔ snake_case.
+- `POST/PATCH/DELETE /api/tracking/columns/{id}` — full CRUD.
+- `POST /api/tracking/track-from-job` — HTMX endpoint; creates card from job record (copies title, company, source, salary, tech stack); returns HTML pill.
+- `POST /api/tracking/cards/{id}/cv` — multipart upload, stores to `uploads/cv/{user_id}/`.
+- `GET /api/tracking/cards/{id}/cv` — FileResponse download.
+
+**Board UI:**
+- KPI grid: Tracking (total), Applied, In Progress (Phone Screen + Interview), Offers — computed by column name matching.
+- Columns: dot color indicator, uppercase header, card count, ⋯ menu (rename / delete).
+- Cards: title, company, salary, tech stack chips (first 3 + overflow), source badge + relative time + ‹/› move arrows.
+- Two-pane modal: left pane (title/company edit, kv-grid, salary box, tech chips, cover letter, CV dropzone); right pane (timeline events, notes textarea).
+- Timeline: 10 event types (todo, apply, hr-response, hr-interview, test-task, tech-interview, offer, agreement, rejected, note); auto-tracking on column move (icon + label inferred from column name); manual events via "+ Add event" form.
+- CV: drag-drop or click to upload (.pdf/.doc/.docx, max 5 MB).
+- Add-column inline form with color swatch picker (6 presets).
+
+**Jobs list integration:**
+- Track button added to vacancy table; HTMX `hx-post` → swaps button to "✓ Tracked" pill on success.
+- If not logged in: button is visible but disabled with `title="Sign in to track"`.
+- Header: shows user avatar initials + name + Sign out when logged in; Sign in link when not.
 
 ---
 
@@ -212,8 +244,9 @@
 | DOU XHR endpoint changes | Medium | Medium | No contract on private API; add smoke test asserting >0 results per run |
 | NoFluffJobs API changes | Medium | Low | Monitor response shape; not documented |
 | work.ua IP rate limiting on server | **High** | Medium | Server IP gets blocked; runs 0 results in <10s. Workaround: run ingest locally with `DATABASE_URL` pointing to remote DB, or add delays + User-Agent rotation |
-| robota.ua blocks scrapers | High | Low (additive) | Start with polite crawling |
 | LLM costs in Phase 4 | Low (if regex-first) | Medium | Gate LLM behind recall threshold; regex handles 85%+ |
 | Postgres migration loses data | Low | High | Backup `jobs.db` before Phase 6; idempotent migration script |
 | APScheduler overlapping runs | Low | Medium | `coalesce=True, max_instances=1` already set |
 | DOU enrich backlog latency | Medium | Low | ~2785 pending items × 1.5s = ~82 min per full enrich run; acceptable for nightly batch |
+| Google OAuth redirect_uri mismatch | Low | Medium | App must be behind HTTPS; `ProxyHeadersMiddleware` must be first middleware so `request.url_for()` generates `https://` |
+| CV upload disk space | Low | Low | Each CV max 5 MB; monitor `uploads/cv/` periodically |
