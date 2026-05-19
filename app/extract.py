@@ -194,6 +194,53 @@ def run_stats() -> None:
     print("=" * w)
 
 
+def run_discover(top_n: int = 40, samples: int = 3) -> None:
+    """Show headers present in fallback vacancies that don't match any req pattern.
+
+    These are candidates for adding to _REQ_HEADER_RE or _HEADER_RE.
+    """
+    with SessionLocal() as db:
+        rows = db.execute(
+            select(JobRecord.id, JobRecord.title, JobRecord.description, JobRecord.source)
+            .where(JobRecord.description.isnot(None))
+        ).fetchall()
+
+    # header_text -> list of (title, source) for sample output
+    unmatched: dict[str, list[tuple[str, str]]] = {}
+
+    for _id, title, description, source in rows:
+        desc = description or ""
+        sections = _split_sections(desc)
+        has_req = any(_REQ_HEADER_RE.search(h) for h, b in sections if b)
+        if has_req:
+            continue  # already covered — skip
+
+        for header, body in sections:
+            if not header or not body:
+                continue
+            if _REQ_HEADER_RE.search(header):
+                continue  # somehow matched — shouldn't happen here
+            key = header.lower().strip()
+            unmatched.setdefault(key, []).append((title, source))
+
+    # rank by frequency
+    ranked = sorted(unmatched.items(), key=lambda x: -len(x[1]))
+
+    w = 70
+    print("=" * w)
+    print("  UNMATCHED HEADERS IN FALLBACK VACANCIES  (pattern discovery)")
+    print(f"  Showing top {top_n} — add req patterns for ones that look like requirements")
+    print("=" * w)
+    for header, occurrences in ranked[:top_n]:
+        count = len(occurrences)
+        bar = "█" * min(count // max(len(rows) // 300, 1), 25)
+        print(f"  {count:5d}  {header[:50]:<50}  {bar}")
+        for t, src in occurrences[:samples]:
+            print(f"           [{src}] {t[:60]}")
+    print("=" * w)
+    print(f"  Total fallback vacancies: {sum(1 for _, d, *_ in rows if not any(_REQ_HEADER_RE.search(h) for h, b in _split_sections(d or '') if b))}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Extract tech stack from vacancy descriptions using regex dictionary")
     p.add_argument(
@@ -208,6 +255,26 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         help="Dry-run: show section detection coverage stats without writing to DB",
     )
+    p.add_argument(
+        "--discover",
+        action="store_true",
+        default=False,
+        help="Show unmatched headers from fallback vacancies to find missing patterns",
+    )
+    p.add_argument(
+        "--discover-top",
+        type=int,
+        default=40,
+        metavar="N",
+        help="How many top headers to show in --discover mode (default: 40)",
+    )
+    p.add_argument(
+        "--discover-samples",
+        type=int,
+        default=3,
+        metavar="N",
+        help="Vacancy title samples per header in --discover mode (default: 3)",
+    )
     return p
 
 
@@ -215,6 +282,9 @@ def main() -> None:
     args = build_parser().parse_args()
     if args.stats:
         run_stats()
+        return
+    if args.discover:
+        run_discover(top_n=args.discover_top, samples=args.discover_samples)
         return
     stats = run_extraction(reprocess=args.reprocess_all)
     print("Extraction completed.")
