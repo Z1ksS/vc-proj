@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from datetime import timezone as _tz
 from urllib.parse import quote
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -21,16 +21,51 @@ from app.ingest import run_ingestion
 from app.models import JobRecord, Technology, TrackingCard, VacancyTechnology
 
 
+_BLOCK_TAGS = frozenset([
+    "p", "div", "section", "article", "blockquote",
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "ul", "ol", "table", "tbody", "tr",
+])
+
+
+def _html_to_text(html: str) -> str:
+    soup = BeautifulSoup(html, "lxml")
+    parts: list[str] = []
+
+    def _walk(node) -> None:
+        if isinstance(node, NavigableString):
+            parts.append(str(node))
+        elif isinstance(node, Tag):
+            if node.name in ("script", "style"):
+                return
+            if node.name in _BLOCK_TAGS:
+                parts.append("\n\n")
+                for child in node.children:
+                    _walk(child)
+                parts.append("\n\n")
+            elif node.name == "li":
+                parts.append("\n• ")
+                for child in node.children:
+                    _walk(child)
+            elif node.name == "br":
+                parts.append("\n")
+            else:
+                for child in node.children:
+                    _walk(child)
+
+    _walk(soup)
+    text = "".join(parts)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = "\n".join(line.strip() for line in text.splitlines())
+    return text.strip()
+
+
 def _format_desc(text: str | None) -> str:
     if not text:
         return ""
     if "<" in text:
-        soup = BeautifulSoup(text, "lxml")
-        text = soup.get_text(separator="\n")
-        text = re.sub(r"[ \t]+", " ", text)
-        text = re.sub(r"\n{3,}", "\n\n", text)
-        text = "\n".join(line.strip() for line in text.splitlines())
-        text = text.strip()
+        text = _html_to_text(text)
     paragraphs = re.split(r"\n{2,}", text.strip())
     parts: list[str] = []
     for para in paragraphs:
