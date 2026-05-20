@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -57,6 +57,11 @@ class JobRecord(Base):
     # Cross-platform dedup — added in migration 0002; initially = source_job_id
     canonical_vacancy_id: Mapped[str | None] = mapped_column(
         String(512), nullable=True, index=True
+    )
+
+    # Miltech/deftech flag — added in migration 0005
+    is_miltech: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="0", index=True
     )
 
     __table_args__ = (Index("ix_jobs_dedupe_source", "dedupe_fingerprint", "source"),)

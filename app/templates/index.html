@@ -263,12 +263,17 @@
           </div>
         </div>
 
-        <!-- Show closed -->
+        <!-- Show closed / Show miltech -->
         <div class="facet">
           <label class="opt{% if include_closed %} on{% endif %}" id="closed-opt">
             <input class="af" type="checkbox" name="include_closed" id="closed-chk" value="true" {% if include_closed %}checked{% endif %}>
             <div class="box"></div>
             <span class="nm">Show closed</span>
+          </label>
+          <label class="opt{% if include_miltech %} on{% endif %}" id="miltech-opt" style="margin-top:4px">
+            <input class="af" type="checkbox" name="include_miltech" id="miltech-chk" value="true" {% if include_miltech %}checked{% endif %}>
+            <div class="box"></div>
+            <span class="nm">Show miltech/deftech</span>
           </label>
         </div>
 
@@ -455,6 +460,9 @@ function renderApplied() {
   if (document.getElementById('closed-chk').checked)
     chips.push({ label: 'Including closed', field: 'closed' });
 
+  if (document.getElementById('miltech-chk').checked)
+    chips.push({ label: 'Including miltech/deftech', field: 'miltech' });
+
   const lo = +document.getElementById('rng-lo').value;
   const hi = +document.getElementById('rng-hi').value;
   if (lo > 0 || hi < SAL_MAX)
@@ -480,6 +488,12 @@ function renderApplied() {
         const chk = document.getElementById('closed-chk');
         chk.checked = false;
         document.getElementById('closed-opt').classList.remove('on');
+        renderApplied();
+        document.getElementById('filter-form').requestSubmit();
+      } else if (f === 'miltech') {
+        const chk = document.getElementById('miltech-chk');
+        chk.checked = false;
+        document.getElementById('miltech-opt').classList.remove('on');
         renderApplied();
         document.getElementById('filter-form').requestSubmit();
       } else {
@@ -508,6 +522,9 @@ function clearAll() {
   const chk = document.getElementById('closed-chk');
   chk.checked = false;
   document.getElementById('closed-opt').classList.remove('on');
+  const mchk = document.getElementById('miltech-chk');
+  mchk.checked = false;
+  document.getElementById('miltech-opt').classList.remove('on');
   updateSalary(false);
   renderApplied();
   document.getElementById('filter-form').requestSubmit();
@@ -516,6 +533,12 @@ function clearAll() {
 // Closed toggle .on sync
 document.getElementById('closed-chk').addEventListener('change', function() {
   document.getElementById('closed-opt').classList.toggle('on', this.checked);
+  renderApplied();
+});
+
+// Miltech toggle .on sync
+document.getElementById('miltech-chk').addEventListener('change', function() {
+  document.getElementById('miltech-opt').classList.toggle('on', this.checked);
   renderApplied();
 });
 

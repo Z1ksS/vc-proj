@@ -69,7 +69,7 @@
 </table>
 
 {% if total_pages > 1 %}
-{% set base = "q=" ~ q ~ "&source=" ~ source ~ "&grade=" ~ grade ~ "&tech=" ~ (tech | urlquote) ~ "&company=" ~ (company | urlquote) ~ "&sort=" ~ sort ~ ("&sal_min=" ~ sal_min if sal_min else "") ~ ("&sal_max=" ~ sal_max if sal_max else "") ~ ("&include_closed=true" if include_closed else "") %}
+{% set base = "q=" ~ q ~ "&source=" ~ source ~ "&grade=" ~ grade ~ "&tech=" ~ (tech | urlquote) ~ "&company=" ~ (company | urlquote) ~ "&sort=" ~ sort ~ ("&sal_min=" ~ sal_min if sal_min else "") ~ ("&sal_max=" ~ sal_max if sal_max else "") ~ ("&include_closed=true" if include_closed else "") ~ ("&include_miltech=true" if include_miltech else "") %}
 <div class="pagination">
   <span class="page-info">{{ (page - 1) * 50 + 1 }}–{{ [page * 50, total] | min }} of {{ total }}</span>
   <div class="page-btns">

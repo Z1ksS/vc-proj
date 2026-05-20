@@ -41,6 +41,21 @@ CLOSE_AFTER_DAYS = int(os.getenv("CLOSE_AFTER_DAYS", "3"))
 _DEFAULT_KEYWORDS_RAW = os.getenv("INGEST_KEYWORDS", "DevOps")
 DEFAULT_KEYWORDS = [k.strip() for k in _DEFAULT_KEYWORDS_RAW.split(",") if k.strip()]
 
+_MILTECH_RE = re.compile(
+    r"\b(?:miltech|deftech|military|defence|defense|"
+    r"drone(?:\s+(?:tech|soft|system|platform))?|"
+    r"uav|uas|unmanned\s+aerial|"
+    r"weapon\s+systems?|ballistic|munitions?|warfighter|"
+    r"battlefield\s+(?:management|system)|"
+    r"бпла|безпілот|оборонн|військов|зброй)\b",
+    re.IGNORECASE,
+)
+
+
+def is_miltech(title: str, description: str | None = None) -> bool:
+    text = title + " " + (description or "")
+    return bool(_MILTECH_RE.search(text))
+
 # Keywords that require tech filtering — vacancies from these categories may be non-technical.
 _OTHER_KEYWORDS: frozenset[str] = frozenset({"other"})
 
@@ -119,6 +134,8 @@ def _upsert_jobs(db: Session, jobs: Iterable) -> tuple[int, int]:
             select(JobRecord).where(JobRecord.source_job_id == job.source_job_id)
         ).scalar_one_or_none()
 
+        miltech_flag = is_miltech(job.title, job.description)
+
         if existing:
             existing.title = job.title
             existing.company = job.company
@@ -130,6 +147,7 @@ def _upsert_jobs(db: Session, jobs: Iterable) -> tuple[int, int]:
             existing.dedupe_fingerprint = job.dedupe_fingerprint
             existing.description = job.description
             existing.last_seen_at = now
+            existing.is_miltech = miltech_flag
             if existing.closed_at is not None:
                 # Vacancy reappeared after being marked closed.
                 existing.closed_at = None
@@ -151,6 +169,7 @@ def _upsert_jobs(db: Session, jobs: Iterable) -> tuple[int, int]:
             first_seen_at=now,
             last_seen_at=now,
             canonical_vacancy_id=job.source_job_id,
+            is_miltech=miltech_flag,
         ))
         inserted += 1
 
