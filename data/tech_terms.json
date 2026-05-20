@@ -554,7 +554,9 @@
       "aliases": [
         "mongodb",
         "mongo",
-        "mongoose"
+        "mongoose",
+        "mongodb atlas",
+        "atlas mongodb"
       ]
     },
     {
@@ -713,7 +715,9 @@
       "canonical": "DigitalOcean",
       "aliases": [
         "digitalocean",
-        "digital ocean"
+        "digital ocean",
+        "doks",
+        "digitalocean kubernetes"
       ]
     },
     {
@@ -2218,6 +2222,247 @@
       "aliases": [
         "payment service provider",
         "psp"
+      ]
+    },
+    {
+      "canonical": "k3s",
+      "aliases": [
+        "k3s",
+        "k3s cluster",
+        "lightweight kubernetes"
+      ]
+    },
+    {
+      "canonical": "Proxmox",
+      "aliases": [
+        "proxmox",
+        "proxmox ve",
+        "proxmox virtual environment",
+        "proxmox backup server",
+        "pbs",
+        "lxc",
+        "linux containers"
+      ]
+    },
+    {
+      "canonical": "FluxCD",
+      "aliases": [
+        "fluxcd",
+        "flux cd",
+        "flux",
+        "flux2"
+      ]
+    },
+    {
+      "canonical": "GitOps",
+      "aliases": [
+        "gitops",
+        "git ops"
+      ]
+    },
+    {
+      "canonical": "Traefik",
+      "aliases": [
+        "traefik",
+        "traefik proxy",
+        "traefik ingress"
+      ]
+    },
+    {
+      "canonical": "HAProxy",
+      "aliases": [
+        "haproxy",
+        "ha proxy"
+      ]
+    },
+    {
+      "canonical": "cert-manager",
+      "aliases": [
+        "cert-manager",
+        "cert manager",
+        "certmanager"
+      ]
+    },
+    {
+      "canonical": "Let's Encrypt",
+      "aliases": [
+        "let's encrypt",
+        "letsencrypt",
+        "lets encrypt"
+      ]
+    },
+    {
+      "canonical": "Strimzi",
+      "aliases": [
+        "strimzi",
+        "strimzi operator",
+        "kafka strimzi"
+      ]
+    },
+    {
+      "canonical": "Cilium",
+      "aliases": [
+        "cilium",
+        "cilium cni",
+        "ebpf networking"
+      ]
+    },
+    {
+      "canonical": "External Secrets Operator",
+      "aliases": [
+        "external secrets operator",
+        "external secrets",
+        "eso"
+      ]
+    },
+    {
+      "canonical": "OpenTofu",
+      "aliases": [
+        "opentofu",
+        "open tofu"
+      ]
+    },
+    {
+      "canonical": "Backblaze B2",
+      "aliases": [
+        "backblaze b2",
+        "backblaze",
+        "b2 storage"
+      ]
+    },
+    {
+      "canonical": "GKE",
+      "aliases": [
+        "gke",
+        "google kubernetes engine",
+        "google gke"
+      ]
+    },
+    {
+      "canonical": "KMS",
+      "aliases": [
+        "kms",
+        "key management service",
+        "aws kms",
+        "google kms",
+        "cloud kms"
+      ]
+    },
+    {
+      "canonical": "Kyverno",
+      "aliases": [
+        "kyverno",
+        "kyverno policy"
+      ]
+    },
+    {
+      "canonical": "OPA",
+      "aliases": [
+        "opa",
+        "open policy agent",
+        "rego"
+      ]
+    },
+    {
+      "canonical": "Helmfile",
+      "aliases": [
+        "helmfile",
+        "helm file"
+      ]
+    },
+    {
+      "canonical": "SOC 2",
+      "aliases": [
+        "soc 2",
+        "soc2",
+        "soc 2 type ii"
+      ]
+    },
+    {
+      "canonical": "PCI DSS",
+      "aliases": [
+        "pci dss",
+        "pci-dss",
+        "payment card industry"
+      ]
+    },
+    {
+      "canonical": "HIPAA",
+      "aliases": [
+        "hipaa",
+        "health insurance portability"
+      ]
+    },
+    {
+      "canonical": "SLO/SLI",
+      "aliases": [
+        "slo",
+        "sli",
+        "service level objective",
+        "service level indicator",
+        "error budget",
+        "error budgets"
+      ]
+    },
+    {
+      "canonical": "OpenShift",
+      "aliases": [
+        "openshift",
+        "open shift",
+        "ocp",
+        "red hat openshift",
+        "okd"
+      ]
+    },
+    {
+      "canonical": "CSI",
+      "aliases": [
+        "csi",
+        "container storage interface"
+      ]
+    },
+    {
+      "canonical": "CNI",
+      "aliases": [
+        "cni",
+        "container network interface"
+      ]
+    },
+    {
+      "canonical": "CloudFront",
+      "aliases": [
+        "cloudfront",
+        "aws cloudfront",
+        "amazon cloudfront"
+      ]
+    },
+    {
+      "canonical": "ALB",
+      "aliases": [
+        "alb",
+        "application load balancer",
+        "aws alb",
+        "aws load balancer",
+        "elastic load balancer",
+        "elb",
+        "nlb"
+      ]
+    },
+    {
+      "canonical": "SQS",
+      "aliases": [
+        "sqs",
+        "amazon sqs",
+        "aws sqs",
+        "simple queue service"
+      ]
+    },
+    {
+      "canonical": "AWS WAF",
+      "aliases": [
+        "aws waf",
+        "waf",
+        "web application firewall"
       ]
     }
   ]
