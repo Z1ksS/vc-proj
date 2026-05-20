@@ -379,6 +379,16 @@
         "nofluffjobs": ["Support"],
         "robotaua": ["technical support", "NOC"]
       }
+    },
+    {
+      "name": "Other",
+      "sources": {
+        "dou": ["Other"],
+        "djinni": ["Other"],
+        "workua": null,
+        "nofluffjobs": null,
+        "robotaua": null
+      }
     }
   ]
 }

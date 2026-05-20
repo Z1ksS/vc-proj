@@ -4,6 +4,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 from typing import Iterable
@@ -15,6 +16,7 @@ from app.db import SessionLocal, engine
 from app.models import Base, JobRecord
 from app.services.dedupe import dedupe_jobs
 from app.services.normalize import normalize_job
+from app.services.tech_extract import extract_technologies
 from parsers.djinni import DjinniParser
 from parsers.dou import DouParser
 from parsers.nofluffjobs import NoFluffJobsParser
@@ -38,6 +40,29 @@ CLOSE_AFTER_DAYS = int(os.getenv("CLOSE_AFTER_DAYS", "3"))
 
 _DEFAULT_KEYWORDS_RAW = os.getenv("INGEST_KEYWORDS", "DevOps")
 DEFAULT_KEYWORDS = [k.strip() for k in _DEFAULT_KEYWORDS_RAW.split(",") if k.strip()]
+
+# Keywords that require tech filtering — vacancies from these categories may be non-technical.
+_OTHER_KEYWORDS: frozenset[str] = frozenset({"other"})
+
+# Fallback title pattern for jobs without a description (e.g. DOU Other).
+# Matches common technical role nouns so non-tech vacancies (HR, finance, etc.) are dropped.
+_TECH_TITLE_RE = re.compile(
+    r"\b(?:engineer|developer|programmer|architect|devops|sre|"
+    r"tester|sysadmin|firmware|embedded|"
+    r"(?:data|ai|ml|machine\s+learning)\s+scientist|"
+    r"(?:data|business\s+intelligence|bi)\s+analyst|"
+    r"(?:system|network|database|cloud|security)\s+admin(?:istrator)?)\b",
+    re.IGNORECASE,
+)
+
+
+def _is_technical_other(job) -> bool:
+    """Return True if a job from the 'Other' category appears to be technical."""
+    text = " ".join(x for x in [job.title, job.description] if x)
+    if extract_technologies(text):
+        return True
+    # Description-less jobs (e.g. DOU listing-only): fall back to title heuristic.
+    return bool(_TECH_TITLE_RE.search(job.title or ""))
 
 
 def _now() -> datetime:
@@ -227,6 +252,15 @@ def run_ingestion(
             except Exception:
                 logger.exception("Parser failed source='%s' keyword='%s'", source, keyword)
                 jobs = []
+            if keyword.lower() in _OTHER_KEYWORDS and jobs:
+                before = len(jobs)
+                jobs = [j for j in jobs if _is_technical_other(j)]
+                dropped = before - len(jobs)
+                if dropped:
+                    logger.info(
+                        "Other-filter source='%s' kept=%d dropped=%d",
+                        source, len(jobs), dropped,
+                    )
             total_raw += len(jobs)
             normalized_jobs.extend(normalize_job(job, source=source) for job in jobs)
 

@@ -9,6 +9,11 @@ from .base import BaseParser
 
 _MAX_PAGES = 50
 
+# Some Djinni categories are exposed as URL path slugs, not ?primary_keyword= params.
+_PATH_KEYWORDS: dict[str, str] = {
+    "Other": "keyword-other",
+}
+
 
 def _extract_text(el) -> str:
     text = el.get_text(separator="\n")
@@ -35,8 +40,11 @@ class DjinniParser(BaseParser):
         if not keyword:
             return []
 
-        encoded = quote(keyword, safe="")
-        base_url = f"https://djinni.co/jobs/?primary_keyword={encoded}&page={{}}"
+        if keyword in _PATH_KEYWORDS:
+            base_url = f"https://djinni.co/jobs/{_PATH_KEYWORDS[keyword]}/?page={{}}"
+        else:
+            encoded = quote(keyword, safe="")
+            base_url = f"https://djinni.co/jobs/?primary_keyword={encoded}&page={{}}"
         last_page = min(self.get_last_page_number(base_url), _MAX_PAGES)
         results: list[Job] = []
 
