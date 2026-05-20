@@ -67,16 +67,9 @@ def _apply_filters(
         stmt = stmt.where(JobRecord.closed_at.is_(None))
     if keyword:
         like = f"%{keyword.lower()}%"
-        tech_subq = (
-            select(VacancyTechnology.vacancy_id)
-            .join(Technology, Technology.id == VacancyTechnology.tech_id)
-            .where(func.lower(Technology.name) == keyword.lower())
-            .scalar_subquery()
-        )
         stmt = stmt.where(
             func.lower(JobRecord.title).like(like) |
-            func.lower(JobRecord.company).like(like) |
-            JobRecord.id.in_(tech_subq)
+            func.lower(JobRecord.company).like(like)
         )
     if source:
         stmt = stmt.where(JobRecord.source == source)
