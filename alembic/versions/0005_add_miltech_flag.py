@@ -37,7 +37,7 @@ def upgrade() -> None:
         f"lower(title) LIKE '{p}' OR lower(coalesce(description,'')) LIKE '{p}'"
         for p in _MILTECH_PATTERNS
     )
-    conn.execute(sa.text(f"UPDATE jobs SET is_miltech = 1 WHERE {conditions}"))
+    conn.execute(sa.text(f"UPDATE jobs SET is_miltech = TRUE WHERE {conditions}"))
 
 
 def downgrade() -> None:
