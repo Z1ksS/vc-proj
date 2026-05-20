@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from markupsafe import Markup, escape
+from markupsafe import escape
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
@@ -21,9 +21,9 @@ from app.ingest import run_ingestion
 from app.models import JobRecord, Technology, TrackingCard, VacancyTechnology
 
 
-def _format_desc(text: str | None) -> Markup:
+def _format_desc(text: str | None) -> str:
     if not text:
-        return Markup("")
+        return ""
     if "<" in text:
         soup = BeautifulSoup(text, "lxml")
         text = soup.get_text(separator="\n")
@@ -34,10 +34,10 @@ def _format_desc(text: str | None) -> Markup:
     paragraphs = re.split(r"\n{2,}", text.strip())
     parts: list[str] = []
     for para in paragraphs:
-        lines = [escape(line) for line in para.splitlines() if line.strip()]
+        lines = [str(escape(line)) for line in para.splitlines() if line.strip()]
         if lines:
-            parts.append("<p>" + Markup("<br>").join(lines) + "</p>")
-    return Markup("".join(parts))
+            parts.append("<p>" + "<br>".join(lines) + "</p>")
+    return "".join(parts)
 
 
 router = APIRouter()

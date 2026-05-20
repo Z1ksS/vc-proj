@@ -39,7 +39,7 @@
   {% if job.description %}
   <div class="job-section">
     <div class="section-label">Description</div>
-    <div class="job-description">{{ job.description | format_desc }}</div>
+    <div class="job-description">{{ job.description | format_desc | safe }}</div>
   </div>
   {% else %}
   <p class="muted">No description available.</p>
