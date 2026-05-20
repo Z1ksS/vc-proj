@@ -168,6 +168,11 @@ def _pagination_ctx(total: int, page: int, **filters) -> dict:
     }
 
 
+@router.get("/signin", response_class=HTMLResponse)
+def signin_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request, "auth/login.html", {})
+
+
 @router.get("/", response_class=HTMLResponse)
 def index(
     request: Request,

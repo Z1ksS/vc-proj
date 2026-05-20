@@ -3,9 +3,6 @@
 
 {% block head %}
 <style>
-/* Widen container for the board */
-.container { max-width: 1480px !important; }
-
 :root {
   --panel-2: #1c2128;
   --muted-2: #484f58;
@@ -118,6 +115,14 @@
   flex: 1; font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3;
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
+.card-del {
+  opacity: 0; background: transparent; border: none; color: var(--muted-2); cursor: pointer;
+  width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 15px; padding: 0;
+  transition: opacity .12s, background .12s, color .12s;
+}
+.card:hover .card-del { opacity: 1; }
+.card-del:hover { color: var(--pink) !important; background: rgba(255,123,114,.10); }
 .card-company { color: var(--muted); font-size: 12px; margin-top: 2px; }
 .card-salary { margin-top: 8px; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--green); }
 .card-salary.none { color: var(--muted-2); }
@@ -538,6 +543,8 @@ async function initBoard() {
     data.cards.forEach(c => { c.id = String(c.id); c.columnId = String(c.columnId); ensureCardDefaults(c); });
     state = data;
     renderAll();
+    const openId = new URLSearchParams(window.location.search).get('open');
+    if (openId) openModal(openId);
   } catch(e) {
     document.getElementById('board').innerHTML =
       `<div class="empty-board"><div class="icon">⚠</div><h3>Failed to load</h3><p>${esc(e.message)}</p></div>`;
@@ -657,7 +664,10 @@ function cardHTML(card, colIdx, colCount) {
   const when = card.appliedAt ? relTime(card.appliedAt) : relTime(card.createdAt);
   return `
     <div class="card" data-card="${card.id}">
-      <div class="card-head"><div class="card-title">${esc(card.title)}</div></div>
+      <div class="card-head">
+        <div class="card-title">${esc(card.title)}</div>
+        <button type="button" class="card-del" data-act="delete-card" title="Remove">×</button>
+      </div>
       <div class="card-company">${esc(card.company)}</div>
       ${salaryHTML}
       ${tags ? `<div class="card-tags">${tags}</div>` : ''}
@@ -695,8 +705,12 @@ function attachBoardHandlers() {
     colEl.querySelectorAll('.card').forEach(cardEl => {
       const cardId = cardEl.dataset.card;
       cardEl.addEventListener('click', e => {
-        if (e.target.closest('.move')) return;
+        if (e.target.closest('.move') || e.target.closest('.card-del')) return;
         openModal(cardId);
+      });
+      cardEl.querySelector('[data-act="delete-card"]').addEventListener('click', e => {
+        e.stopPropagation();
+        if (window.confirm('Remove from board?')) deleteCard(cardId);
       });
       cardEl.querySelector('[data-act="move-left"]').addEventListener('click', e => {
         e.stopPropagation(); moveCard(cardId, -1);

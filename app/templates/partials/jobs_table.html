@@ -51,14 +51,14 @@
           {% if job.id in tracked_job_ids %}
             <a class="tracked-pill" href="/tracking"><span class="chk">✓</span> Tracked</a>
           {% else %}
-            <button class="track-btn"
+            <button type="button" class="track-btn"
                     hx-post="/api/tracking/track-from-job"
                     hx-vals='{"job_id": {{ job.id }}}'
                     hx-target="this"
                     hx-swap="outerHTML">+ Track</button>
           {% endif %}
         {% else %}
-          <button class="track-btn" disabled title="Sign in to track">+ Track</button>
+          <button type="button" class="track-btn" disabled title="Sign in to track">+ Track</button>
         {% endif %}
       </td>
     </tr>

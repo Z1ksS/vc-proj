@@ -69,7 +69,7 @@ def _card_to_dict(card: TrackingCard) -> dict:
 def board_page(request: Request) -> HTMLResponse:
     user = get_current_user(request)
     if not user:
-        return RedirectResponse("/auth/login")
+        return RedirectResponse("/signin")
     return templates.TemplateResponse(request, "board.html", {"current_user": user})
 
 
@@ -267,7 +267,7 @@ async def track_from_job(request: Request, db: Session = Depends(get_db)) -> HTM
         .where(TrackingCard.user_id == user["id"], TrackingCard.job_id == job_id)
     ).scalar_one_or_none()
     if existing:
-        return HTMLResponse('<a class="tracked-pill" href="/tracking"><span class="chk">✓</span> Tracked</a>')
+        return HTMLResponse(f'<a class="tracked-pill" href="/tracking?open={existing.id}"><span class="chk">✓</span> Tracked</a>')
 
     col = db.execute(
         select(TrackingColumn)
@@ -289,7 +289,7 @@ async def track_from_job(request: Request, db: Session = Depends(get_db)) -> HTM
             .order_by(Technology.name)
         ).fetchall()
     ]
-    db.add(TrackingCard(
+    new_card = TrackingCard(
         user_id=user["id"],
         column_id=col.id,
         job_id=job_id,
@@ -302,9 +302,11 @@ async def track_from_job(request: Request, db: Session = Depends(get_db)) -> HTM
         salary_max=job.salary_max,
         salary_currency=job.salary_currency,
         stack_json=json.dumps(tech_names) if tech_names else None,
-    ))
+    )
+    db.add(new_card)
     db.commit()
-    return HTMLResponse('<a class="tracked-pill" href="/tracking"><span class="chk">✓</span> Tracked</a>')
+    db.refresh(new_card)
+    return HTMLResponse(f'<a class="tracked-pill" href="/tracking?open={new_card.id}"><span class="chk">✓</span> Tracked</a>')
 
 
 # ── CV upload / download ──────────────────────────────────────────────────────

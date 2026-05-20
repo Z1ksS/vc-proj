@@ -150,6 +150,8 @@
   .role-card .head .name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
   .role-card .head .name .badge { width: 8px; height: 8px; border-radius: 2px; }
   .role-card .head .total { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .show-all-btn { width: 100%; margin-top: 6px; padding: 5px; background: transparent; border: 1px dashed var(--border); border-radius: 6px; color: var(--muted); font-size: 11px; cursor: pointer; font-family: inherit; }
+  .show-all-btn:hover { color: var(--accent); border-color: var(--accent); }
   .rc-row { display: grid; grid-template-columns: 18px 1fr 1fr 44px; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; cursor: pointer; }
   .rc-row:hover { opacity: .8; }
   .rc-row .r { color: var(--muted-2); font-variant-numeric: tabular-nums; font-size: 11px; text-align: right; }
@@ -373,7 +375,7 @@ const HEATMAP_TECHS = (() => {
 })();
 
 // Filter state
-const state = { source: 'all', grade: 'all', search: '', selectedTech: null, showHeatmapValues: false };
+const state = { source: 'all', grade: 'all', search: '', selectedTech: null, showHeatmapValues: false, roleShowAll: {} };
 
 // Source weights from real data
 const SOURCE_WEIGHTS = { all: 1.0 };
@@ -467,17 +469,22 @@ function renderByRole() {
   const roleTotals = filteredRoleTotals();
   grid.innerHTML = '';
   ROLES.forEach(role => {
-    const list = TECHS.map(t => { const f=applyFilters(t.byRole); return {name:t.name, count:f[role]}; })
+    const fullList = TECHS.map(t => { const f=applyFilters(t.byRole); return {name:t.name, count:f[role]}; })
       .filter(t => t.count>0 && (!search||t.name.toLowerCase().includes(search)))
-      .sort((a,b) => b.count-a.count).slice(0,10);
-    const total = roleTotals[role]; const max = list[0]?.count||1; const color = ROLE_COLORS[role];
+      .sort((a,b) => b.count-a.count);
+    const showAll = !!state.roleShowAll[role];
+    const list = showAll ? fullList : fullList.slice(0, 10);
+    const total = roleTotals[role]; const max = fullList[0]?.count||1; const color = ROLE_COLORS[role];
     const rowsHTML = list.map((t,i) => {
       const pct = total ? (t.count/total)*100 : 0;
       return `<div class="rc-row ${SHARED_TECHS.has(t.name)?'is-shared':''}" data-tech="${t.name}" data-role="${role}"><div class="r">${i+1}</div><div class="n">${t.name}</div><div class="bar"><div style="width:${(t.count/max)*100}%;background:${color}"></div></div><div class="pct">${pct.toFixed(0)}%</div></div>`;
     }).join('');
+    const showAllBtn = fullList.length > 10
+      ? `<button class="show-all-btn" data-role="${role}">${showAll ? 'Show less' : `Show all ${fullList.length}`}</button>`
+      : '';
     const card = document.createElement('div');
     card.className = 'role-card';
-    card.innerHTML = `<div class="head"><div class="name"><span class="badge" style="background:${color}"></span>${role}</div><div class="total">${total.toLocaleString()} vacancies</div></div>${rowsHTML||'<div class="empty-role">No matches</div>'}`;
+    card.innerHTML = `<div class="head"><div class="name"><span class="badge" style="background:${color}"></span>${role}</div><div class="total">${total.toLocaleString()} vacancies</div></div>${rowsHTML||'<div class="empty-role">No matches</div>'}${showAllBtn}`;
     card.querySelectorAll('.rc-row').forEach(row => {
       row.addEventListener('mousemove', ev => {
         const t = TECHS.find(x=>x.name===row.dataset.tech);
@@ -487,6 +494,11 @@ function renderByRole() {
       });
       row.addEventListener('mouseleave', hideTip);
       row.addEventListener('click', () => { state.selectedTech=row.dataset.tech; switchView('top'); });
+    });
+    const btn = card.querySelector('.show-all-btn');
+    if (btn) btn.addEventListener('click', () => {
+      state.roleShowAll[role] = !state.roleShowAll[role];
+      renderByRole();
     });
     grid.appendChild(card);
   });
