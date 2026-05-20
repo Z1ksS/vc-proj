@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from datetime import timezone as _tz
 from urllib.parse import quote
 
+from bs4 import BeautifulSoup
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -23,6 +24,13 @@ from app.models import JobRecord, Technology, TrackingCard, VacancyTechnology
 def _format_desc(text: str | None) -> Markup:
     if not text:
         return Markup("")
+    if "<" in text:
+        soup = BeautifulSoup(text, "lxml")
+        text = soup.get_text(separator="\n")
+        text = re.sub(r"[ \t]+", " ", text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        text = "\n".join(line.strip() for line in text.splitlines())
+        text = text.strip()
     paragraphs = re.split(r"\n{2,}", text.strip())
     parts: list[str] = []
     for para in paragraphs:
