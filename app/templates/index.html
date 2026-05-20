@@ -37,7 +37,7 @@
 
   /* Checkbox-style radio options */
   .opt { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; font-size: 12px; user-select: none; }
-  .opt input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+  .opt input[type=radio], .opt input[type=checkbox] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
   .opt .box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); background: var(--panel-2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background .12s, border-color .12s; }
   .opt .box::after { content: ""; width: 6px; height: 6px; border-radius: 1px; background: var(--accent); opacity: 0; transition: opacity .1s; }
   .opt.on .box { border-color: var(--accent); background: rgba(68,147,248,.10); }
