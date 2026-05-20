@@ -7,7 +7,10 @@
       <th class="col-grade">Grade</th>
       <th>Technologies</th>
       <th class="col-salary">Salary</th>
-      <th class="col-when">Posted</th>
+      <th class="col-when{% if sort in ('posted-asc','posted-desc') %} sort-active{% endif %}"
+          data-sort data-sort-asc="posted-asc" data-sort-desc="posted-desc">
+        Posted<i class="sort-arrow">{% if sort == 'posted-asc' %}▲{% elif sort == 'posted-desc' %}▼{% else %}⇅{% endif %}</i>
+      </th>
       <th class="col-track">Track</th>
     </tr>
   </thead>

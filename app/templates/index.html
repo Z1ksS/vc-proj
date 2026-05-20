@@ -88,6 +88,11 @@
   /* Table */
   .jt { width: 100%; border-collapse: collapse; font-size: 13px; }
   .jt thead th { text-align: left; padding: 8px 12px; color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--panel); white-space: nowrap; }
+  .jt thead th[data-sort] { cursor: pointer; user-select: none; }
+  .jt thead th[data-sort]:hover { color: var(--text); }
+  .sort-arrow { margin-left: 4px; opacity: .5; font-style: normal; }
+  th[data-sort].sort-active { color: var(--accent); }
+  th[data-sort].sort-active .sort-arrow { opacity: 1; }
   .jt tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
   .jt tbody tr:last-child td { border-bottom: none; }
   .jt tbody tr:hover td { background: var(--panel-2); }
@@ -272,7 +277,7 @@
       <!-- Main panel -->
       <div class="vac-main">
         <div class="toolbar-row">
-          <input class="search-main af" type="search" name="q" id="q-inp" placeholder="Search title, company, keyword…" value="{{ q }}">
+          <input class="search-main" type="search" name="q" id="q-inp" placeholder="Search title, company, keyword…" value="{{ q }}">
           <select class="sort-sel af" name="sort">
             <option value="posted-desc" {% if sort == 'posted-desc' %}selected{% endif %}>Newest first</option>
             <option value="posted-asc"  {% if sort == 'posted-asc'  %}selected{% endif %}>Oldest first</option>
@@ -512,6 +517,21 @@ function clearAll() {
 document.getElementById('closed-chk').addEventListener('change', function() {
   document.getElementById('closed-opt').classList.toggle('on', this.checked);
   renderApplied();
+});
+
+// Sort by column header (event delegation — works after htmx swaps)
+document.getElementById('jobs-table').addEventListener('click', function(e) {
+  const th = e.target.closest('th[data-sort]');
+  if (!th) return;
+  const sel = document.querySelector('select[name="sort"]');
+  const asc = th.dataset.sortAsc, desc = th.dataset.sortDesc;
+  if (!sel) return;
+  if (desc && sel.value !== desc) {
+    sel.value = desc;
+  } else if (asc) {
+    sel.value = (sel.value === desc) ? asc : (desc || asc);
+  }
+  document.getElementById('filter-form').requestSubmit();
 });
 
 // Init

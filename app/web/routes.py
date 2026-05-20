@@ -66,8 +66,11 @@ def _apply_filters(
     if not include_closed:
         stmt = stmt.where(JobRecord.closed_at.is_(None))
     if keyword:
-        like = f"%{keyword}%"
-        stmt = stmt.where(JobRecord.title.ilike(like) | JobRecord.company.ilike(like))
+        like = f"%{keyword.lower()}%"
+        stmt = stmt.where(
+            func.lower(JobRecord.title).like(like) |
+            func.lower(JobRecord.company).like(like)
+        )
     if source:
         stmt = stmt.where(JobRecord.source == source)
     if grade:
