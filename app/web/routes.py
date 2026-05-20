@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 from datetime import timezone as _tz
@@ -9,6 +10,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from markupsafe import Markup, escape
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
@@ -18,9 +20,22 @@ from app.ingest import run_ingestion
 from app.models import JobRecord, Technology, TrackingCard, VacancyTechnology
 
 
+def _format_desc(text: str | None) -> Markup:
+    if not text:
+        return Markup("")
+    paragraphs = re.split(r"\n{2,}", text.strip())
+    parts: list[str] = []
+    for para in paragraphs:
+        lines = [escape(line) for line in para.splitlines() if line.strip()]
+        if lines:
+            parts.append("<p>" + Markup("<br>").join(lines) + "</p>")
+    return Markup("".join(parts))
+
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 templates.env.filters["urlquote"] = lambda s: quote(str(s), safe="")
+templates.env.filters["format_desc"] = _format_desc
 templates.env.globals["current_user_fn"] = get_current_user
 
 
