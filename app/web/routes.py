@@ -70,7 +70,7 @@ def _apply_filters(
         tech_subq = (
             select(VacancyTechnology.vacancy_id)
             .join(Technology, Technology.id == VacancyTechnology.tech_id)
-            .where(func.lower(Technology.name).like(like))
+            .where(func.lower(Technology.name) == keyword.lower())
             .scalar_subquery()
         )
         stmt = stmt.where(
