@@ -519,6 +519,15 @@ document.getElementById('closed-chk').addEventListener('change', function() {
   renderApplied();
 });
 
+// Search: submit on Enter (display:none submit button doesn't trigger in Chrome)
+document.getElementById('q-inp').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    renderApplied();
+    document.getElementById('filter-form').requestSubmit();
+  }
+});
+
 // Sort by column header (event delegation — works after htmx swaps)
 document.getElementById('jobs-table').addEventListener('click', function(e) {
   const th = e.target.closest('th[data-sort]');
