@@ -139,6 +139,56 @@
     .vac-layout { grid-template-columns: 1fr; }
     .facets { position: static; }
   }
+
+  /* Filter toggle button — mobile only */
+  .filter-toggle-btn {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+  }
+  .filter-toggle-btn:hover { border-color: var(--muted-2); }
+  .filter-toggle-btn.filters-open { border-color: var(--accent); color: var(--accent); }
+  .filter-active-badge {
+    margin-left: auto;
+    font-size: 11px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 1px 7px;
+    display: none;
+  }
+  .filter-active-badge.show { display: inline-block; }
+
+  @media (max-width: 700px) {
+    .facets { display: none; }
+    .facets.mobile-open { display: block; }
+    .filter-toggle-btn { display: flex; }
+
+    /* Hide Source, Technologies, Posted columns */
+    .jt thead th:nth-child(3), .jt tbody td:nth-child(3) { display: none; }
+    .jt thead th:nth-child(5), .jt tbody td:nth-child(5) { display: none; }
+    .jt thead th:nth-child(7), .jt tbody td:nth-child(7) { display: none; }
+
+    #jobs-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .jt { min-width: 360px; }
+    .jt .col-salary { width: auto; }
+
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .vac-main .toolbar-row { gap: 6px; padding: 10px; }
+    .search-main { min-width: 0; }
+    .sort-sel { font-size: 12px; padding: 6px 8px; }
+  }
 </style>
 {% endblock %}
 {% block content %}
@@ -163,6 +213,11 @@
         hx-target="#jobs-table"
         hx-swap="innerHTML"
         hx-trigger="submit, change from:.af">
+
+    <button type="button" class="filter-toggle-btn" id="filterToggleBtn">
+      ☰ <span class="filter-btn-txt">Show filters</span>
+      <span id="filterActiveBadge" class="filter-active-badge"></span>
+    </button>
 
     <div class="vac-layout">
 
@@ -471,6 +526,13 @@ function renderApplied() {
   const q = document.getElementById('q-inp').value;
   if (q) chips.push({ label: 'Search: ' + q, field: 'q' });
 
+  // Update mobile filter badge
+  const filterBadge = document.getElementById('filterActiveBadge');
+  if (filterBadge) {
+    filterBadge.textContent = chips.length || '';
+    filterBadge.classList.toggle('show', chips.length > 0);
+  }
+
   if (!chips.length) { c.innerHTML = ''; return; }
 
   c.innerHTML = chips.map(ch =>
@@ -565,6 +627,18 @@ document.getElementById('jobs-table').addEventListener('click', function(e) {
   }
   document.getElementById('filter-form').requestSubmit();
 });
+
+// Mobile filter panel toggle
+(function() {
+  const btn = document.getElementById('filterToggleBtn');
+  const facets = document.querySelector('.facets');
+  if (!btn || !facets) return;
+  btn.addEventListener('click', function() {
+    const open = facets.classList.toggle('mobile-open');
+    btn.querySelector('.filter-btn-txt').textContent = open ? 'Hide filters' : 'Show filters';
+    btn.classList.toggle('filters-open', open);
+  });
+})();
 
 // Init
 document.querySelectorAll('input[name="source"]:checked, input[name="grade"]:checked, input[name="tech"]:checked').forEach(i => {

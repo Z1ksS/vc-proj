@@ -53,8 +53,9 @@ _MILTECH_RE = re.compile(
 
 
 def is_miltech(title: str, description: str | None = None) -> bool:
-    text = title + " " + (description or "")
-    return bool(_MILTECH_RE.search(text))
+    # Title-only detection to avoid false positives from outsourcing companies
+    # whose descriptions mention defense clients
+    return bool(_MILTECH_RE.search(title))
 
 # Keywords that require tech filtering — vacancies from these categories may be non-technical.
 _OTHER_KEYWORDS: frozenset[str] = frozenset({"other"})

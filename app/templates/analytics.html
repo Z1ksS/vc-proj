@@ -148,6 +148,38 @@
   .title-techs { display:flex; flex-wrap:wrap; gap:3px; }
   .tc { font-size:10px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; padding:1px 5px; color:var(--muted); }
   @media (max-width: 1000px) { .grid-2, .grid-2to1 { grid-template-columns: 1fr; } .title-row { grid-template-columns: 28px 1fr auto; } .title-row .title-techs { display:none; } }
+
+  @media (max-width: 700px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .an-panel { padding: 12px; }
+    .trend-wrap svg { height: 140px; }
+
+    /* Donut */
+    .donut-wrap { flex-direction: column; }
+    .donut { width: 120px; height: 120px; }
+
+    /* Grade pyramid */
+    .pyr-row { grid-template-columns: 60px 1fr 44px; gap: 6px; }
+
+    /* Source × grade stacked bars */
+    .stack-row { grid-template-columns: 70px 1fr; gap: 6px; }
+    .stack-tot { display: none; }
+
+    /* Boxplots */
+    .boxplot-row { grid-template-columns: 70px 1fr; gap: 6px; }
+    .bp-stat { display: none; }
+    .bp-axis { margin-left: 80px; margin-right: 0; }
+
+    /* Role bars */
+    .role-bar-row { grid-template-columns: 70px 1fr 38px; gap: 6px; }
+
+    /* Grade histograms: 1 column */
+    #grade-hists { grid-template-columns: 1fr !important; }
+
+    /* Tabs */
+    .tabs { flex-wrap: wrap; }
+    .tab { padding: 8px 10px; font-size: 12px; }
+  }
 </style>
 {% endblock %}
 {% block content %}

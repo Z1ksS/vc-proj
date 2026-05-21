@@ -216,6 +216,16 @@
 
   @media (max-width: 1100px) { .top-grid { grid-template-columns: 1fr; } .role-grid { grid-template-columns: repeat(2,1fr); } }
   @media (max-width: 720px) { .role-grid { grid-template-columns: 1fr; } .tech-detail { grid-template-columns: 1fr; } .role-split { grid-template-columns: repeat(3,1fr); } .bar-row { grid-template-columns: 22px 100px 1fr 50px; } }
+  @media (max-width: 700px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .ta-panel { padding: 12px; }
+    .toolbar { gap: 6px; }
+    .filter-group { flex-wrap: wrap; gap: 4px; }
+    .tabs { flex-wrap: wrap; }
+    .tab { padding: 8px 10px; font-size: 12px; }
+    .bar-row { grid-template-columns: 22px 90px 1fr 44px; }
+    .role-split { grid-template-columns: repeat(2,1fr); }
+  }
 </style>
 {% endblock %}
 

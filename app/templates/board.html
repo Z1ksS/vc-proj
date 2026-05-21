@@ -432,6 +432,20 @@ input.tl-date-input::-webkit-calendar-picker-indicator { opacity: 0; width: 0; p
   .m-left { border-right: none; border-bottom: 1px solid var(--border); }
   .salary-row { grid-template-columns: 1fr 1fr; }
 }
+
+@media (max-width: 700px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .page-head { margin-top: 14px; }
+  .column { width: 240px; }
+
+  /* Modal as bottom sheet */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal { max-height: 92vh; max-width: 100%; border-radius: 12px 12px 0 0; }
+  .m-head { padding: 10px 14px; }
+  .m-pane { padding: 12px 14px; }
+  .m-foot { padding: 10px 14px; flex-wrap: wrap; }
+  .kv-grid { grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+}
 </style>
 {% endblock %}
 

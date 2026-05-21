@@ -499,3 +499,30 @@ span.tag-more { font-size: 11px; color: var(--muted); align-self: center; }
   td:nth-child(5) { display: none; }
   .job-detail-header { flex-direction: column; }
 }
+
+/* ── Mobile (≤ 700px) ──────────────────────────── */
+@media (max-width: 700px) {
+  .container { padding: 10px; }
+
+  /* Header: title + user-bar on row 1, nav on row 2 */
+  .header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "title userbar" "nav nav";
+    gap: 6px 10px;
+    margin-bottom: 8px;
+  }
+  .header h1 { grid-area: title; font-size: 20px; margin: 0; }
+  .nav       { grid-area: nav; gap: 12px; margin-top: 0; flex-wrap: wrap; }
+  .nav a     { font-size: 13px; }
+  .user-bar  { grid-area: userbar; align-self: center; }
+  .user-name { display: none; }
+  .signout-btn { padding: 3px 8px; font-size: 11px; }
+
+  .panel { padding: 12px; margin-top: 12px; }
+
+  /* Job detail page */
+  .job-detail-header { gap: 10px; }
+  .job-title { font-size: 18px; }
+  .btn-open { align-self: flex-start; }
+}

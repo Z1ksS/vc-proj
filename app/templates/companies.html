@@ -34,7 +34,17 @@
 
   /* 2-col layout */
   .co-layout { display: grid; grid-template-columns: 1fr 400px; gap: 16px; align-items: start; }
-  @media (max-width: 900px) { .co-layout { grid-template-columns: 1fr; } .drill-col { display: none; } }
+  @media (max-width: 900px) { .co-layout { grid-template-columns: 1fr; } }
+  @media (min-width: 701px) and (max-width: 900px) { .drill-col { display: none; } }
+  @media (max-width: 700px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .drill-col { position: static; }
+    .drill-panel { margin-top: 12px; }
+    .sal-grid { grid-template-columns: repeat(2, 1fr); }
+    .toolbar { gap: 6px; }
+    .co-search { width: 100%; }
+    .spacer { display: none; }
+  }
 
   /* Leaderboard */
   .co-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
@@ -373,6 +383,13 @@ function showDrill(co) {
       </div>`).join('');
   } else {
     recentSec.style.display = 'none';
+  }
+
+  // On mobile, scroll to the drill panel so user sees the details
+  if (window.innerWidth <= 700) {
+    setTimeout(() => {
+      document.querySelector('.drill-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
   }
 }
 

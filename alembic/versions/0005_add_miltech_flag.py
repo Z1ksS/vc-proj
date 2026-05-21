@@ -34,7 +34,7 @@ def upgrade() -> None:
     # Backfill existing records
     conn = op.get_bind()
     conditions = " OR ".join(
-        f"lower(title) LIKE '{p}' OR lower(coalesce(description,'')) LIKE '{p}'"
+        f"lower(title) LIKE '{p}'"
         for p in _MILTECH_PATTERNS
     )
     conn.execute(sa.text(f"UPDATE jobs SET is_miltech = TRUE WHERE {conditions}"))
