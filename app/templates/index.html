@@ -201,11 +201,10 @@
   </div>
 
   <div class="kpi-grid">
-    <div class="kpi is-accent"><div class="label">Total vacancies</div><div class="value">{{ stats.total }}</div></div>
+    <div class="kpi is-accent"><div class="label">Total</div><div class="value">{{ stats.total }}</div></div>
     <div class="kpi"><div class="label">New today</div><div class="value">{{ stats.new_today }}</div></div>
-    <div class="kpi"><div class="label">With salary</div><div class="value">{{ stats.with_salary }}</div><div class="delta">{{ ((stats.with_salary / stats.total * 100) | int) if stats.total else 0 }}% disclose</div></div>
-    <div class="kpi"><div class="label">With tech stack</div><div class="value">{{ stats.with_tech }}</div><div class="delta">{{ ((stats.with_tech / stats.total * 100) | int) if stats.total else 0 }}% coverage</div></div>
-    <div class="kpi"><div class="label">Avg stack size</div><div class="value">{{ stats.avg_stack }}</div><div class="delta">techs per vacancy</div></div>
+    <div class="kpi"><div class="label">Opened</div><div class="value" style="color:var(--green)">{{ stats.opened }}</div><div class="delta">active vacancies</div></div>
+    <div class="kpi"><div class="label">Closed</div><div class="value" style="color:var(--pink)">{{ stats.closed }}</div><div class="delta">no longer active</div></div>
   </div>
 
   <form id="filter-form"

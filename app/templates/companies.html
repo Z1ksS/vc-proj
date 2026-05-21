@@ -127,6 +127,10 @@
   .grade-badge { display: inline-block; font-size: 10px; border-radius: 4px; padding: 1px 5px; font-weight: 500; }
 
   .empty-row td { text-align: center; padding: 40px; color: var(--muted); }
+
+  .role-badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; border: 1px solid; margin-left: 5px; opacity: .85; vertical-align: middle; font-weight: 500; }
+  .role-toolbar { margin-top: -8px; margin-bottom: 14px; }
+  .role-pill.active { font-weight: 600; }
 </style>
 {% endblock %}
 {% block content %}
@@ -152,6 +156,18 @@
     <button class="pill-btn" data-sort="name-asc">A → Z</button>
     <div class="spacer"></div>
     <input class="co-search" id="co-q" type="text" placeholder="Search companies…" autocomplete="off">
+  </div>
+  <div class="toolbar role-toolbar">
+    <span class="lbl">Role</span>
+    <button class="pill-btn role-pill active" data-role="">All</button>
+    <button class="pill-btn role-pill" data-role="Backend" style="--rc:#4493f8">Backend</button>
+    <button class="pill-btn role-pill" data-role="Frontend" style="--rc:#56d364">Frontend</button>
+    <button class="pill-btn role-pill" data-role="DevOps" style="--rc:#e3b341">DevOps</button>
+    <button class="pill-btn role-pill" data-role="Data" style="--rc:#bc8cff">Data</button>
+    <button class="pill-btn role-pill" data-role="QA" style="--rc:#ff7b72">QA</button>
+    <button class="pill-btn role-pill" data-role="Mobile" style="--rc:#39c5cf">Mobile</button>
+    <button class="pill-btn role-pill" data-role="Security" style="--rc:#f78166">Security</button>
+    <button class="pill-btn role-pill" data-role="PM" style="--rc:#ffa657">PM</button>
   </div>
 
   <div class="co-layout">
@@ -214,6 +230,11 @@
             <div class="grade-legend" id="d-grade-legend"></div>
           </div>
 
+          <div class="drill-section" id="d-role-section">
+            <div class="drill-section-title">Role breakdown</div>
+            <div id="d-roles"></div>
+          </div>
+
           <div class="drill-section" id="d-sal-section">
             <div class="drill-section-title">Avg salary by grade</div>
             <div class="sal-grid" id="d-sal-grid"></div>
@@ -238,7 +259,13 @@ const GRADE_COLORS = {
 };
 const GRADE_ORDER = ['Junior', 'Middle', 'Senior', 'Lead', 'Staff', 'Principal', 'Intern'];
 
-const state = { sort: 'cnt-desc', q: '', page: 1, perPage: 25, selected: null };
+const ROLE_COLORS = {
+  Backend: '#4493f8', Frontend: '#56d364', DevOps: '#e3b341',
+  Data: '#bc8cff', QA: '#ff7b72', Mobile: '#39c5cf',
+  Security: '#f78166', PM: '#ffa657', Support: '#a5d6ff', Hardware: '#7ee787'
+};
+
+const state = { sort: 'cnt-desc', q: '', role: '', page: 1, perPage: 25, selected: null };
 
 /* ── KPIs ──────────────────────────────────────── */
 (function() {
@@ -274,7 +301,11 @@ function sparklineSVG(weekly, w, h, fill) {
 /* ── Filter + sort ─────────────────────────────── */
 function applyFilters() {
   const q = state.q.toLowerCase();
-  let arr = COMPANIES.filter(c => !q || c.name.toLowerCase().includes(q));
+  let arr = COMPANIES.filter(c => {
+    if (q && !c.name.toLowerCase().includes(q)) return false;
+    if (state.role && !(c.roles && c.roles[state.role])) return false;
+    return true;
+  });
   const [key, dir] = state.sort.split('-');
   const sgn = dir === 'asc' ? 1 : -1;
   arr.sort((a, b) => key === 'name' ? a.name.localeCompare(b.name) * sgn : (a.cnt - b.cnt) * sgn);
@@ -351,6 +382,23 @@ function showDrill(co) {
     gradeSec.style.display = 'none';
   }
 
+  /* Role breakdown */
+  const roleSec = document.getElementById('d-role-section');
+  const rolesEl = document.getElementById('d-roles');
+  const roleEntries = Object.entries(co.roles || {});
+  if (roleEntries.length) {
+    roleSec.style.display = '';
+    const maxRoleCnt = roleEntries[0][1];
+    rolesEl.innerHTML = roleEntries.map(([role, cnt]) => `
+      <div class="tech-bar-row">
+        <span class="tech-bar-label" style="color:${ROLE_COLORS[role]||'var(--text)'}">${role}</span>
+        <div class="tech-bar-track"><div class="tech-bar-fill" style="width:${(cnt/maxRoleCnt*100).toFixed(1)}%;background:${ROLE_COLORS[role]||'var(--accent)'}"></div></div>
+        <span class="tech-bar-cnt">${cnt}</span>
+      </div>`).join('');
+  } else {
+    roleSec.style.display = 'none';
+  }
+
   /* Salary by grade */
   const salSec = document.getElementById('d-sal-section');
   const salGrid = document.getElementById('d-sal-grid');
@@ -418,9 +466,12 @@ function render() {
   tbody.innerHTML = slice.map(c => {
     const spark = `<svg viewBox="0 0 80 28" width="80" height="28" preserveAspectRatio="none">${sparklineSVG(c.weekly, 80, 28, false)}</svg>`;
     const isSelected = c.name === state.selected;
+    const roleBadge = c.top_role
+      ? `<span class="role-badge" style="color:${ROLE_COLORS[c.top_role]||'var(--muted)'};border-color:${ROLE_COLORS[c.top_role]||'var(--border)'}44;background:${ROLE_COLORS[c.top_role]||'var(--panel-2)'}11">${c.top_role}</span>`
+      : '';
     return `<tr data-name="${c.name}" class="${isSelected ? 'selected' : ''}">
       <td class="rank-cell">${c.rank}</td>
-      <td class="name-cell"><span class="cname">${c.name}</span></td>
+      <td class="name-cell"><span class="cname">${c.name}</span>${roleBadge}</td>
       <td class="spark-cell">${spark}</td>
       <td class="vac-cell">${c.cnt}</td>
     </tr>`;
@@ -447,6 +498,17 @@ document.querySelectorAll('.pill-btn[data-sort]').forEach(b => {
     document.querySelectorAll('.pill-btn[data-sort]').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     state.sort = b.dataset.sort;
+    state.page = 1;
+    render();
+  });
+});
+
+/* ── Role filter pills ─────────────────────────── */
+document.querySelectorAll('.role-pill').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.role-pill').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.role = b.dataset.role;
     state.page = 1;
     render();
   });

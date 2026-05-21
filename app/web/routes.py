@@ -368,7 +368,6 @@ def companies_page(
         select(JobRecord.company, func.count(JobRecord.id).label("cnt"))
         .group_by(JobRecord.company)
         .order_by(func.count(JobRecord.id).desc())
-        .limit(120)
     ).fetchall()
     names = [r.company for r in rows]
 
@@ -450,6 +449,21 @@ def companies_page(
             "created_at": dt_str,
         })
 
+    from app.services.analytics import _classify_role
+    title_rows = db.execute(
+        select(JobRecord.company, JobRecord.title)
+        .where(JobRecord.company.in_(names))
+    ).fetchall()
+    company_roles_raw: dict = _dd(lambda: _dd(int))
+    for _co, _title in title_rows:
+        _role = _classify_role(_title or '')
+        if _role:
+            company_roles_raw[_co][_role] += 1
+    company_roles = {
+        c: dict(sorted(roles.items(), key=lambda x: -x[1]))
+        for c, roles in company_roles_raw.items()
+    }
+
     companies_data = [
         {
             "name": r.company,
@@ -460,6 +474,8 @@ def companies_page(
             "weekly": weekly_counts.get(r.company, [0] * 8),
             "salary_by_grade": salary_by_grade.get(r.company, {}),
             "recent": recent_jobs.get(r.company, []),
+            "roles": company_roles.get(r.company, {}),
+            "top_role": next(iter(company_roles.get(r.company, {}).keys()), None),
             "url": f"/companies/{quote(r.company, safe='')}",
         }
         for i, r in enumerate(rows)

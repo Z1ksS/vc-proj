@@ -83,6 +83,10 @@ def summary_stats(db: Session) -> dict:
     today_start = datetime.now(_tz.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
     total = db.execute(select(func.count(JobRecord.id))).scalar_one()
+    opened = db.execute(
+        select(func.count(JobRecord.id)).where(JobRecord.closed_at.is_(None))
+    ).scalar_one()
+    closed = total - opened
     with_tech = db.execute(
         select(func.count(VacancyTechnology.vacancy_id.distinct()))
     ).scalar_one()
@@ -104,6 +108,8 @@ def summary_stats(db: Session) -> dict:
     avg_stack = round(total_assignments / with_tech, 1) if with_tech else 0
     return {
         "total": total,
+        "opened": opened,
+        "closed": closed,
         "with_tech": with_tech,
         "with_salary": with_salary,
         "graded": graded,
