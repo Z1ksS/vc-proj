@@ -27,6 +27,10 @@
 
   /* Facets sidebar */
   .facets { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; position: sticky; top: 14px; max-height: calc(100vh - 28px); overflow-y: auto; }
+  .facets::-webkit-scrollbar { width: 4px; }
+  .facets::-webkit-scrollbar-track { background: transparent; }
+  .facets::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .facets::-webkit-scrollbar-thumb:hover { background: var(--muted-2); }
   .facet { border-bottom: 1px solid var(--border); padding: 12px 14px; }
   .facet:last-child { border-bottom: none; }
   .facet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
