@@ -19,8 +19,12 @@ from app.services.normalize import normalize_job
 from app.services.tech_extract import extract_technologies
 from parsers.djinni import DjinniParser
 from parsers.dou import DouParser
+from parsers.epam import EpamParser
 from parsers.nofluffjobs import NoFluffJobsParser
+from parsers.provectus import ProvectusParser
 from parsers.robotaua import RobotauaParser
+from parsers.sigma import SigmaParser
+from parsers.tieto import TietoParser
 from parsers.workua import WorkUaParser
 
 
@@ -30,6 +34,11 @@ _PARSER_REGISTRY = {
     "nofluffjobs": NoFluffJobsParser,
     "dou": DouParser,
     "robotaua": RobotauaParser,
+    # Company-specific parsers (fetch all vacancies, keyword is ignored)
+    "provectus": ProvectusParser,
+    "sigma": SigmaParser,
+    "tieto": TietoParser,
+    "epam": EpamParser,
 }
 
 ALL_SOURCES = tuple(_PARSER_REGISTRY.keys())
