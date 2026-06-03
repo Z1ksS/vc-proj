@@ -17,4 +17,4 @@ jobs:
           script: |
             cd /opt/vc-proj
             git pull
-            sudo systemctl restart manager-bot
+            sudo systemctl restart job-vc
