@@ -15,6 +15,6 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /opt/manager-bot
+            cd /opt/vc-proj
             git pull
             sudo systemctl restart manager-bot
