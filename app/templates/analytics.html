@@ -150,15 +150,21 @@
   @media (max-width: 1000px) { .grid-2, .grid-2to1 { grid-template-columns: 1fr; } .title-row { grid-template-columns: 28px 1fr auto; } .title-row .title-techs { display:none; } }
 
   /* Daily nav */
-  .daily-nav { display: flex; align-items: center; gap: 10px; }
-  .daily-nav-btn { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); cursor: pointer; font-size: 14px; padding: 4px 12px; font-family: inherit; line-height: 1; }
+  .daily-nav { display: flex; align-items: center; gap: 8px; }
+  .daily-nav-btn { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); cursor: pointer; font-size: 15px; padding: 3px 11px; font-family: inherit; line-height: 1.4; }
   .daily-nav-btn:hover:not(:disabled) { background: var(--border); }
   .daily-nav-btn:disabled { opacity: .35; cursor: default; }
-  .daily-nav-label { font-size: 12px; color: var(--muted); min-width: 160px; text-align: center; font-variant-numeric: tabular-nums; }
-  .daily-week-strip { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+  .daily-nav-label { font-size: 13px; color: var(--muted); min-width: 160px; text-align: center; font-variant-numeric: tabular-nums; }
+  .daily-week-strip { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 12px; }
   .daily-week-pill { background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; font-size: 11px; color: var(--muted); padding: 3px 8px; cursor: pointer; font-family: inherit; }
   .daily-week-pill:hover { color: var(--text); border-color: var(--accent); }
   .daily-week-pill.active { background: var(--accent-dim); border-color: var(--accent); color: var(--text); }
+  /* Status toggle */
+  .daily-status-group { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .daily-status-btn { background: transparent; border: none; border-right: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: 12px; font-family: inherit; padding: 4px 12px; }
+  .daily-status-btn:last-child { border-right: none; }
+  .daily-status-btn:hover { color: var(--text); background: var(--panel-2); }
+  .daily-status-btn.active { background: var(--accent-dim); color: var(--text); }
 
   @media (max-width: 700px) {
     .kpi-grid { grid-template-columns: 1fr 1fr; }
@@ -285,10 +291,17 @@
     <div class="an-panel">
       <div class="panel-head">
         <div><h3>Daily vacancy volume</h3><div class="sub">New vacancies per day &middot; last 13 weeks</div></div>
-        <div class="daily-nav">
-          <button class="daily-nav-btn" id="daily-prev">&#8592;</button>
-          <span class="daily-nav-label" id="daily-label"></span>
-          <button class="daily-nav-btn" id="daily-next">&#8594;</button>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <div class="daily-status-group" id="daily-status">
+            <button class="daily-status-btn active" data-status="all">All</button>
+            <button class="daily-status-btn" data-status="open">Open</button>
+            <button class="daily-status-btn" data-status="closed">Closed</button>
+          </div>
+          <div class="daily-nav">
+            <button class="daily-nav-btn" id="daily-prev">&#8592;</button>
+            <span class="daily-nav-label" id="daily-label"></span>
+            <button class="daily-nav-btn" id="daily-next">&#8594;</button>
+          </div>
         </div>
       </div>
       <div class="trend-wrap">
@@ -781,13 +794,18 @@ function renderPairs() {
 
 /* Daily chart */
 (function() {
-  const daily = _D.daily || [];
-  if (!daily.length) return;
+  const DATASETS = {
+    all:    _D.daily_all    || [],
+    open:   _D.daily_open   || [],
+    closed: _D.daily_closed || [],
+  };
+  const STATUS_COLORS = { all: 'var(--accent)', open: 'var(--green)', closed: 'var(--pink)' };
+  const STATUS_DIMS   = { all: 'var(--accent-dim)', open: '#0f2c14', closed: '#2e0a0a' };
+
+  let currentStatus = 'all';
+  let weekOffset = 0;
 
   const WEEK = 7;
-  const totalWeeks = Math.ceil(daily.length / WEEK);
-  let weekOffset = 0; // 0 = most recent week
-  const globalMax = Math.max(...daily.map(d => d.count), 1);
   const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -796,16 +814,23 @@ function renderPairs() {
     return MON[d.getMonth()] + ' ' + d.getDate();
   }
 
+  function getData() { return DATASETS[currentStatus] || []; }
+
+  function totalWeeks() { return Math.ceil(getData().length / WEEK); }
+
   function getSlice(offset) {
-    const end = daily.length - offset * WEEK;
+    const data = getData();
+    const end = data.length - offset * WEEK;
     const start = Math.max(0, end - WEEK);
-    return daily.slice(start, end);
+    return data.slice(start, end);
   }
 
   function buildStrip() {
     const strip = document.getElementById('daily-strip');
+    const data = getData();
+    const tw = Math.ceil(data.length / WEEK);
     let html = '';
-    for (let i = totalWeeks - 1; i >= 0; i--) {
+    for (let i = tw - 1; i >= 0; i--) {
       const sl = getSlice(i);
       if (!sl.length) continue;
       const lbl = fmtDate(sl[0].date) + '–' + fmtDate(sl[sl.length - 1].date);
@@ -813,42 +838,38 @@ function renderPairs() {
     }
     strip.innerHTML = html;
     strip.querySelectorAll('.daily-week-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        weekOffset = +pill.dataset.offset;
-        render();
-      });
+      pill.addEventListener('click', () => { weekOffset = +pill.dataset.offset; render(); });
     });
   }
 
   function render() {
     const slice = getSlice(weekOffset);
+    const tw = totalWeeks();
     const prevBtn = document.getElementById('daily-prev');
     const nextBtn = document.getElementById('daily-next');
-    const label  = document.getElementById('daily-label');
+    const label   = document.getElementById('daily-label');
 
-    prevBtn.disabled = weekOffset >= totalWeeks - 1;
+    prevBtn.disabled = weekOffset >= tw - 1;
     nextBtn.disabled = weekOffset <= 0;
+    if (slice.length) label.textContent = fmtDate(slice[0].date) + ' – ' + fmtDate(slice[slice.length - 1].date);
 
-    if (slice.length) {
-      label.textContent = fmtDate(slice[0].date) + ' – ' + fmtDate(slice[slice.length - 1].date);
-    }
-
-    // Update strip active state
     document.querySelectorAll('.daily-week-pill').forEach(pill => {
       pill.classList.toggle('active', +pill.dataset.offset === weekOffset);
     });
 
-    // SVG bar chart
-    const PW = 700, PH = 200, padL = 32, padR = 12, padT = 20, padB = 44;
+    // Scale to max of current week so bars fill the chart
+    const weekMax = Math.max(...slice.map(d => d.count), 1);
+    const barColor    = STATUS_COLORS[currentStatus];
+    const barColorDim = STATUS_DIMS[currentStatus];
+
+    const PW = 700, PH = 200, padL = 36, padR = 12, padT = 24, padB = 48;
     const cW = PW - padL - padR, cH = PH - padT - padB;
-    const n = slice.length;
-    const colW = cW / n;
-    const barW = Math.max(4, Math.floor(colW * 0.55));
+    const colW = cW / WEEK;
+    const barW = Math.max(6, Math.floor(colW * 0.72));
 
     let inner = '';
-    // Grid lines + Y labels
     for (let t = 0; t <= 4; t++) {
-      const yv = Math.round(globalMax * (4 - t) / 4);
+      const yv = Math.round(weekMax * (4 - t) / 4);
       const yp = padT + (t / 4) * cH;
       inner += `<line x1="${padL}" x2="${PW - padR}" y1="${yp.toFixed(1)}" y2="${yp.toFixed(1)}" stroke="var(--border-soft)" stroke-dasharray="2 4" stroke-width="1"/>`;
       inner += `<text x="${padL - 5}" y="${(yp + 3.5).toFixed(1)}" text-anchor="end" class="trend-axis">${yv}</text>`;
@@ -856,17 +877,18 @@ function renderPairs() {
 
     slice.forEach((d, i) => {
       const cx = padL + (i + 0.5) * colW;
-      const barH = d.count > 0 ? Math.max(3, (d.count / globalMax) * cH) : 0;
+      const barH = d.count > 0 ? Math.max(3, (d.count / weekMax) * cH) : 0;
       const by = padT + cH - barH;
       const date = new Date(d.date + 'T00:00:00');
       const dayName = DAY_NAMES[date.getDay()];
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
-      inner += `<rect x="${(cx - barW / 2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${barH.toFixed(1)}" rx="2" fill="var(--accent-dim)" class="daily-bar-rect" data-date="${d.date}" data-count="${d.count}" style="cursor:pointer"/>`;
+      inner += `<rect x="${(cx - barW / 2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${barH.toFixed(1)}" rx="3" fill="${barColorDim}" class="daily-bar-rect" data-date="${d.date}" data-count="${d.count}" data-color="${barColor}" data-dim="${barColorDim}" style="cursor:pointer"/>`;
       if (d.count > 0) {
-        inner += `<text x="${cx.toFixed(1)}" y="${(by - 4).toFixed(1)}" text-anchor="middle" class="trend-axis">${d.count}</text>`;
+        inner += `<text x="${cx.toFixed(1)}" y="${(by - 5).toFixed(1)}" text-anchor="middle" class="trend-axis" font-size="11">${d.count}</text>`;
       }
-      inner += `<text x="${cx.toFixed(1)}" y="${(PH - padB + 14).toFixed(1)}" text-anchor="middle" class="trend-axis" font-weight="500">${dayName}</text>`;
-      inner += `<text x="${cx.toFixed(1)}" y="${(PH - padB + 27).toFixed(1)}" text-anchor="middle" class="trend-axis" style="font-size:9px">${fmtDate(d.date)}</text>`;
+      inner += `<text x="${cx.toFixed(1)}" y="${(PH - padB + 15).toFixed(1)}" text-anchor="middle" class="trend-axis" font-size="12" font-weight="600" fill="${isWeekend ? 'var(--muted-2)' : 'var(--text)'}">${dayName}</text>`;
+      inner += `<text x="${cx.toFixed(1)}" y="${(PH - padB + 30).toFixed(1)}" text-anchor="middle" class="trend-axis" font-size="10">${fmtDate(d.date)}</text>`;
     });
 
     const svg = document.getElementById('daily-svg');
@@ -877,17 +899,32 @@ function renderPairs() {
     svg.querySelectorAll('.daily-bar-rect').forEach(bar => {
       bar.addEventListener('mousemove', ev => {
         showTip(`<div class="t">${bar.dataset.date}</div><div class="meta"><b style="color:#e6edf3">${bar.dataset.count}</b> new vacancies</div>`, ev);
-        bar.setAttribute('fill', 'var(--accent)');
+        bar.setAttribute('fill', bar.dataset.color);
       });
       bar.addEventListener('mouseleave', () => {
         hideTip();
-        bar.setAttribute('fill', 'var(--accent-dim)');
+        bar.setAttribute('fill', bar.dataset.dim);
       });
     });
   }
 
-  document.getElementById('daily-prev').addEventListener('click', () => { if (weekOffset < totalWeeks - 1) { weekOffset++; render(); } });
-  document.getElementById('daily-next').addEventListener('click', () => { if (weekOffset > 0) { weekOffset--; render(); } });
+  document.getElementById('daily-prev').addEventListener('click', () => {
+    if (weekOffset < totalWeeks() - 1) { weekOffset++; render(); }
+  });
+  document.getElementById('daily-next').addEventListener('click', () => {
+    if (weekOffset > 0) { weekOffset--; render(); }
+  });
+
+  document.querySelectorAll('.daily-status-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.daily-status-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentStatus = btn.dataset.status;
+      weekOffset = 0;
+      buildStrip();
+      render();
+    });
+  });
 
   buildStrip();
   render();

@@ -566,7 +566,9 @@ def analytics_page(
         'salary_by_grade': salary_by_grade(db),
         'salary_by_role': salary_by_role(db),
         'weekly': weekly_vacancy_counts(db, weeks=16),
-        'daily': daily_vacancy_counts(db, days=91),
+        'daily_all': daily_vacancy_counts(db, days=91, status='all'),
+        'daily_open': daily_vacancy_counts(db, days=91, status='open'),
+        'daily_closed': daily_vacancy_counts(db, days=91, status='closed'),
         'role_categories': role_category_stats(db),
         'top_titles': top_job_titles(db),
     }

@@ -136,13 +136,16 @@ def source_distribution(db: Session) -> list[tuple[str, int]]:
     ).fetchall()
 
 
-def daily_vacancy_counts(db: Session, days: int = 91) -> list[dict]:
+def daily_vacancy_counts(db: Session, days: int = 91, status: str = 'all') -> list[dict]:
     from datetime import datetime, timedelta, timezone as _tz
     now = datetime.now(_tz.utc)
     cutoff = now - timedelta(days=days)
-    rows = db.execute(
-        select(JobRecord.created_at).where(JobRecord.created_at >= cutoff)
-    ).fetchall()
+    stmt = select(JobRecord.created_at).where(JobRecord.created_at >= cutoff)
+    if status == 'open':
+        stmt = stmt.where(JobRecord.closed_at.is_(None))
+    elif status == 'closed':
+        stmt = stmt.where(JobRecord.closed_at.isnot(None))
+    rows = db.execute(stmt).fetchall()
     counts: dict[str, int] = defaultdict(int)
     for (created_at,) in rows:
         dt = created_at if created_at.tzinfo else created_at.replace(tzinfo=_tz.utc)
