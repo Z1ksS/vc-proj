@@ -552,6 +552,7 @@ def analytics_page(
         grade_distribution, source_distribution, summary_stats, tech_cooccurrence,
         source_grade_mix, salary_histogram, salary_by_grade, salary_by_role,
         top_tech_counts, weekly_vacancy_counts, role_category_stats, top_job_titles,
+        daily_vacancy_counts,
     )
     stats = summary_stats(db)
     data = {
@@ -565,6 +566,7 @@ def analytics_page(
         'salary_by_grade': salary_by_grade(db),
         'salary_by_role': salary_by_role(db),
         'weekly': weekly_vacancy_counts(db, weeks=16),
+        'daily': daily_vacancy_counts(db, days=91),
         'role_categories': role_category_stats(db),
         'top_titles': top_job_titles(db),
     }

@@ -136,6 +136,25 @@ def source_distribution(db: Session) -> list[tuple[str, int]]:
     ).fetchall()
 
 
+def daily_vacancy_counts(db: Session, days: int = 91) -> list[dict]:
+    from datetime import datetime, timedelta, timezone as _tz
+    now = datetime.now(_tz.utc)
+    cutoff = now - timedelta(days=days)
+    rows = db.execute(
+        select(JobRecord.created_at).where(JobRecord.created_at >= cutoff)
+    ).fetchall()
+    counts: dict[str, int] = defaultdict(int)
+    for (created_at,) in rows:
+        dt = created_at if created_at.tzinfo else created_at.replace(tzinfo=_tz.utc)
+        counts[dt.strftime('%Y-%m-%d')] += 1
+    result = []
+    for i in range(days):
+        day = (now - timedelta(days=days - 1 - i)).date()
+        day_str = day.strftime('%Y-%m-%d')
+        result.append({'date': day_str, 'count': counts.get(day_str, 0)})
+    return result
+
+
 def weekly_vacancy_counts(db: Session, weeks: int = 16) -> list[int]:
     from datetime import datetime, timedelta, timezone as _tz
     now = datetime.now(_tz.utc)
