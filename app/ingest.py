@@ -134,56 +134,83 @@ def get_parsers() -> dict[str, object]:
     }
 
 
-def _upsert_jobs(db: Session, jobs: Iterable) -> tuple[int, int]:
+def _upsert_one(db: Session, job, now: datetime) -> str:
+    """Insert or update a single job. Returns 'inserted' or 'updated'."""
+    existing = db.execute(
+        select(JobRecord).where(JobRecord.source_job_id == job.source_job_id)
+    ).scalar_one_or_none()
+
+    miltech_flag = is_miltech(job.title, job.description)
+
+    if existing:
+        existing.title = job.title
+        existing.company = job.company
+        existing.salary = job.salary
+        existing.link = job.link
+        existing.job_format = job.job_format
+        existing.normalized_title = job.normalized_title
+        existing.normalized_company = job.normalized_company
+        existing.dedupe_fingerprint = job.dedupe_fingerprint
+        existing.description = job.description
+        existing.last_seen_at = now
+        existing.is_miltech = miltech_flag
+        if existing.closed_at is not None:
+            # Vacancy reappeared after being marked closed.
+            existing.closed_at = None
+        return "updated"
+
+    db.add(JobRecord(
+        source=job.source,
+        source_job_id=job.source_job_id,
+        title=job.title,
+        company=job.company,
+        salary=job.salary,
+        link=job.link,
+        job_format=job.job_format,
+        normalized_title=job.normalized_title,
+        normalized_company=job.normalized_company,
+        dedupe_fingerprint=job.dedupe_fingerprint,
+        description=job.description,
+        first_seen_at=now,
+        last_seen_at=now,
+        canonical_vacancy_id=job.source_job_id,
+        is_miltech=miltech_flag,
+    ))
+    return "inserted"
+
+
+def _upsert_jobs(
+    db: Session, jobs: Iterable, logger: logging.Logger | None = None
+) -> tuple[int, int]:
+    logger = logger or _get_ingest_logger()
     inserted = 0
     updated = 0
+    failed = 0
     now = _now()
 
     for job in jobs:
-        existing = db.execute(
-            select(JobRecord).where(JobRecord.source_job_id == job.source_job_id)
-        ).scalar_one_or_none()
-
-        miltech_flag = is_miltech(job.title, job.description)
-
-        if existing:
-            existing.title = job.title
-            existing.company = job.company
-            existing.salary = job.salary
-            existing.link = job.link
-            existing.job_format = job.job_format
-            existing.normalized_title = job.normalized_title
-            existing.normalized_company = job.normalized_company
-            existing.dedupe_fingerprint = job.dedupe_fingerprint
-            existing.description = job.description
-            existing.last_seen_at = now
-            existing.is_miltech = miltech_flag
-            if existing.closed_at is not None:
-                # Vacancy reappeared after being marked closed.
-                existing.closed_at = None
-            updated += 1
+        # Each record is written in its own savepoint and flushed immediately so a
+        # single bad row (e.g. an over-long field or constraint violation) rolls back
+        # only itself instead of aborting the whole batch — see commit message / history.
+        try:
+            with db.begin_nested():
+                outcome = _upsert_one(db, job, now)
+                db.flush()
+        except Exception:
+            failed += 1
+            logger.exception(
+                "Failed to upsert job source_job_id=%r — skipping",
+                getattr(job, "source_job_id", None),
+            )
             continue
-
-        db.add(JobRecord(
-            source=job.source,
-            source_job_id=job.source_job_id,
-            title=job.title,
-            company=job.company,
-            salary=job.salary,
-            link=job.link,
-            job_format=job.job_format,
-            normalized_title=job.normalized_title,
-            normalized_company=job.normalized_company,
-            dedupe_fingerprint=job.dedupe_fingerprint,
-            description=job.description,
-            first_seen_at=now,
-            last_seen_at=now,
-            canonical_vacancy_id=job.source_job_id,
-            is_miltech=miltech_flag,
-        ))
-        inserted += 1
+        if outcome == "inserted":
+            inserted += 1
+        else:
+            updated += 1
 
     db.commit()
+    if failed:
+        logger.warning("Upsert skipped %d job(s) due to errors", failed)
     return inserted, updated
 
 
@@ -296,7 +323,7 @@ def run_ingestion(
     deduped = dedupe_jobs(normalized_jobs)
 
     with SessionLocal() as db:
-        inserted, updated = _upsert_jobs(db, deduped)
+        inserted, updated = _upsert_jobs(db, deduped, logger)
         closed = _mark_closed(db, sources_ingested, logger)
 
     stats = {
