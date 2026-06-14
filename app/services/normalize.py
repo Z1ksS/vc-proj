@@ -10,6 +10,11 @@ from models.job import Job
 SPACES_RE = re.compile(r"\s+")
 NON_WORD_RE = re.compile(r"[^\w\s]")
 
+# Max length of the String(256) columns in app.models.JobRecord. Values longer
+# than this make Postgres reject the whole batch insert (StringDataRightTruncation),
+# so we cap them here — the single funnel before persistence.
+_VARCHAR_LIMIT = 256
+
 
 @dataclass(slots=True)
 class NormalizedJob:
@@ -47,14 +52,18 @@ def build_fingerprint(title: str, company: str) -> str:
     return f"{title}::{company}"
 
 
+def _cap(value: str, limit: int = _VARCHAR_LIMIT) -> str:
+    return value[:limit]
+
+
 def normalize_job(job: Job, source: str) -> NormalizedJob:
-    title = (job.title or "").strip()
-    company = (job.company or "").strip()
-    salary = normalize_salary(job.salary or "")
+    title = _cap((job.title or "").strip())
+    company = _cap((job.company or "").strip())
+    salary = _cap(normalize_salary(job.salary or ""))
     link = (job.link or "").strip()
-    job_format = (job.job_format or "").strip()
-    normalized_title = normalize_text(title)
-    normalized_company = normalize_text(company)
+    job_format = _cap((job.job_format or "").strip())
+    normalized_title = _cap(normalize_text(title))
+    normalized_company = _cap(normalize_text(company))
     fingerprint = build_fingerprint(normalized_title, normalized_company)
     source_job_id = (job.id or "").strip() or f"{source}:{link or fingerprint}"
     return NormalizedJob(
