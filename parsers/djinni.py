@@ -70,6 +70,12 @@ class DjinniParser(BaseParser):
                 company = company_el.text.strip() if company_el else ""
                 salary = salary_el.text.strip() if salary_el else "Not specified"
                 href = link_el.get("href", "") if link_el else ""
+                # Djinni appends volatile tracking params (?ref=job_search&sid=<random>)
+                # to listing links; sid changes every request. Strip query/fragment so
+                # source_job_id (company::link) stays stable across runs — otherwise every
+                # vacancy is re-inserted as a "new" row each ingest. See dedupe history.
+                if href:
+                    href = href.split("?", 1)[0].split("#", 1)[0]
                 link = f"https://djinni.co{href}" if href else ""
                 job_format = (
                     f"{first_span.text.strip()} {location_el.text.strip()}"
