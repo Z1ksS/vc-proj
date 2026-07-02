@@ -2,6 +2,10 @@
 
 Internal tool for ingesting IT vacancies from Ukrainian job boards, normalizing and deduplicating them, and browsing results in a FastAPI + HTMX UI. Includes a personal Kanban board for tracking job applications.
 
+## Live Demo
+
+https://vacancyproj.duckdns.org/
+
 ## Stack
 - FastAPI + Jinja2 + HTMX
 - SQLAlchemy 2.x + PostgreSQL
