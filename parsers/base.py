@@ -62,8 +62,21 @@ class BaseParser(ABC):
 
 
 def _describe(exc: requests.RequestException) -> str:
-    """Compact, log-friendly reason: HTTP status when present, else exception type."""
+    """Compact, log-friendly reason: HTTP status (plus edge/anti-bot hints) or exception type.
+
+    On an HTTP error we also surface the ``Server`` header and any Cloudflare/challenge
+    markers, so a 403 tells us whether it's a plain rate-limit or a bot-challenge (which
+    retries/pacing can't clear — that needs a different egress IP)."""
     resp = getattr(exc, "response", None)
-    if resp is not None:
-        return f"HTTP {resp.status_code}"
-    return type(exc).__name__
+    if resp is None:
+        return type(exc).__name__
+    parts = [f"HTTP {resp.status_code}"]
+    server = resp.headers.get("Server")
+    if server:
+        parts.append(f"server={server}")
+    if resp.headers.get("cf-ray") or resp.headers.get("cf-mitigated"):
+        parts.append("cloudflare")
+    body = (resp.text or "")[:600].lower()
+    if any(m in body for m in ("just a moment", "cf-challenge", "attention required", "cf-error-details")):
+        parts.append("challenge-page")
+    return " ".join(parts)

@@ -33,12 +33,26 @@ _BASE_URL = "https://jobs.dou.ua/vacancies/"
 _XHR_PATH = "https://jobs.dou.ua/vacancies/xhr-load/"
 _CSRF_RE = re.compile(r"window\.CSRF_TOKEN\s*=\s*['\"]([^'\"]+)['\"]")
 _MAX_PAGES = 50  # safety cap (~1000 vacancies)
-_PAGE_DELAY = 0.5  # seconds between XHR pages — pace the burst so DOU's anti-bot doesn't 403
+# DOU sits behind Cloudflare, which 403-blocks datacenter IPs under load. A single parser
+# instance serves every category in a run, so we pace ALL of its requests (GET + XHR) at a
+# global minimum interval to stay under Cloudflare's rate threshold.
+_MIN_INTERVAL = 1.0  # seconds between any two DOU requests, run-wide (~2 min for a full run)
 _INITIAL_RETRIES = 3  # the first GET gates the whole category; retry a transient 403/block
-_RETRY_BACKOFF = 3.0  # base seconds, multiplied by attempt number (3s, 6s, ...)
+_RETRY_BACKOFF = 10.0  # base seconds, multiplied by attempt number (10s, 20s) — Cloudflare cooldowns are long
 
 
 class DouParser(BaseParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self._last_request = 0.0  # monotonic ts of the last DOU hit, for run-wide pacing
+
+    def _throttle(self) -> None:
+        """Block until at least _MIN_INTERVAL has elapsed since the previous DOU request."""
+        wait = _MIN_INTERVAL - (time.monotonic() - self._last_request)
+        if wait > 0:
+            time.sleep(wait)
+        self._last_request = time.monotonic()
+
     def parse(self, keyword: str) -> list[Job]:
         if not keyword:
             return []
@@ -48,6 +62,7 @@ class DouParser(BaseParser):
         # with a growing backoff before giving up.
         first = None
         for attempt in range(_INITIAL_RETRIES):
+            self._throttle()
             first = self._get(_BASE_URL, params={"category": keyword}, headers=_HEADERS, timeout=30)
             if first is not None:
                 break
@@ -75,7 +90,7 @@ class DouParser(BaseParser):
         xhr_headers = {**_XHR_HEADERS, "Referer": f"{_BASE_URL}?category={encoded}"}
 
         for _ in range(_MAX_PAGES):
-            time.sleep(_PAGE_DELAY)
+            self._throttle()
             resp = self._post(
                 xhr_url,
                 headers=xhr_headers,
