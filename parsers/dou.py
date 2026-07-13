@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 from urllib.parse import quote
 
 from bs4 import BeautifulSoup
@@ -32,6 +33,9 @@ _BASE_URL = "https://jobs.dou.ua/vacancies/"
 _XHR_PATH = "https://jobs.dou.ua/vacancies/xhr-load/"
 _CSRF_RE = re.compile(r"window\.CSRF_TOKEN\s*=\s*['\"]([^'\"]+)['\"]")
 _MAX_PAGES = 50  # safety cap (~1000 vacancies)
+_PAGE_DELAY = 0.5  # seconds between XHR pages — pace the burst so DOU's anti-bot doesn't 403
+_INITIAL_RETRIES = 3  # the first GET gates the whole category; retry a transient 403/block
+_RETRY_BACKOFF = 3.0  # base seconds, multiplied by attempt number (3s, 6s, ...)
 
 
 class DouParser(BaseParser):
@@ -39,10 +43,18 @@ class DouParser(BaseParser):
         if not keyword:
             return []
 
-        # Step 1: load the first page — seeds session cookie (csrftoken) + initial vacancies
-        first = self._get(_BASE_URL, params={"category": keyword}, headers=_HEADERS, timeout=30)
+        # Step 1: load the first page — seeds session cookie (csrftoken) + initial vacancies.
+        # This request gates the whole category, so retry a transient block (DOU 403s under load)
+        # with a growing backoff before giving up.
+        first = None
+        for attempt in range(_INITIAL_RETRIES):
+            first = self._get(_BASE_URL, params={"category": keyword}, headers=_HEADERS, timeout=30)
+            if first is not None:
+                break
+            if attempt < _INITIAL_RETRIES - 1:
+                time.sleep(_RETRY_BACKOFF * (attempt + 1))
         if first is None:
-            logger.warning("dou: initial request failed keyword=%r", keyword)
+            logger.warning("dou: initial request failed keyword=%r after %d attempts", keyword, _INITIAL_RETRIES)
             return []
 
         soup = BeautifulSoup(first.text, "lxml")
@@ -63,6 +75,7 @@ class DouParser(BaseParser):
         xhr_headers = {**_XHR_HEADERS, "Referer": f"{_BASE_URL}?category={encoded}"}
 
         for _ in range(_MAX_PAGES):
+            time.sleep(_PAGE_DELAY)
             resp = self._post(
                 xhr_url,
                 headers=xhr_headers,
