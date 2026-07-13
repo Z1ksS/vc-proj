@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+from urllib.parse import quote
 
 from bs4 import BeautifulSoup
 
@@ -57,8 +58,9 @@ class DouParser(BaseParser):
             return jobs
 
         # Step 3: paginate via the XHR endpoint the site uses internally
-        xhr_url = f"{_XHR_PATH}?category={keyword}"
-        xhr_headers = {**_XHR_HEADERS, "Referer": f"{_BASE_URL}?category={keyword}"}
+        encoded = quote(keyword, safe="")
+        xhr_url = f"{_XHR_PATH}?category={encoded}"
+        xhr_headers = {**_XHR_HEADERS, "Referer": f"{_BASE_URL}?category={encoded}"}
 
         for _ in range(_MAX_PAGES):
             resp = self._post(

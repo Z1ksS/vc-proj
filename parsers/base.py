@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -6,6 +7,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from models.job import Job
+
+logger = logging.getLogger("job_vc.parser")
 
 
 class BaseParser(ABC):
@@ -39,7 +42,8 @@ class BaseParser(ABC):
             response = self.session.get(url, **kwargs)
             response.raise_for_status()
             return response
-        except requests.RequestException:
+        except requests.RequestException as exc:
+            logger.warning("GET failed url=%s reason=%s", url, _describe(exc))
             return None
 
     def _post(self, url: str, **kwargs) -> requests.Response | None:
@@ -48,9 +52,18 @@ class BaseParser(ABC):
             response = self.session.post(url, **kwargs)
             response.raise_for_status()
             return response
-        except requests.RequestException:
+        except requests.RequestException as exc:
+            logger.warning("POST failed url=%s reason=%s", url, _describe(exc))
             return None
 
     @abstractmethod
     def parse(self, keyword: str) -> List[Job]:
         pass
+
+
+def _describe(exc: requests.RequestException) -> str:
+    """Compact, log-friendly reason: HTTP status when present, else exception type."""
+    resp = getattr(exc, "response", None)
+    if resp is not None:
+        return f"HTTP {resp.status_code}"
+    return type(exc).__name__
